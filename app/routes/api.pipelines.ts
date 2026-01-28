@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs } from "react-router";
 import { getSession } from "~/services/session.server";
-import { db, pipelines } from "~/db";
+import { db, pipelines, pipelineTemplates } from "~/db";
 import { eq, and } from "drizzle-orm";
-import type { FlowData } from "~/db/schema/pipelines";
+import type { FlowData, TemplateVariable } from "~/db/schema/pipelines";
 
 function jsonResponse(data: unknown, status: number = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -97,6 +97,76 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       return jsonResponse({ success: true });
+    }
+
+    case "create-template": {
+      const pipelineId = formData.get("pipelineId") as string;
+      const variablesStr = formData.get("variables") as string;
+
+      if (!pipelineId) {
+        return jsonResponse({ error: "Pipeline ID required" }, 400);
+      }
+
+      // Verify pipeline belongs to user
+      const [pipeline] = await db
+        .select()
+        .from(pipelines)
+        .where(and(eq(pipelines.id, pipelineId), eq(pipelines.userId, userId)));
+
+      if (!pipeline) {
+        return jsonResponse({ error: "Pipeline not found" }, 404);
+      }
+
+      const variables: TemplateVariable[] = JSON.parse(variablesStr || "[]");
+
+      // Check if template already exists
+      const [existing] = await db
+        .select()
+        .from(pipelineTemplates)
+        .where(eq(pipelineTemplates.pipelineId, pipelineId));
+
+      if (existing) {
+        // Update existing template
+        const [updated] = await db
+          .update(pipelineTemplates)
+          .set({ variables })
+          .where(eq(pipelineTemplates.pipelineId, pipelineId))
+          .returning();
+        return jsonResponse({ template: updated });
+      }
+
+      // Create new template
+      const [template] = await db
+        .insert(pipelineTemplates)
+        .values({ pipelineId, variables })
+        .returning();
+
+      return jsonResponse({ template });
+    }
+
+    case "get-template": {
+      const pipelineId = formData.get("pipelineId") as string;
+
+      if (!pipelineId) {
+        return jsonResponse({ error: "Pipeline ID required" }, 400);
+      }
+
+      // Verify pipeline belongs to user
+      const [pipeline] = await db
+        .select()
+        .from(pipelines)
+        .where(and(eq(pipelines.id, pipelineId), eq(pipelines.userId, userId)));
+
+      if (!pipeline) {
+        return jsonResponse({ error: "Pipeline not found" }, 404);
+      }
+
+      const [template] = await db
+        .select()
+        .from(pipelineTemplates)
+        .where(eq(pipelineTemplates.pipelineId, pipelineId));
+
+      return jsonResponse({ template: template || null });
     }
 
     default:

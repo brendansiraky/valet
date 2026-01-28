@@ -1,17 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { redirect } from "react-router";
 import { getSession } from "~/services/session.server";
-import { db, pipelines, agents } from "~/db";
+import { db, pipelines, agents, pipelineTemplates } from "~/db";
 import { eq, and } from "drizzle-orm";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { PipelineCanvas } from "~/components/pipeline-builder/pipeline-canvas";
 import { AgentSidebar } from "~/components/pipeline-builder/agent-sidebar";
+import {
+  TemplateDialog,
+  type TemplateVariable,
+} from "~/components/pipeline-builder/template-dialog";
+import { VariableFillDialog } from "~/components/pipeline-builder/variable-fill-dialog";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { LayoutGrid, Save, Trash2 } from "lucide-react";
+import { LayoutGrid, Save, Trash2, FileCode, Play } from "lucide-react";
 import type { Node, Edge } from "@xyflow/react";
 import type { AgentNodeData } from "~/stores/pipeline-store";
 
@@ -33,7 +38,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   // For new pipelines, return null pipeline
   if (id === "new") {
-    return { pipeline: null, agents: userAgents };
+    return { pipeline: null, agents: userAgents, template: null };
   }
 
   // Load existing pipeline
@@ -46,13 +51,28 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response("Pipeline not found", { status: 404 });
   }
 
-  return { pipeline, agents: userAgents };
+  // Load template if exists
+  const [template] = await db
+    .select()
+    .from(pipelineTemplates)
+    .where(eq(pipelineTemplates.pipelineId, id!));
+
+  return { pipeline, agents: userAgents, template: template || null };
 }
 
 export default function PipelineBuilderPage() {
-  const { pipeline, agents: userAgents } = useLoaderData<typeof loader>();
+  const {
+    pipeline,
+    agents: userAgents,
+    template,
+  } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [variableFillDialogOpen, setVariableFillDialogOpen] = useState(false);
+  const [templateVariables, setTemplateVariables] = useState<
+    TemplateVariable[]
+  >(template?.variables || []);
 
   const {
     nodes,
@@ -163,6 +183,45 @@ export default function PipelineBuilderPage() {
     navigate("/pipelines");
   };
 
+  const handleSaveTemplate = useCallback(
+    async (variables: TemplateVariable[]) => {
+      if (!pipelineId) return;
+
+      const formData = new FormData();
+      formData.set("intent", "create-template");
+      formData.set("pipelineId", pipelineId);
+      formData.set("variables", JSON.stringify(variables));
+
+      const response = await fetch("/api/pipelines", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setTemplateVariables(variables);
+    },
+    [pipelineId]
+  );
+
+  const handleRun = () => {
+    // If template has variables, show variable fill dialog
+    if (templateVariables.length > 0) {
+      setVariableFillDialogOpen(true);
+    } else {
+      // Run directly (Phase 5 implementation)
+      console.log("Run pipeline without variables");
+    }
+  };
+
+  const handleRunWithVariables = (values: Record<string, string>) => {
+    // Phase 5 will implement actual execution
+    console.log("Run pipeline with variables:", values);
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Header */}
@@ -183,10 +242,23 @@ export default function PipelineBuilderPage() {
           {isSaving ? "Saving..." : "Save"}
         </Button>
         {pipelineId && (
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setTemplateDialogOpen(true)}
+            >
+              <FileCode className="w-4 h-4 mr-2" />
+              {templateVariables.length > 0 ? "Edit Template" : "Save as Template"}
+            </Button>
+            <Button onClick={handleRun}>
+              <Play className="w-4 h-4 mr-2" />
+              Run
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>
+          </>
         )}
       </div>
 
@@ -197,6 +269,25 @@ export default function PipelineBuilderPage() {
           <PipelineCanvas onDropAgent={handleDropAgent} />
         </div>
       </div>
+
+      {/* Dialogs */}
+      {pipelineId && (
+        <>
+          <TemplateDialog
+            open={templateDialogOpen}
+            onOpenChange={setTemplateDialogOpen}
+            pipelineId={pipelineId}
+            onSave={handleSaveTemplate}
+          />
+          <VariableFillDialog
+            open={variableFillDialogOpen}
+            onOpenChange={setVariableFillDialogOpen}
+            templateName={pipelineName}
+            variables={templateVariables}
+            onSubmit={handleRunWithVariables}
+          />
+        </>
+      )}
     </div>
   );
 }

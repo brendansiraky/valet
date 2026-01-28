@@ -13,11 +13,7 @@ import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { Plus, X } from "lucide-react";
 
-interface TemplateVariable {
-  name: string;
-  description: string;
-  defaultValue: string;
-}
+import type { TemplateVariable } from "~/db/schema/pipelines";
 
 interface TemplateDialogProps {
   open: boolean;
@@ -129,7 +125,7 @@ export function TemplateDialog({
                       <Label htmlFor={`var-default-${index}`}>Default Value</Label>
                       <Input
                         id={`var-default-${index}`}
-                        value={variable.defaultValue}
+                        value={variable.defaultValue ?? ""}
                         onChange={(e) =>
                           updateVariable(index, "defaultValue", e.target.value)
                         }
@@ -142,7 +138,7 @@ export function TemplateDialog({
                     <Label htmlFor={`var-desc-${index}`}>Description</Label>
                     <Textarea
                       id={`var-desc-${index}`}
-                      value={variable.description}
+                      value={variable.description ?? ""}
                       onChange={(e) =>
                         updateVariable(index, "description", e.target.value)
                       }
@@ -169,4 +165,4 @@ export function TemplateDialog({
   );
 }
 
-export type { TemplateVariable };
+export type { TemplateVariable } from "~/db/schema/pipelines";
