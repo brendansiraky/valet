@@ -12,7 +12,7 @@ Valet delivers a visual AI agent pipeline builder in six phases: establishing se
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Project setup, auth, secure API key management
+- [x] **Phase 1: Foundation** - Project setup, auth, secure API key management
 - [ ] **Phase 2: Agent Management** - Create, edit, save, and organize agents
 - [ ] **Phase 3: Agent Capabilities** - LLM responses, web search, URL fetching
 - [ ] **Phase 4: Pipeline Builder** - Visual canvas for wiring agents into sequences
@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project bootstrap and database schema
-- [ ] 01-02-PLAN.md — Auth services (session, password, encryption, authenticator)
-- [ ] 01-03-PLAN.md — Auth routes and settings UI
+- [x] 01-01-PLAN.md — Project bootstrap and database schema
+- [x] 01-02-PLAN.md — Auth services (session, password, encryption, authenticator)
+- [x] 01-03-PLAN.md — Auth routes and settings UI
 
 ### Phase 2: Agent Management
 **Goal**: Users can create and organize a personal library of reusable agents
@@ -121,7 +121,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Planned | - |
+| 1. Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Agent Management | 0/2 | Not started | - |
 | 3. Agent Capabilities | 0/2 | Not started | - |
 | 4. Pipeline Builder | 0/3 | Not started | - |
