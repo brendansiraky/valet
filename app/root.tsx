@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import "@xyflow/react/dist/style.css";
 
 import type { Route } from "./+types/root";
 import "./app.css";
