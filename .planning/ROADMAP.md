@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can log in and remain authenticated across browser sessions
   3. User can save their Anthropic API key (stored encrypted server-side)
   4. User can select which Claude model to use for their agents
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — Project bootstrap and database schema
+- [ ] 01-02-PLAN.md — Auth services (session, password, encryption, authenticator)
+- [ ] 01-03-PLAN.md — Auth routes and settings UI
 
 ### Phase 2: Agent Management
 **Goal**: Users can create and organize a personal library of reusable agents
@@ -121,7 +121,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Planned | - |
 | 2. Agent Management | 0/2 | Not started | - |
 | 3. Agent Capabilities | 0/2 | Not started | - |
 | 4. Pipeline Builder | 0/3 | Not started | - |
