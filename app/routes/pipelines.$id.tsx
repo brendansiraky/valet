@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { redirect } from "react-router";
@@ -13,10 +13,11 @@ import {
   type TemplateVariable,
 } from "~/components/pipeline-builder/template-dialog";
 import { VariableFillDialog } from "~/components/pipeline-builder/variable-fill-dialog";
+import { RunProgress } from "~/components/pipeline-runner/run-progress";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { LayoutGrid, Save, Trash2, FileCode, Play } from "lucide-react";
+import { LayoutGrid, Save, Trash2, FileCode, Play, Loader2 } from "lucide-react";
 import type { Node, Edge } from "@xyflow/react";
 import type { AgentNodeData } from "~/stores/pipeline-store";
 
@@ -73,6 +74,8 @@ export default function PipelineBuilderPage() {
   const [templateVariables, setTemplateVariables] = useState<
     TemplateVariable[]
   >(template?.variables || []);
+  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [isStartingRun, setIsStartingRun] = useState(false);
 
   const {
     nodes,
@@ -207,20 +210,74 @@ export default function PipelineBuilderPage() {
     [pipelineId]
   );
 
-  const handleRun = () => {
+  // Get steps from store nodes for progress display
+  const pipelineSteps = useMemo(() => {
+    return nodes.map((node) => ({
+      agentId: node.data.agentId,
+      agentName: node.data.agentName,
+    }));
+  }, [nodes]);
+
+  // Start pipeline execution by calling API and tracking run ID
+  const startPipelineRun = async (
+    input: string,
+    variables?: Record<string, string>
+  ) => {
+    if (!pipelineId) return;
+
+    setIsStartingRun(true);
+    try {
+      const formData = new FormData();
+      formData.set("input", input);
+      if (variables) {
+        formData.set("variables", JSON.stringify(variables));
+      }
+
+      const response = await fetch(`/api/pipeline/${pipelineId}/run`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setCurrentRunId(data.runId);
+      setVariableFillDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to start pipeline:", error);
+      // TODO: Show toast error
+    } finally {
+      setIsStartingRun(false);
+    }
+  };
+
+  const handleRun = async () => {
     // If template has variables, show variable fill dialog
     if (templateVariables.length > 0) {
       setVariableFillDialogOpen(true);
     } else {
-      // Run directly (Phase 5 implementation)
-      console.log("Run pipeline without variables");
+      // Run directly with empty input (first agent uses its instructions)
+      await startPipelineRun("");
     }
   };
 
-  const handleRunWithVariables = (values: Record<string, string>) => {
-    // Phase 5 will implement actual execution
-    console.log("Run pipeline with variables:", values);
+  const handleRunWithVariables = async (values: Record<string, string>) => {
+    // Pass empty input - first agent uses its instructions
+    // Variables are substituted in agent instructions by executor
+    await startPipelineRun("", values);
   };
+
+  const handleRunComplete = useCallback((finalOutput: string) => {
+    console.log("Pipeline completed:", finalOutput);
+    // Phase 6 will add output viewing
+  }, []);
+
+  const handleRunError = useCallback((error: string) => {
+    console.error("Pipeline failed:", error);
+    // TODO: Show toast error
+  }, []);
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
@@ -250,9 +307,26 @@ export default function PipelineBuilderPage() {
               <FileCode className="w-4 h-4 mr-2" />
               {templateVariables.length > 0 ? "Edit Template" : "Save as Template"}
             </Button>
-            <Button onClick={handleRun}>
-              <Play className="w-4 h-4 mr-2" />
-              Run
+            <Button
+              onClick={handleRun}
+              disabled={isStartingRun || !!currentRunId}
+            >
+              {isStartingRun ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Starting...
+                </>
+              ) : currentRunId ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Run
+                </>
+              )}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
               <Trash2 className="w-4 h-4 mr-2" />
@@ -269,6 +343,18 @@ export default function PipelineBuilderPage() {
           <PipelineCanvas onDropAgent={handleDropAgent} />
         </div>
       </div>
+
+      {/* Run Progress */}
+      {currentRunId && (
+        <div className="fixed bottom-4 right-4 w-96 z-50">
+          <RunProgress
+            runId={currentRunId}
+            steps={pipelineSteps}
+            onComplete={handleRunComplete}
+            onError={handleRunError}
+          />
+        </div>
+      )}
 
       {/* Dialogs */}
       {pipelineId && (
