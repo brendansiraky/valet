@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-28)
 
 ## Current Position
 
-Phase: 4 of 6 (Pipeline Builder)
-Plan: 3 of 4 complete (04-01, 04-02, 04-03)
-Status: In progress
-Last activity: 2026-01-28 - Completed 04-02-PLAN.md (Canvas UI)
+Phase: 4 of 6 (Pipeline Builder) - COMPLETE
+Plan: 4 of 4 complete (04-01, 04-02, 04-03, 04-04)
+Status: Phase complete
+Last activity: 2026-01-28 - Completed 04-04-PLAN.md (Templates)
 
 Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 12 min
-- Total execution time: 2.1 hours
+- Total plans completed: 12
+- Average duration: 11 min
+- Total execution time: 2.2 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [████████░░] 83%
 | 01-foundation | 3 | 78 min | 26 min |
 | 02-agent-management | 2 | 16 min | 8 min |
 | 03-agent-capabilities | 3 | 11 min | 4 min |
-| 04-pipeline-builder | 3 | 19 min | 6 min |
+| 04-pipeline-builder | 4 | 23 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (8 min), 04-01 (6 min), 04-02 (8 min), 04-03 (5 min)
+- Last 5 plans: 04-01 (6 min), 04-02 (8 min), 04-03 (5 min), 04-04 (4 min)
 
 *Updated after each plan completion*
 
@@ -71,6 +71,8 @@ Recent decisions affecting current work:
 - NodeProps generic takes Node type not data type in React Flow 12
 - nodeTypes object defined outside component to prevent re-render loops
 - Custom MIME types for drag data transfer (application/agent-*)
+- Import TemplateVariable type from schema for consistency across components
+- Template variables stored in separate pipelineTemplates table
 
 ### Pending Todos
 
@@ -82,9 +84,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T10:33:00Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-01-28T10:39:58Z
+Stopped at: Completed 04-04-PLAN.md (Phase 4 complete)
 Resume file: None
 
 ---
-*Next: Continue Phase 4 - Plan 04-04 (Templates)*
+*Next: Begin Phase 5 - Pipeline Execution*
