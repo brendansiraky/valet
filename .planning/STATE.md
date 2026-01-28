@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-28)
 ## Current Position
 
 Phase: 3 of 6 (Agent Capabilities)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-01-28 — Completed 03-01-PLAN.md (Agent Runner + Text Generation)
+Last activity: 2026-01-28 — Completed 03-02-PLAN.md (Web Search + URL Fetch Capabilities)
 
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 47%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 16 min
-- Total execution time: 1.6 hours
+- Total plans completed: 7
+- Average duration: 14 min
+- Total execution time: 1.7 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [████░░░░░░] 40%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 78 min | 26 min |
 | 02-agent-management | 2 | 16 min | 8 min |
-| 03-agent-capabilities | 1 | 1 min | 1 min |
+| 03-agent-capabilities | 2 | 3 min | 1.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (45 min), 02-01 (8 min), 02-02 (8 min), 03-01 (1 min)
+- Last 5 plans: 02-01 (8 min), 02-02 (8 min), 03-01 (1 min), 03-02 (2 min)
 
 *Updated after each plan completion*
 
@@ -56,6 +56,11 @@ Recent decisions affecting current work:
 - Intent-based form actions for multiple forms on same page
 - Capability service pattern: each capability in separate module under capabilities/
 - Default maxTokens 4096 for text generation
+- Type casting for beta API features not yet in SDK types (web_fetch_20250910)
+- Citations enabled by default on URL fetch
+- Capabilities mutually exclusive for now (combined in Phase 5)
+- Default max_uses 5 for both web_search and web_fetch
+- Default max_content_tokens 25000 for URL fetch
 
 ### Pending Todos
 
@@ -67,9 +72,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T09:31:34Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-01-28T09:35:30Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
 
 ---
-*Next: Execute 03-02-PLAN.md (Web Search Capability)*
+*Next: Execute 03-03-PLAN.md (Capability UI or next phase plan)*
