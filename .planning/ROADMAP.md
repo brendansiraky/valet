@@ -96,12 +96,12 @@ Plans:
   3. User sees streaming output as each agent responds
   4. User sees clear error messages when an agent fails
   5. Pipeline stops on error and provides failure context
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md — Execution infrastructure (schema, emitter, executor)
+- [ ] 05-02-PLAN.md — Run API and SSE streaming endpoints
+- [ ] 05-03-PLAN.md — Progress UI and pipeline integration
 
 ### Phase 6: Output & Export
 **Goal**: Users can view and download the documents their pipelines produce
