@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** Phase 4 - Pipeline Builder
+**Current focus:** Phase 5 - Execution Engine
 
 ## Current Position
 
@@ -89,4 +89,4 @@ Stopped at: Completed 04-04-PLAN.md (Phase 4 complete)
 Resume file: None
 
 ---
-*Next: Begin Phase 5 - Pipeline Execution*
+*Next: Plan Phase 5 - Execution Engine*

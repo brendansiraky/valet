@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Project setup, auth, secure API key management
 - [x] **Phase 2: Agent Management** - Create, edit, save, and organize agents
 - [x] **Phase 3: Agent Capabilities** - LLM responses, web search, URL fetching
-- [ ] **Phase 4: Pipeline Builder** - Visual canvas for wiring agents into sequences
+- [x] **Phase 4: Pipeline Builder** - Visual canvas for wiring agents into sequences
 - [ ] **Phase 5: Execution Engine** - Run pipelines with streaming progress and error handling
 - [ ] **Phase 6: Output & Export** - View agent outputs and download documents
 
@@ -80,10 +80,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Pipeline infrastructure (dependencies, schema, store)
-- [ ] 04-02-PLAN.md — Visual canvas UI and drag-drop agent placement
-- [ ] 04-03-PLAN.md — Pipeline persistence (save, load, delete)
-- [ ] 04-04-PLAN.md — Templates and input variables
+- [x] 04-01-PLAN.md — Pipeline infrastructure (dependencies, schema, store)
+- [x] 04-02-PLAN.md — Visual canvas UI and drag-drop agent placement
+- [x] 04-03-PLAN.md — Pipeline persistence (save, load, delete)
+- [x] 04-04-PLAN.md — Templates and input variables
 
 ### Phase 5: Execution Engine
 **Goal**: Users can run pipelines and observe progress in real-time
@@ -126,7 +126,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Agent Management | 2/2 | Complete | 2026-01-28 |
 | 3. Agent Capabilities | 3/3 | Complete | 2026-01-28 |
-| 4. Pipeline Builder | 0/4 | Not started | - |
+| 4. Pipeline Builder | 4/4 | Complete | 2026-01-28 |
 | 5. Execution Engine | 0/3 | Not started | - |
 | 6. Output & Export | 0/2 | Not started | - |
 

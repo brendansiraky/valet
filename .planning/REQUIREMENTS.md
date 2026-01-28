@@ -30,15 +30,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Pipeline Builder
 
-- [ ] **PIPE-01**: User can create pipeline on visual canvas
-- [ ] **PIPE-02**: User can add agents to pipeline by dragging from library
-- [ ] **PIPE-03**: User can connect agents in sequence
-- [ ] **PIPE-04**: User can reorder agents in pipeline
-- [ ] **PIPE-05**: User can save pipeline definitions
-- [ ] **PIPE-06**: User can load saved pipelines
-- [ ] **PIPE-07**: User can save pipeline as reusable template
-- [ ] **PIPE-08**: User can define input variables for template
-- [ ] **PIPE-09**: User can fill variables when running template
+- [x] **PIPE-01**: User can create pipeline on visual canvas
+- [x] **PIPE-02**: User can add agents to pipeline by dragging from library
+- [x] **PIPE-03**: User can connect agents in sequence
+- [x] **PIPE-04**: User can reorder agents in pipeline
+- [x] **PIPE-05**: User can save pipeline definitions
+- [x] **PIPE-06**: User can load saved pipelines
+- [x] **PIPE-07**: User can save pipeline as reusable template
+- [x] **PIPE-08**: User can define input variables for template
+- [x] **PIPE-09**: User can fill variables when running template
 
 ### Execution
 
@@ -132,15 +132,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAPS-01 | Phase 3 | Complete |
 | CAPS-02 | Phase 3 | Complete |
 | CAPS-03 | Phase 3 | Complete |
-| PIPE-01 | Phase 4 | Pending |
-| PIPE-02 | Phase 4 | Pending |
-| PIPE-03 | Phase 4 | Pending |
-| PIPE-04 | Phase 4 | Pending |
-| PIPE-05 | Phase 4 | Pending |
-| PIPE-06 | Phase 4 | Pending |
-| PIPE-07 | Phase 4 | Pending |
-| PIPE-08 | Phase 4 | Pending |
-| PIPE-09 | Phase 4 | Pending |
+| PIPE-01 | Phase 4 | Complete |
+| PIPE-02 | Phase 4 | Complete |
+| PIPE-03 | Phase 4 | Complete |
+| PIPE-04 | Phase 4 | Complete |
+| PIPE-05 | Phase 4 | Complete |
+| PIPE-06 | Phase 4 | Complete |
+| PIPE-07 | Phase 4 | Complete |
+| PIPE-08 | Phase 4 | Complete |
+| PIPE-09 | Phase 4 | Complete |
 | EXEC-01 | Phase 5 | Pending |
 | EXEC-02 | Phase 5 | Pending |
 | EXEC-03 | Phase 5 | Pending |
