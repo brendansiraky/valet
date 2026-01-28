@@ -28,6 +28,10 @@ export async function getJobQueue(): Promise<PgBoss> {
   boss.on("error", (err: Error) => console.error("pg-boss error:", err));
 
   await boss.start();
+
+  // Ensure pipeline-run queue exists (required in pg-boss v10+)
+  await boss.createQueue("pipeline-run");
+
   return boss;
 }
 

@@ -89,12 +89,15 @@ export async function executePipeline(
         variables
       );
 
+      // Use default prompt if no input (first agent case)
+      const userMessage = currentInput.trim() || "Please proceed with your instructions.";
+
       // Stream the response
       const stream = client.messages.stream({
         model,
         max_tokens: 4096,
         system: substitutedInstructions,
-        messages: [{ role: "user", content: currentInput }],
+        messages: [{ role: "user", content: userMessage }],
       });
 
       let fullOutput = "";
