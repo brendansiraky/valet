@@ -8,5 +8,8 @@ export default [
   route("dashboard", "routes/dashboard.tsx"),
   route("settings", "routes/settings.tsx"),
   route("agents", "routes/agents.tsx"),
+  route("pipelines", "routes/pipelines.tsx"),
+  route("pipelines/:id", "routes/pipelines.$id.tsx"),
   route("api/agent/:agentId/run", "routes/api.agent.$agentId.run.ts"),
+  route("api/pipelines", "routes/api.pipelines.ts"),
 ] satisfies RouteConfig;
