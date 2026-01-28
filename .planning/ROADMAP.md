@@ -77,12 +77,13 @@ Plans:
   3. User can connect agents in sequence and reorder them
   4. User can save pipeline definitions and load them later
   5. User can save a pipeline as a reusable template with input variables
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — Pipeline infrastructure (dependencies, schema, store)
+- [ ] 04-02-PLAN.md — Visual canvas UI and drag-drop agent placement
+- [ ] 04-03-PLAN.md — Pipeline persistence (save, load, delete)
+- [ ] 04-04-PLAN.md — Templates and input variables
 
 ### Phase 5: Execution Engine
 **Goal**: Users can run pipelines and observe progress in real-time
@@ -125,7 +126,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Agent Management | 2/2 | Complete | 2026-01-28 |
 | 3. Agent Capabilities | 3/3 | Complete | 2026-01-28 |
-| 4. Pipeline Builder | 0/3 | Not started | - |
+| 4. Pipeline Builder | 0/4 | Not started | - |
 | 5. Execution Engine | 0/3 | Not started | - |
 | 6. Output & Export | 0/2 | Not started | - |
 
