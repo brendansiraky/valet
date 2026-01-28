@@ -137,7 +137,11 @@ Plans:
   4. User can edit an existing trait's name and context
   5. User can delete traits they no longer need
   6. User can view their trait library and browse available traits
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md - Sidebar navigation and authenticated layout
+- [ ] 07-02-PLAN.md - Traits database schema and CRUD UI
 
 ### Phase 8: Agent Configuration
 **Goal**: Users can configure agents with capability, model, and trait settings
@@ -191,7 +195,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 7. Navigation & Traits | 0/? | Pending | - |
+| 7. Navigation & Traits | 0/2 | Planned | - |
 | 8. Agent Configuration | 0/? | Pending | - |
 | 9. Pipeline & Cost | 0/? | Pending | - |
 | 10. Agent UX | 0/? | Pending | - |
@@ -199,5 +203,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 ---
 *Roadmap created: 2026-01-28*
 *v1.1 phases added: 2026-01-29*
+*Phase 7 planned: 2026-01-29*
 *Depth: standard (5-8 phases per milestone)*
 *Coverage: v1.0 30/30, v1.1 17/17 requirements mapped*
