@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Play, Trash2 } from "lucide-react";
 import type { Agent } from "~/db";
 import {
   Card,
@@ -12,6 +12,7 @@ import { AgentDeleteDialog } from "./agent-delete-dialog";
 
 interface AgentCardProps {
   agent: Pick<Agent, "id" | "name" | "instructions" | "updatedAt">;
+  onTest?: () => void;
 }
 
 function formatRelativeTime(date: Date | string): string {
@@ -40,12 +41,18 @@ function truncateText(text: string, maxLength: number): string {
   return text.slice(0, maxLength).trim() + "...";
 }
 
-export function AgentCard({ agent }: AgentCardProps) {
+export function AgentCard({ agent, onTest }: AgentCardProps) {
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-row items-start justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-semibold">{agent.name}</CardTitle>
         <div className="flex gap-1">
+          {onTest && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onTest}>
+              <Play className="h-4 w-4" />
+              <span className="sr-only">Test {agent.name}</span>
+            </Button>
+          )}
           <AgentFormDialog
             agent={agent}
             trigger={

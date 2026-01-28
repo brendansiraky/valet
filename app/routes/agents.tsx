@@ -1,8 +1,10 @@
+import { useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { redirect, useLoaderData, data } from "react-router";
 import { z } from "zod";
 import { getSession } from "~/services/session.server";
 import { db, users, agents } from "~/db";
+import type { Agent } from "~/db/schema/agents";
 import { eq, and, desc } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import {
@@ -15,6 +17,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { AgentCard } from "~/components/agent-card";
 import { AgentFormDialog } from "~/components/agent-form-dialog";
+import { AgentTestDialog } from "~/components/agent-test-dialog";
 
 const AgentSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
@@ -126,8 +129,11 @@ export async function action({ request }: ActionFunctionArgs) {
   return null;
 }
 
+type TestableAgent = Pick<Agent, "id" | "name">;
+
 export default function Agents() {
   const { agents: userAgents } = useLoaderData<typeof loader>();
+  const [testingAgent, setTestingAgent] = useState<TestableAgent | null>(null);
 
   return (
     <div className="min-h-screen px-4 py-8">
@@ -173,9 +179,22 @@ export default function Agents() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {userAgents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                onTest={() => setTestingAgent({ id: agent.id, name: agent.name })}
+              />
             ))}
           </div>
+        )}
+
+        {/* Test Dialog */}
+        {testingAgent && (
+          <AgentTestDialog
+            agent={testingAgent}
+            open={!!testingAgent}
+            onOpenChange={(open) => !open && setTestingAgent(null)}
+          />
         )}
       </div>
     </div>
