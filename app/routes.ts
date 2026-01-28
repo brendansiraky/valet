@@ -13,4 +13,5 @@ export default [
   route("api/agent/:agentId/run", "routes/api.agent.$agentId.run.ts"),
   route("api/pipelines", "routes/api.pipelines.ts"),
   route("api/pipeline/:pipelineId/run", "routes/api.pipeline.$pipelineId.run.ts"),
+  route("api/pipeline/run/:runId/stream", "routes/api.pipeline.run.$runId.stream.ts"),
 ] satisfies RouteConfig;
