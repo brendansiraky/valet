@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-28)
 ## Current Position
 
 Phase: 4 of 6 (Pipeline Builder)
-Plan: 1 of 3 complete
+Plan: 2 of 4 complete (04-01, 04-03; 04-02 in parallel)
 Status: In progress
-Last activity: 2026-01-28 - Completed 04-01-PLAN.md (Pipeline Infrastructure)
+Last activity: 2026-01-28 - Completed 04-03-PLAN.md (Pipeline Persistence)
 
-Progress: [███████░░░] 60%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 12 min
-- Total execution time: 1.9 hours
+- Total execution time: 2.0 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [███████░░░] 60%
 | 01-foundation | 3 | 78 min | 26 min |
 | 02-agent-management | 2 | 16 min | 8 min |
 | 03-agent-capabilities | 3 | 11 min | 4 min |
-| 04-pipeline-builder | 1 | 6 min | 6 min |
+| 04-pipeline-builder | 2 | 11 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (1 min), 03-02 (2 min), 03-03 (8 min), 04-01 (6 min)
+- Last 5 plans: 03-02 (2 min), 03-03 (8 min), 04-01 (6 min), 04-03 (5 min)
 
 *Updated after each plan completion*
 
@@ -66,6 +66,8 @@ Recent decisions affecting current work:
 - Cmd+Enter keyboard shortcut for running agents
 - Index signature on AgentNodeData for React Flow Node<T> compatibility
 - JSONB columns for flowData and variables (flexible structured storage)
+- Intent-based API actions for pipeline CRUD (consistent with agents pattern)
+- Dagre LR layout as default direction for pipeline flow
 
 ### Pending Todos
 
@@ -77,9 +79,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T10:21:00Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-01-28T10:32:01Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
 
 ---
-*Next: Continue Phase 4 - Plan 04-02 (Canvas UI)*
+*Next: Complete 04-02 (Canvas UI) and 04-04 (Templates)*
