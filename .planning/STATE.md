@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-28)
 ## Current Position
 
 Phase: 3 of 6 (Agent Capabilities)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-01-28 — Completed Phase 2 (Agent Management)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-01-28 — Completed 03-01-PLAN.md (Agent Runner + Text Generation)
 
-Progress: [████░░░░░░] 33%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 19 min
-- Total execution time: 1.5 hours
+- Total plans completed: 6
+- Average duration: 16 min
+- Total execution time: 1.6 hours
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [████░░░░░░] 33%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 78 min | 26 min |
 | 02-agent-management | 2 | 16 min | 8 min |
+| 03-agent-capabilities | 1 | 1 min | 1 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (2 min), 01-03 (45 min), 02-01 (8 min), 02-02 (8 min)
+- Last 5 plans: 01-03 (45 min), 02-01 (8 min), 02-02 (8 min), 03-01 (1 min)
 
 *Updated after each plan completion*
 
@@ -53,6 +54,8 @@ Recent decisions affecting current work:
 - Index on user_id for agents table query performance
 - Cascade delete for agents when user deleted
 - Intent-based form actions for multiple forms on same page
+- Capability service pattern: each capability in separate module under capabilities/
+- Default maxTokens 4096 for text generation
 
 ### Pending Todos
 
@@ -64,9 +67,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T19:10:00Z
-Stopped at: Completed Phase 2, ready for Phase 3
+Last session: 2026-01-28T09:31:34Z
+Stopped at: Completed 03-01-PLAN.md
 Resume file: None
 
 ---
-*Next: Plan Phase 3 (Agent Capabilities)*
+*Next: Execute 03-02-PLAN.md (Web Search Capability)*
