@@ -61,15 +61,15 @@ Requirements for milestone v1.1 (Enhanced Agents). Each maps to roadmap phases.
 
 ### App Navigation
 
-- [ ] **NAV-01**: App has persistent sidebar navigation on authenticated pages
-- [ ] **NAV-02**: Sidebar can be collapsed/expanded
+- [x] **NAV-01**: App has persistent sidebar navigation on authenticated pages
+- [x] **NAV-02**: Sidebar can be collapsed/expanded
 
 ### Traits System
 
-- [ ] **TRAIT-01**: User can create a trait (name + context text)
-- [ ] **TRAIT-02**: User can edit an existing trait
-- [ ] **TRAIT-03**: User can delete a trait
-- [ ] **TRAIT-04**: User can view their trait library
+- [x] **TRAIT-01**: User can create a trait (name + context text)
+- [x] **TRAIT-02**: User can edit an existing trait
+- [x] **TRAIT-03**: User can delete a trait
+- [x] **TRAIT-04**: User can view their trait library
 
 ### Agent Configuration
 
@@ -195,12 +195,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NAV-01 | Phase 7 | Pending |
-| NAV-02 | Phase 7 | Pending |
-| TRAIT-01 | Phase 7 | Pending |
-| TRAIT-02 | Phase 7 | Pending |
-| TRAIT-03 | Phase 7 | Pending |
-| TRAIT-04 | Phase 7 | Pending |
+| NAV-01 | Phase 7 | Complete |
+| NAV-02 | Phase 7 | Complete |
+| TRAIT-01 | Phase 7 | Complete |
+| TRAIT-02 | Phase 7 | Complete |
+| TRAIT-03 | Phase 7 | Complete |
+| TRAIT-04 | Phase 7 | Complete |
 | AGNT-07 | Phase 8 | Pending |
 | AGNT-08 | Phase 8 | Pending |
 | AGNT-09 | Phase 8 | Pending |
@@ -215,7 +215,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 **Coverage:**
 - v1.0 requirements: 30/30 complete
-- v1.1 requirements: 17/17 mapped (0 complete)
+- v1.1 requirements: 17/17 mapped (6 complete)
 
 ---
 *Requirements defined: 2025-01-28*

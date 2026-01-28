@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### v1.1 (Current)
 
-- [ ] **Phase 7: Navigation & Traits** - Sidebar navigation and reusable context snippets
+- [x] **Phase 7: Navigation & Traits** - Sidebar navigation and reusable context snippets
 - [ ] **Phase 8: Agent Configuration** - Capability, model, and trait settings per agent
 - [ ] **Phase 9: Pipeline & Cost** - Capabilities in pipeline execution, cost visibility
 - [ ] **Phase 10: Agent UX** - Cleaner test dialog that uses agent configuration
@@ -140,8 +140,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md - Sidebar navigation and authenticated layout
-- [ ] 07-02-PLAN.md - Traits database schema and CRUD UI
+- [x] 07-01-PLAN.md - Sidebar navigation and authenticated layout
+- [x] 07-02-PLAN.md - Traits database schema and CRUD UI
 
 ### Phase 8: Agent Configuration
 **Goal**: Users can configure agents with capability, model, and trait settings
@@ -195,7 +195,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 7. Navigation & Traits | 0/2 | Planned | - |
+| 7. Navigation & Traits | 2/2 | Complete | 2026-01-29 |
 | 8. Agent Configuration | 0/? | Pending | - |
 | 9. Pipeline & Cost | 0/? | Pending | - |
 | 10. Agent UX | 0/? | Pending | - |
