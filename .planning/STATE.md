@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-28)
+See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** Milestone v1.0 COMPLETE
+**Current focus:** Milestone v1.1 — Enhanced Agents
 
 ## Current Position
 
-Phase: 6 of 6 (Output & Export) - COMPLETE
-Plan: All plans complete
-Status: MILESTONE COMPLETE
-Last activity: 2026-01-28 - Completed Phase 6 (Output & Export)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-01-29 — Milestone v1.1 started
 
-Progress: [██████████] 100% (Milestone v1.0)
+Progress: [░░░░░░░░░░] 0% (Milestone v1.1)
 
 ## Performance Metrics
 
@@ -106,4 +106,4 @@ Stopped at: Completed 06-02-PLAN.md
 Resume file: None
 
 ---
-*Milestone v1.0 complete. All 6 phases delivered. 18 plans executed. 30/30 requirements fulfilled.*
+*Milestone v1.1 started. Previous: v1.0 complete (6 phases, 18 plans, 30 requirements).*

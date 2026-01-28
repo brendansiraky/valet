@@ -8,35 +8,55 @@ A GUI application that wraps the Anthropic API, enabling non-technical users to 
 
 Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
 
+## Current Milestone: v1.1 Enhanced Agents
+
+**Goal:** Enhance agents with traits, full pipeline capabilities, and cost visibility
+
+**Target features:**
+- Traits system (reusable context snippets assigned to agents)
+- Pipeline capabilities parity (web search + URL fetch in pipeline execution)
+- Cost visibility (token counts and cost estimation per run)
+- Agent UX improvements (capability on agent definition, cleaner test dialog)
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+<!-- Shipped and confirmed valuable in v1.0 -->
+
+- ✓ User can create account and log in — v1.0
+- ✓ User can save and manage their Anthropic API key — v1.0
+- ✓ User can create agents with natural language instructions — v1.0
+- ✓ Agents can perform web searches (in testing) — v1.0
+- ✓ Agents can browse provided URLs (in testing) — v1.0
+- ✓ User can create pipeline templates by wiring agents in sequence — v1.0
+- ✓ User can save and reuse agents across different pipelines — v1.0
+- ✓ User can save and reuse pipeline templates — v1.0
+- ✓ User can execute a pipeline and see meaningful progress updates — v1.0
+- ✓ Pipeline runs sequentially, passing output from each agent to the next — v1.0
+- ✓ User can download the final output document — v1.0
+- ✓ User can view output from each agent in the pipeline — v1.0
 
 ### Active
 
-- [ ] User can create account and log in
-- [ ] User can save and manage their Anthropic API key
-- [ ] User can create agents with natural language instructions
-- [ ] Agents can perform web searches
-- [ ] Agents can browse provided URLs
-- [ ] User can create pipeline templates by wiring agents in sequence
-- [ ] User can save and reuse agents across different pipelines
-- [ ] User can save and reuse pipeline templates
-- [ ] User can execute a pipeline and see meaningful progress updates
-- [ ] Pipeline runs sequentially, passing output from each agent to the next
-- [ ] User can download the final output document
-- [ ] Each agent in the pipeline can produce downloadable artifacts
+<!-- Current scope for v1.1 -->
+
+- [ ] User can create and manage reusable traits (name + context text)
+- [ ] User can assign traits to agents
+- [ ] Agent capabilities (web search, URL fetch) work in pipeline execution
+- [ ] Capability is defined on the agent, not selected at test time
+- [ ] User sees token count per pipeline run
+- [ ] User sees estimated cost per pipeline run
+- [ ] Test dialog is clearer about its purpose (testing vs running)
 
 ### Out of Scope
 
 - Intervention during pipeline execution — defer to future version
-- Visual display of results in-app — v1 is download-only
-- Visual traits/presets for agent configuration — future enhancement
-- OAuth/social login — email/password sufficient for v1
-- Real-time collaboration — single-user focus for v1
+- Context file attachments (upload docs) — text-based traits first, files later
+- OAuth/social login — email/password sufficient
+- Real-time collaboration — single-user focus
 - Mobile app — web-first
+- DOCX/PDF export — text/markdown sufficient for now
 
 ## Context
 
@@ -65,4 +85,4 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 | Download-only output | Faster to ship, display can come later | — Pending |
 
 ---
-*Last updated: 2025-01-28 after initialization*
+*Last updated: 2026-01-29 after v1.1 milestone start*
