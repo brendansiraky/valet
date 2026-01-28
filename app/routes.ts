@@ -7,4 +7,5 @@ export default [
   route("logout", "routes/logout.tsx"),
   route("dashboard", "routes/dashboard.tsx"),
   route("settings", "routes/settings.tsx"),
+  route("agents", "routes/agents.tsx"),
 ] satisfies RouteConfig;
