@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ interface TemplateDialogProps {
   onOpenChange: (open: boolean) => void;
   pipelineId: string;
   onSave: (variables: TemplateVariable[]) => Promise<void>;
+  initialVariables?: TemplateVariable[];
 }
 
 export function TemplateDialog({
@@ -27,10 +28,24 @@ export function TemplateDialog({
   onOpenChange,
   pipelineId,
   onSave,
+  initialVariables,
 }: TemplateDialogProps) {
-  const [variables, setVariables] = useState<TemplateVariable[]>([
-    { name: "", description: "", defaultValue: "" },
-  ]);
+  const [variables, setVariables] = useState<TemplateVariable[]>(
+    initialVariables?.length
+      ? initialVariables
+      : [{ name: "", description: "", defaultValue: "" }]
+  );
+
+  // Reset state when dialog opens or initialVariables changes
+  useEffect(() => {
+    if (open) {
+      setVariables(
+        initialVariables?.length
+          ? initialVariables
+          : [{ name: "", description: "", defaultValue: "" }]
+      );
+    }
+  }, [open, initialVariables]);
   const [isSaving, setIsSaving] = useState(false);
 
   const addVariable = () => {
@@ -59,8 +74,6 @@ export function TemplateDialog({
     try {
       await onSave(validVariables);
       onOpenChange(false);
-      // Reset form
-      setVariables([{ name: "", description: "", defaultValue: "" }]);
     } catch (error) {
       console.error("Failed to save template:", error);
     } finally {
