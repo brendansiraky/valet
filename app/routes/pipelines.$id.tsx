@@ -278,6 +278,7 @@ export default function PipelineBuilderPage() {
             onOpenChange={setTemplateDialogOpen}
             pipelineId={pipelineId}
             onSave={handleSaveTemplate}
+            initialVariables={templateVariables}
           />
           <VariableFillDialog
             open={variableFillDialogOpen}
