@@ -9,18 +9,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication & API
 
-- [ ] **AUTH-01**: User can create account with email/password
-- [ ] **AUTH-02**: User can log in and maintain session
-- [ ] **AUTH-03**: User can save Anthropic API key (encrypted, server-side)
-- [ ] **AUTH-04**: User can select Claude model for agents
+- [x] **AUTH-01**: User can create account with email/password
+- [x] **AUTH-02**: User can log in and maintain session
+- [x] **AUTH-03**: User can save Anthropic API key (encrypted, server-side)
+- [x] **AUTH-04**: User can select Claude model for agents
 
 ### Agent Management
 
-- [ ] **AGNT-01**: User can create agent with natural language instructions
-- [ ] **AGNT-02**: User can edit agent instructions
-- [ ] **AGNT-03**: User can delete agents
-- [ ] **AGNT-04**: User can save agents to personal library
-- [ ] **AGNT-05**: User can view and select from saved agents
+- [x] **AGNT-01**: User can create agent with natural language instructions
+- [x] **AGNT-02**: User can edit agent instructions
+- [x] **AGNT-03**: User can delete agents
+- [x] **AGNT-04**: User can save agents to personal library
+- [x] **AGNT-05**: User can view and select from saved agents
 
 ### Agent Capabilities
 
@@ -42,18 +42,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Execution
 
-- [ ] **EXEC-01**: Pipeline executes agents sequentially
-- [ ] **EXEC-02**: Output from agent N passes as input to agent N+1
-- [ ] **EXEC-03**: User sees which agent is currently running
-- [ ] **EXEC-04**: User sees streaming output as agent responds
-- [ ] **EXEC-05**: User sees clear error when agent fails
-- [ ] **EXEC-06**: Pipeline stops on error with failure context
+- [x] **EXEC-01**: Pipeline executes agents sequentially
+- [x] **EXEC-02**: Output from agent N passes as input to agent N+1
+- [x] **EXEC-03**: User sees which agent is currently running
+- [x] **EXEC-04**: User sees streaming output as agent responds
+- [x] **EXEC-05**: User sees clear error when agent fails
+- [x] **EXEC-06**: Pipeline stops on error with failure context
 
 ### Output & Export
 
-- [ ] **OUTP-01**: User can view output from each agent
-- [ ] **OUTP-02**: User can download final output as text
-- [ ] **OUTP-03**: User can download final output as markdown
+- [x] **OUTP-01**: User can view output from each agent
+- [x] **OUTP-02**: User can download final output as text
+- [x] **OUTP-03**: User can download final output as markdown
 
 ## v2 Requirements
 
@@ -141,15 +141,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-07 | Phase 4 | Complete |
 | PIPE-08 | Phase 4 | Complete |
 | PIPE-09 | Phase 4 | Complete |
-| EXEC-01 | Phase 5 | Pending |
-| EXEC-02 | Phase 5 | Pending |
-| EXEC-03 | Phase 5 | Pending |
-| EXEC-04 | Phase 5 | Pending |
-| EXEC-05 | Phase 5 | Pending |
-| EXEC-06 | Phase 5 | Pending |
-| OUTP-01 | Phase 6 | Pending |
-| OUTP-02 | Phase 6 | Pending |
-| OUTP-03 | Phase 6 | Pending |
+| EXEC-01 | Phase 5 | Complete |
+| EXEC-02 | Phase 5 | Complete |
+| EXEC-03 | Phase 5 | Complete |
+| EXEC-04 | Phase 5 | Complete |
+| EXEC-05 | Phase 5 | Complete |
+| EXEC-06 | Phase 5 | Complete |
+| OUTP-01 | Phase 6 | Complete |
+| OUTP-02 | Phase 6 | Complete |
+| OUTP-03 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 30 total

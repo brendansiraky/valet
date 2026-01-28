@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Agent Capabilities** - LLM responses, web search, URL fetching
 - [x] **Phase 4: Pipeline Builder** - Visual canvas for wiring agents into sequences
 - [x] **Phase 5: Execution Engine** - Run pipelines with streaming progress and error handling
-- [ ] **Phase 6: Output & Export** - View agent outputs and download documents
+- [x] **Phase 6: Output & Export** - View agent outputs and download documents
 
 ## Phase Details
 
@@ -114,8 +114,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Dependencies, download utilities, and MarkdownViewer component
-- [ ] 06-02-PLAN.md — OutputViewer component and pipeline page integration
+- [x] 06-01-PLAN.md — Dependencies, download utilities, and MarkdownViewer component
+- [x] 06-02-PLAN.md — OutputViewer component and pipeline page integration
 
 ## Progress
 
@@ -129,7 +129,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Agent Capabilities | 3/3 | Complete | 2026-01-28 |
 | 4. Pipeline Builder | 5/5 | Complete | 2026-01-28 |
 | 5. Execution Engine | 3/3 | Complete | 2026-01-28 |
-| 6. Output & Export | 0/2 | Not started | - |
+| 6. Output & Export | 2/2 | Complete | 2026-01-28 |
 
 ---
 *Roadmap created: 2026-01-28*
