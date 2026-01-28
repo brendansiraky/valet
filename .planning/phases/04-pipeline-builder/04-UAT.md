@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 04-pipeline-builder
 source: 04-01-SUMMARY.md, 04-02-SUMMARY.md, 04-03-SUMMARY.md, 04-04-SUMMARY.md
 started: 2026-01-28T11:00:00Z
@@ -73,7 +73,15 @@ skipped: 0
   reason: "User reported: variables save but Edit Template shows empty dialog - doesn't load saved variables"
   severity: major
   test: 10
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "TemplateDialog component does not accept initialVariables prop; useState always initializes empty"
+  artifacts:
+    - path: "app/components/pipeline-builder/template-dialog.tsx"
+      issue: "Missing initialVariables prop; useState hardcoded to empty array"
+    - path: "app/routes/pipelines.$id.tsx"
+      issue: "Does not pass templateVariables to TemplateDialog"
+  missing:
+    - "Add initialVariables prop to TemplateDialogProps interface"
+    - "Initialize useState with initialVariables"
+    - "Add useEffect to reset state when initialVariables changes"
+    - "Pass initialVariables={templateVariables} in route"
+  debug_session: ".planning/debug/template-dialog-not-loading.md"
