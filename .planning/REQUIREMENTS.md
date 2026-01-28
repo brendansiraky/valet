@@ -55,6 +55,40 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **OUTP-02**: User can download final output as text
 - [x] **OUTP-03**: User can download final output as markdown
 
+## v1.1 Requirements
+
+Requirements for milestone v1.1 (Enhanced Agents). Each maps to roadmap phases.
+
+### Traits System
+
+- [ ] **TRAIT-01**: User can create a trait (name + context text)
+- [ ] **TRAIT-02**: User can edit an existing trait
+- [ ] **TRAIT-03**: User can delete a trait
+- [ ] **TRAIT-04**: User can view their trait library
+
+### Agent Configuration
+
+- [ ] **AGNT-07**: Agent has capability setting (none / web search / URL fetch)
+- [ ] **AGNT-08**: Agent has model setting (Claude models, defaults to user's global)
+- [ ] **AGNT-09**: Agent can have traits assigned
+- [ ] **AGNT-10**: Assigned trait context is included when agent executes
+
+### Pipeline Capabilities
+
+- [ ] **PCAP-01**: Pipeline execution supports web search capability
+- [ ] **PCAP-02**: Pipeline execution supports URL fetch capability
+
+### Cost Visibility
+
+- [ ] **COST-01**: User sees token count after pipeline run
+- [ ] **COST-02**: User sees estimated cost after pipeline run
+
+### Agent UX
+
+- [ ] **AGUX-01**: Test dialog input is labeled "Test input" (not "Your prompt")
+- [ ] **AGUX-02**: Test dialog uses agent's capability (no dropdown)
+- [ ] **AGUX-03**: Test dialog clearly indicates purpose (testing before pipeline use)
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -64,20 +98,19 @@ Deferred to future release. Tracked but not in current roadmap.
 - **OUTP-04**: User can download output as DOCX (Word document)
 - **OUTP-05**: User can view run history with past outputs
 
-### Cost & Analytics
-
-- **COST-01**: User sees token count per agent run
-- **COST-02**: User sees estimated cost per pipeline run
-
 ### Agent Enhancements
 
-- **AGNT-06**: User can apply preset traits to agents (visual toggles)
 - **CAPS-04**: Agent can access attached context files (style guides, reference docs)
 
 ### Execution Enhancements
 
 - **EXEC-07**: User can pause pipeline at designated checkpoints
 - **EXEC-08**: User can edit agent output before continuing to next agent
+
+### Multi-Provider Support
+
+- **PROV-01**: User can store multiple API keys (Anthropic, OpenAI)
+- **PROV-02**: Agent model selection includes OpenAI models
 
 ## Out of Scope
 
@@ -118,6 +151,8 @@ Explicitly excluded. Documented to prevent scope creep.
 
 Which phases cover which requirements. Updated during roadmap creation.
 
+### v1.0 (Complete)
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
@@ -151,11 +186,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUTP-02 | Phase 6 | Complete |
 | OUTP-03 | Phase 6 | Complete |
 
+### v1.1 (Current)
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| TRAIT-01 | TBD | Pending |
+| TRAIT-02 | TBD | Pending |
+| TRAIT-03 | TBD | Pending |
+| TRAIT-04 | TBD | Pending |
+| AGNT-07 | TBD | Pending |
+| AGNT-08 | TBD | Pending |
+| AGNT-09 | TBD | Pending |
+| AGNT-10 | TBD | Pending |
+| PCAP-01 | TBD | Pending |
+| PCAP-02 | TBD | Pending |
+| COST-01 | TBD | Pending |
+| COST-02 | TBD | Pending |
+| AGUX-01 | TBD | Pending |
+| AGUX-02 | TBD | Pending |
+| AGUX-03 | TBD | Pending |
+
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 30
-- Unmapped: 0
+- v1.0 requirements: 30/30 complete
+- v1.1 requirements: 15 total, 0 mapped (roadmap pending)
 
 ---
 *Requirements defined: 2025-01-28*
-*Last updated: 2026-01-28 after roadmap creation*
+*v1.1 requirements added: 2026-01-29*
+*Last updated: 2026-01-29 after v1.1 definition*
