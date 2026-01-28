@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-01-28)
 ## Current Position
 
 Phase: 4 of 6 (Pipeline Builder) - COMPLETE
-Plan: 4 of 4 complete (04-01, 04-02, 04-03, 04-04)
-Status: Phase complete
-Last activity: 2026-01-28 - Completed 04-04-PLAN.md (Templates)
+Plan: 5 of 5 complete (04-01, 04-02, 04-03, 04-04, 04-05 gap closure)
+Status: Phase complete (including gap closure)
+Last activity: 2026-01-28 - Completed 04-05-PLAN.md (Template Variable Loading gap closure)
 
 Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 11 min
 - Total execution time: 2.2 hours
 
@@ -30,10 +30,10 @@ Progress: [████████░░] 83%
 | 01-foundation | 3 | 78 min | 26 min |
 | 02-agent-management | 2 | 16 min | 8 min |
 | 03-agent-capabilities | 3 | 11 min | 4 min |
-| 04-pipeline-builder | 4 | 23 min | 6 min |
+| 04-pipeline-builder | 5 | 27 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (6 min), 04-02 (8 min), 04-03 (5 min), 04-04 (4 min)
+- Last 5 plans: 04-02 (8 min), 04-03 (5 min), 04-04 (4 min), 04-05 (4 min)
 
 *Updated after each plan completion*
 
@@ -73,6 +73,7 @@ Recent decisions affecting current work:
 - Custom MIME types for drag data transfer (application/agent-*)
 - Import TemplateVariable type from schema for consistency across components
 - Template variables stored in separate pipelineTemplates table
+- useEffect for dialog state initialization on open (cleaner than manual reset)
 
 ### Pending Todos
 
@@ -84,8 +85,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T10:39:58Z
-Stopped at: Completed 04-04-PLAN.md (Phase 4 complete)
+Last session: 2026-01-28T11:08:13Z
+Stopped at: Completed 04-05-PLAN.md (Gap closure complete)
 Resume file: None
 
 ---
