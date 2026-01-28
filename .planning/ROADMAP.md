@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Agent Management** - Create, edit, save, and organize agents
 - [x] **Phase 3: Agent Capabilities** - LLM responses, web search, URL fetching
 - [x] **Phase 4: Pipeline Builder** - Visual canvas for wiring agents into sequences
-- [ ] **Phase 5: Execution Engine** - Run pipelines with streaming progress and error handling
+- [x] **Phase 5: Execution Engine** - Run pipelines with streaming progress and error handling
 - [ ] **Phase 6: Output & Export** - View agent outputs and download documents
 
 ## Phase Details
@@ -99,9 +99,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Execution infrastructure (schema, emitter, executor)
-- [ ] 05-02-PLAN.md — Run API and SSE streaming endpoints
-- [ ] 05-03-PLAN.md — Progress UI and pipeline integration
+- [x] 05-01-PLAN.md — Execution infrastructure (schema, emitter, executor)
+- [x] 05-02-PLAN.md — Run API and SSE streaming endpoints
+- [x] 05-03-PLAN.md — Progress UI and pipeline integration
 
 ### Phase 6: Output & Export
 **Goal**: Users can view and download the documents their pipelines produce
@@ -111,11 +111,11 @@ Plans:
   1. User can view the output from each agent in the pipeline
   2. User can download the final output as a text file
   3. User can download the final output as a markdown file
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Dependencies, download utilities, and MarkdownViewer component
+- [ ] 06-02-PLAN.md — OutputViewer component and pipeline page integration
 
 ## Progress
 
@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Agent Management | 2/2 | Complete | 2026-01-28 |
 | 3. Agent Capabilities | 3/3 | Complete | 2026-01-28 |
 | 4. Pipeline Builder | 5/5 | Complete | 2026-01-28 |
-| 5. Execution Engine | 0/3 | Not started | - |
+| 5. Execution Engine | 3/3 | Complete | 2026-01-28 |
 | 6. Output & Export | 0/2 | Not started | - |
 
 ---
