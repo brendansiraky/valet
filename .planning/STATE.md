@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** Phase 5 - Execution Engine
+**Current focus:** Phase 6 - Output & Export
 
 ## Current Position
 
-Phase: 5 of 6 (Execution Engine)
-Plan: 2 of 4 complete (05-02)
+Phase: 6 of 6 (Output & Export)
+Plan: 1 of 2 complete (06-01)
 Status: In progress
-Last activity: 2026-01-28 - Completed 05-02-PLAN.md (Run API)
+Last activity: 2026-01-28 - Completed 06-01-PLAN.md (Foundation)
 
-Progress: [█████████░] 93%
+Progress: [█████░░░░░] 50% (Phase 6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 17
 - Average duration: 10 min
-- Total execution time: 2.4 hours
+- Total execution time: 2.7 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [█████████░] 93%
 | 02-agent-management | 2 | 16 min | 8 min |
 | 03-agent-capabilities | 3 | 11 min | 4 min |
 | 04-pipeline-builder | 5 | 27 min | 5 min |
-| 05-execution-engine | 2 | 9 min | 5 min |
+| 05-execution-engine | 3 | 24 min | 8 min |
+| 06-output-export | 1 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-04 (4 min), 04-05 (4 min), 05-01 (4 min), 05-02 (5 min)
+- Last 5 plans: 05-01 (4 min), 05-02 (5 min), 05-03 (15 min), 06-01 (5 min)
 
 *Updated after each plan completion*
 
@@ -81,6 +82,11 @@ Recent decisions affecting current work:
 - pg-boss for reliable background job processing
 - Kahn's algorithm for topological sort of pipeline flow
 - remix-utils eventStream for SSE response handling
+- Explicit createQueue() for pg-boss v10+ compatibility
+- Default user message for first agent when no initial input
+- Typography via @plugin directive (Tailwind v4 CSS-first config)
+- Client-side Blob API for downloads (no server round-trip)
+- prose-sm for compact output display
 
 ### Pending Todos
 
@@ -92,9 +98,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T11:58:00Z
-Stopped at: Completed 05-02-PLAN.md (Run API)
+Last session: 2026-01-28T13:05:00Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
 
 ---
-*Next: Execute 05-03-PLAN.md (Run Status)*
+*Next: Execute 06-02-PLAN.md (Output Viewing Integration)*
