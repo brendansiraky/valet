@@ -15,6 +15,13 @@
       "when": 1769600113877,
       "tag": "0001_past_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769643949227,
+      "tag": "0002_mysterious_pet_avengers",
+      "breakpoints": true
     }
   ]
 }
