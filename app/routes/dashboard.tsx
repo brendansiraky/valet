@@ -45,6 +45,11 @@ export default function Dashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          <Link to="/agents">
+            <Button className="w-full">
+              My Agents
+            </Button>
+          </Link>
           <Link to="/settings">
             <Button variant="outline" className="w-full">
               Settings
