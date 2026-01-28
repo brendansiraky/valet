@@ -24,9 +24,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Agent Capabilities
 
-- [ ] **CAPS-01**: Agent can generate text responses via Anthropic API
-- [ ] **CAPS-02**: Agent can perform web searches
-- [ ] **CAPS-03**: Agent can fetch and read provided URLs
+- [x] **CAPS-01**: Agent can generate text responses via Anthropic API
+- [x] **CAPS-02**: Agent can perform web searches
+- [x] **CAPS-03**: Agent can fetch and read provided URLs
 
 ### Pipeline Builder
 
@@ -129,9 +129,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AGNT-03 | Phase 2 | Complete |
 | AGNT-04 | Phase 2 | Complete |
 | AGNT-05 | Phase 2 | Complete |
-| CAPS-01 | Phase 3 | Pending |
-| CAPS-02 | Phase 3 | Pending |
-| CAPS-03 | Phase 3 | Pending |
+| CAPS-01 | Phase 3 | Complete |
+| CAPS-02 | Phase 3 | Complete |
+| CAPS-03 | Phase 3 | Complete |
 | PIPE-01 | Phase 4 | Pending |
 | PIPE-02 | Phase 4 | Pending |
 | PIPE-03 | Phase 4 | Pending |
