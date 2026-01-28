@@ -120,15 +120,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AGNT-01 | Phase 2 | Pending |
-| AGNT-02 | Phase 2 | Pending |
-| AGNT-03 | Phase 2 | Pending |
-| AGNT-04 | Phase 2 | Pending |
-| AGNT-05 | Phase 2 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| AGNT-01 | Phase 2 | Complete |
+| AGNT-02 | Phase 2 | Complete |
+| AGNT-03 | Phase 2 | Complete |
+| AGNT-04 | Phase 2 | Complete |
+| AGNT-05 | Phase 2 | Complete |
 | CAPS-01 | Phase 3 | Pending |
 | CAPS-02 | Phase 3 | Pending |
 | CAPS-03 | Phase 3 | Pending |

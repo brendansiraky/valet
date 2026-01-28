@@ -13,7 +13,7 @@ Valet delivers a visual AI agent pipeline builder in six phases: establishing se
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Project setup, auth, secure API key management
-- [ ] **Phase 2: Agent Management** - Create, edit, save, and organize agents
+- [x] **Phase 2: Agent Management** - Create, edit, save, and organize agents
 - [ ] **Phase 3: Agent Capabilities** - LLM responses, web search, URL fetching
 - [ ] **Phase 4: Pipeline Builder** - Visual canvas for wiring agents into sequences
 - [ ] **Phase 5: Execution Engine** - Run pipelines with streaming progress and error handling
@@ -49,8 +49,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Database schema and UI components
-- [ ] 02-02-PLAN.md — Agent CRUD route and dashboard integration
+- [x] 02-01-PLAN.md — Database schema and UI components
+- [x] 02-02-PLAN.md — Agent CRUD route and dashboard integration
 
 ### Phase 3: Agent Capabilities
 **Goal**: Agents can perform useful work via LLM, web search, and URL reading
@@ -122,7 +122,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-01-28 |
-| 2. Agent Management | 0/2 | Not started | - |
+| 2. Agent Management | 2/2 | Complete | 2026-01-28 |
 | 3. Agent Capabilities | 0/2 | Not started | - |
 | 4. Pipeline Builder | 0/3 | Not started | - |
 | 5. Execution Engine | 0/3 | Not started | - |
