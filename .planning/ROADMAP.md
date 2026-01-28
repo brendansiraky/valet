@@ -46,11 +46,11 @@ Plans:
   2. User can edit an existing agent's instructions
   3. User can delete agents they no longer need
   4. User can view their saved agents and select one for use
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Database schema and UI components
+- [ ] 02-02-PLAN.md — Agent CRUD route and dashboard integration
 
 ### Phase 3: Agent Capabilities
 **Goal**: Agents can perform useful work via LLM, web search, and URL reading
