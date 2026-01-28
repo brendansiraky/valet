@@ -14,6 +14,7 @@ import {
 } from "~/components/pipeline-builder/template-dialog";
 import { VariableFillDialog } from "~/components/pipeline-builder/variable-fill-dialog";
 import { RunProgress } from "~/components/pipeline-runner/run-progress";
+import { OutputViewer } from "~/components/output-viewer/output-viewer";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -76,6 +77,10 @@ export default function PipelineBuilderPage() {
   >(template?.variables || []);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
   const [isStartingRun, setIsStartingRun] = useState(false);
+  const [completedOutput, setCompletedOutput] = useState<{
+    steps: Array<{ agentName: string; output: string }>;
+    finalOutput: string;
+  } | null>(null);
 
   const {
     nodes,
@@ -269,13 +274,23 @@ export default function PipelineBuilderPage() {
     await startPipelineRun("", values);
   };
 
-  const handleRunComplete = useCallback((finalOutput: string) => {
+  const handleRunComplete = useCallback((finalOutput: string, stepOutputs: Map<number, string>) => {
     console.log("Pipeline completed:", finalOutput);
-    // Phase 6 will add output viewing
-  }, []);
+
+    // Convert stepOutputs map to array with agent names
+    const steps = pipelineSteps.map((step, index) => ({
+      agentName: step.agentName,
+      output: stepOutputs.get(index) || "",
+    }));
+
+    setCompletedOutput({ steps, finalOutput });
+    setCurrentRunId(null);
+  }, [pipelineSteps]);
 
   const handleRunError = useCallback((error: string) => {
     console.error("Pipeline failed:", error);
+    // Reset run state after a brief delay to show error message
+    setTimeout(() => setCurrentRunId(null), 3000);
     // TODO: Show toast error
   }, []);
 
@@ -353,6 +368,20 @@ export default function PipelineBuilderPage() {
             onComplete={handleRunComplete}
             onError={handleRunError}
           />
+        </div>
+      )}
+
+      {/* Output Viewer Modal */}
+      {completedOutput && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="w-full max-w-4xl mx-4">
+            <OutputViewer
+              steps={completedOutput.steps}
+              finalOutput={completedOutput.finalOutput}
+              pipelineName={pipelineName}
+              onClose={() => setCompletedOutput(null)}
+            />
+          </div>
         </div>
       )}
 

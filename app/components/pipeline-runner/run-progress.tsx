@@ -9,7 +9,7 @@ import { Loader2, CheckCircle2, XCircle, Circle } from "lucide-react";
 interface RunProgressProps {
   runId: string | null;
   steps: Array<{ agentId: string; agentName: string }>;
-  onComplete?: (finalOutput: string) => void;
+  onComplete?: (finalOutput: string, stepOutputs: Map<number, string>) => void;
   onError?: (error: string) => void;
 }
 
@@ -44,12 +44,12 @@ export function RunProgress({
   // Notify on completion/error
   useEffect(() => {
     if (status === "completed" && finalOutput && onComplete) {
-      onComplete(finalOutput);
+      onComplete(finalOutput, stepOutputs);
     }
     if (status === "failed" && error && onError) {
       onError(error);
     }
-  }, [status, finalOutput, error, onComplete, onError]);
+  }, [status, finalOutput, stepOutputs, error, onComplete, onError]);
 
   if (!runId) return null;
 
