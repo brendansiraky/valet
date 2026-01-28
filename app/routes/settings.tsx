@@ -1,8 +1,9 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Form, Link, redirect, useActionData, useLoaderData } from "react-router";
+import { Form, Link, redirect, useLoaderData, data } from "react-router";
 import { getSession, commitSession } from "~/services/session.server";
 import { encrypt } from "~/services/encryption.server";
-import { validateApiKey, AVAILABLE_MODELS } from "~/services/anthropic.server";
+import { validateApiKey } from "~/services/anthropic.server";
+import { AVAILABLE_MODELS } from "~/lib/models";
 import { db, users, apiKeys } from "~/db";
 import { eq } from "drizzle-orm";
 import {
@@ -45,11 +46,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
     where: eq(apiKeys.userId, userId),
   });
 
-  return {
-    user: { id: user.id, email: user.email },
-    hasApiKey: !!apiKey,
-    modelPreference: apiKey?.modelPreference ?? AVAILABLE_MODELS[0].id,
-  };
+  // Get flash messages (reading clears them)
+  const successMessage = session.get("success") as string | undefined;
+  const errorMessage = session.get("error") as string | undefined;
+
+  return data(
+    {
+      user: { id: user.id, email: user.email },
+      hasApiKey: !!apiKey,
+      modelPreference: apiKey?.modelPreference ?? AVAILABLE_MODELS[0].id,
+      availableModels: AVAILABLE_MODELS,
+      successMessage,
+      errorMessage,
+    },
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -148,12 +163,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Settings() {
-  const { user, hasApiKey, modelPreference } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
-
-  // Get flash messages from loader
-  // Note: We're using redirect with flash, so we need to get messages from loader
-  // This is a simplified approach - in production you might want a more robust flash system
+  const { user, hasApiKey, modelPreference, availableModels, successMessage, errorMessage } = useLoaderData<typeof loader>();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-8">
@@ -165,6 +175,17 @@ export default function Settings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Flash Messages */}
+          {successMessage && (
+            <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+              {successMessage}
+            </div>
+          )}
+          {errorMessage && (
+            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+              {errorMessage}
+            </div>
+          )}
           {/* API Key Section */}
           <div className="space-y-4">
             <div className="space-y-2">
@@ -216,7 +237,7 @@ export default function Settings() {
                       <SelectValue placeholder="Select a model" />
                     </SelectTrigger>
                     <SelectContent>
-                      {AVAILABLE_MODELS.map((model) => (
+                      {availableModels.map((model) => (
                         <SelectItem key={model.id} value={model.id}>
                           {model.name}
                         </SelectItem>
