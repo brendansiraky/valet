@@ -2,7 +2,7 @@
 
 ## Overview
 
-Valet delivers a visual AI agent pipeline builder in six phases: establishing secure foundation (auth, API keys), enabling agent creation and management, adding agent capabilities (LLM, search, URL fetching), building the visual pipeline canvas, implementing sequential execution with streaming progress, and finally enabling output viewing and document export. Each phase delivers a complete, testable capability that builds toward the core value of non-technical users automating document workflows.
+Valet delivers a visual AI agent pipeline builder. Milestone v1.0 (Phases 1-6) established the core: auth, agent management, capabilities, pipeline builder, execution engine, and output export. Milestone v1.1 (Phases 7-10) enhances agents with traits (reusable context snippets), full capability configuration, pipeline capability parity, cost visibility, and improved test UX.
 
 ## Phases
 
@@ -12,12 +12,21 @@ Valet delivers a visual AI agent pipeline builder in six phases: establishing se
 
 Decimal phases appear between their surrounding integers in numeric order.
 
+### v1.0 (Complete)
+
 - [x] **Phase 1: Foundation** - Project setup, auth, secure API key management
 - [x] **Phase 2: Agent Management** - Create, edit, save, and organize agents
 - [x] **Phase 3: Agent Capabilities** - LLM responses, web search, URL fetching
 - [x] **Phase 4: Pipeline Builder** - Visual canvas for wiring agents into sequences
 - [x] **Phase 5: Execution Engine** - Run pipelines with streaming progress and error handling
 - [x] **Phase 6: Output & Export** - View agent outputs and download documents
+
+### v1.1 (Current)
+
+- [ ] **Phase 7: Navigation & Traits** - Sidebar navigation and reusable context snippets
+- [ ] **Phase 8: Agent Configuration** - Capability, model, and trait settings per agent
+- [ ] **Phase 9: Pipeline & Cost** - Capabilities in pipeline execution, cost visibility
+- [ ] **Phase 10: Agent UX** - Cleaner test dialog that uses agent configuration
 
 ## Phase Details
 
@@ -33,9 +42,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [x] 01-01-PLAN.md — Project bootstrap and database schema
-- [x] 01-02-PLAN.md — Auth services (session, password, encryption, authenticator)
-- [x] 01-03-PLAN.md — Auth routes and settings UI
+- [x] 01-01-PLAN.md - Project bootstrap and database schema
+- [x] 01-02-PLAN.md - Auth services (session, password, encryption, authenticator)
+- [x] 01-03-PLAN.md - Auth routes and settings UI
 
 ### Phase 2: Agent Management
 **Goal**: Users can create and organize a personal library of reusable agents
@@ -49,8 +58,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [x] 02-01-PLAN.md — Database schema and UI components
-- [x] 02-02-PLAN.md — Agent CRUD route and dashboard integration
+- [x] 02-01-PLAN.md - Database schema and UI components
+- [x] 02-02-PLAN.md - Agent CRUD route and dashboard integration
 
 ### Phase 3: Agent Capabilities
 **Goal**: Agents can perform useful work via LLM, web search, and URL reading
@@ -63,9 +72,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 03-01-PLAN.md — Agent runner and text generation capability
-- [x] 03-02-PLAN.md — Web search and URL fetch capabilities
-- [x] 03-03-PLAN.md — Agent execution API and testing UI
+- [x] 03-01-PLAN.md - Agent runner and text generation capability
+- [x] 03-02-PLAN.md - Web search and URL fetch capabilities
+- [x] 03-03-PLAN.md - Agent execution API and testing UI
 
 ### Phase 4: Pipeline Builder
 **Goal**: Users can visually construct pipelines by arranging and connecting agents
@@ -80,11 +89,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [x] 04-01-PLAN.md — Pipeline infrastructure (dependencies, schema, store)
-- [x] 04-02-PLAN.md — Visual canvas UI and drag-drop agent placement
-- [x] 04-03-PLAN.md — Pipeline persistence (save, load, delete)
-- [x] 04-04-PLAN.md — Templates and input variables
-- [x] 04-05-PLAN.md — Gap closure: TemplateDialog loads saved variables
+- [x] 04-01-PLAN.md - Pipeline infrastructure (dependencies, schema, store)
+- [x] 04-02-PLAN.md - Visual canvas UI and drag-drop agent placement
+- [x] 04-03-PLAN.md - Pipeline persistence (save, load, delete)
+- [x] 04-04-PLAN.md - Templates and input variables
+- [x] 04-05-PLAN.md - Gap closure: TemplateDialog loads saved variables
 
 ### Phase 5: Execution Engine
 **Goal**: Users can run pipelines and observe progress in real-time
@@ -99,9 +108,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 05-01-PLAN.md — Execution infrastructure (schema, emitter, executor)
-- [x] 05-02-PLAN.md — Run API and SSE streaming endpoints
-- [x] 05-03-PLAN.md — Progress UI and pipeline integration
+- [x] 05-01-PLAN.md - Execution infrastructure (schema, emitter, executor)
+- [x] 05-02-PLAN.md - Run API and SSE streaming endpoints
+- [x] 05-03-PLAN.md - Progress UI and pipeline integration
 
 ### Phase 6: Output & Export
 **Goal**: Users can view and download the documents their pipelines produce
@@ -114,13 +123,60 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [x] 06-01-PLAN.md — Dependencies, download utilities, and MarkdownViewer component
-- [x] 06-02-PLAN.md — OutputViewer component and pipeline page integration
+- [x] 06-01-PLAN.md - Dependencies, download utilities, and MarkdownViewer component
+- [x] 06-02-PLAN.md - OutputViewer component and pipeline page integration
+
+### Phase 7: Navigation & Traits
+**Goal**: App has persistent navigation and users can create reusable context snippets
+**Depends on**: Phase 1 (user authentication)
+**Requirements**: NAV-01, NAV-02, TRAIT-01, TRAIT-02, TRAIT-03, TRAIT-04
+**Success Criteria** (what must be TRUE):
+  1. Authenticated pages have persistent sidebar navigation
+  2. Sidebar can be collapsed/expanded
+  3. User can create a new trait with a name and context text
+  4. User can edit an existing trait's name and context
+  5. User can delete traits they no longer need
+  6. User can view their trait library and browse available traits
+**Plans**: TBD
+
+### Phase 8: Agent Configuration
+**Goal**: Users can configure agents with capability, model, and trait settings
+**Depends on**: Phase 7 (traits must exist before assignment)
+**Requirements**: AGNT-07, AGNT-08, AGNT-09, AGNT-10
+**Success Criteria** (what must be TRUE):
+  1. User can set capability on agent definition (none / web search / URL fetch)
+  2. User can set model per agent (defaults to global setting)
+  3. User can assign traits to agents
+  4. Agent execution includes assigned trait context in the prompt
+**Plans**: TBD
+
+### Phase 9: Pipeline & Cost
+**Goal**: Pipeline execution supports all capabilities and shows cost information
+**Depends on**: Phase 5 (execution engine), Phase 8 (agent capabilities)
+**Requirements**: PCAP-01, PCAP-02, COST-01, COST-02
+**Success Criteria** (what must be TRUE):
+  1. Pipeline execution respects agent's web search capability
+  2. Pipeline execution respects agent's URL fetch capability
+  3. User sees token count after pipeline completes
+  4. User sees estimated cost after pipeline completes
+**Plans**: TBD
+
+### Phase 10: Agent UX
+**Goal**: Test dialog is clearer and uses agent configuration
+**Depends on**: Phase 8 (agent capability is on definition)
+**Requirements**: AGUX-01, AGUX-02, AGUX-03
+**Success Criteria** (what must be TRUE):
+  1. Test dialog input field is labeled "Test input" instead of "Your prompt"
+  2. Test dialog uses agent's configured capability (no dropdown selector)
+  3. Test dialog clearly indicates its purpose (testing before pipeline use)
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
+
+### v1.0 Progress (Complete)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -131,7 +187,17 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 5. Execution Engine | 3/3 | Complete | 2026-01-28 |
 | 6. Output & Export | 2/2 | Complete | 2026-01-28 |
 
+### v1.1 Progress (Current)
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 7. Navigation & Traits | 0/? | Pending | - |
+| 8. Agent Configuration | 0/? | Pending | - |
+| 9. Pipeline & Cost | 0/? | Pending | - |
+| 10. Agent UX | 0/? | Pending | - |
+
 ---
 *Roadmap created: 2026-01-28*
-*Depth: standard (5-8 phases)*
-*Coverage: 30/30 v1 requirements mapped*
+*v1.1 phases added: 2026-01-29*
+*Depth: standard (5-8 phases per milestone)*
+*Coverage: v1.0 30/30, v1.1 17/17 requirements mapped*

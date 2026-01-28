@@ -59,6 +59,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 Requirements for milestone v1.1 (Enhanced Agents). Each maps to roadmap phases.
 
+### App Navigation
+
+- [ ] **NAV-01**: App has persistent sidebar navigation on authenticated pages
+- [ ] **NAV-02**: Sidebar can be collapsed/expanded
+
 ### Traits System
 
 - [ ] **TRAIT-01**: User can create a trait (name + context text)
@@ -119,7 +124,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | Feature | Reason |
 |---------|--------|
 | PDF export | High complexity, defer until DOCX proves valuable |
-| Full RAG/vector database | Massive complexity; "dumb RAG" kills quality — start simple |
+| Full RAG/vector database | Massive complexity; "dumb RAG" kills quality - start simple |
 | Multi-model orchestration | Complexity explosion; Anthropic-only for v1 |
 | Real-time collaboration | Massive engineering overhead; single-user focus for v1 |
 | Agent-to-agent communication | Error cascading; debugging becomes impossible |
@@ -190,27 +195,29 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRAIT-01 | TBD | Pending |
-| TRAIT-02 | TBD | Pending |
-| TRAIT-03 | TBD | Pending |
-| TRAIT-04 | TBD | Pending |
-| AGNT-07 | TBD | Pending |
-| AGNT-08 | TBD | Pending |
-| AGNT-09 | TBD | Pending |
-| AGNT-10 | TBD | Pending |
-| PCAP-01 | TBD | Pending |
-| PCAP-02 | TBD | Pending |
-| COST-01 | TBD | Pending |
-| COST-02 | TBD | Pending |
-| AGUX-01 | TBD | Pending |
-| AGUX-02 | TBD | Pending |
-| AGUX-03 | TBD | Pending |
+| NAV-01 | Phase 7 | Pending |
+| NAV-02 | Phase 7 | Pending |
+| TRAIT-01 | Phase 7 | Pending |
+| TRAIT-02 | Phase 7 | Pending |
+| TRAIT-03 | Phase 7 | Pending |
+| TRAIT-04 | Phase 7 | Pending |
+| AGNT-07 | Phase 8 | Pending |
+| AGNT-08 | Phase 8 | Pending |
+| AGNT-09 | Phase 8 | Pending |
+| AGNT-10 | Phase 8 | Pending |
+| PCAP-01 | Phase 9 | Pending |
+| PCAP-02 | Phase 9 | Pending |
+| COST-01 | Phase 9 | Pending |
+| COST-02 | Phase 9 | Pending |
+| AGUX-01 | Phase 10 | Pending |
+| AGUX-02 | Phase 10 | Pending |
+| AGUX-03 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 30/30 complete
-- v1.1 requirements: 15 total, 0 mapped (roadmap pending)
+- v1.1 requirements: 17/17 mapped (0 complete)
 
 ---
 *Requirements defined: 2025-01-28*
 *v1.1 requirements added: 2026-01-29*
-*Last updated: 2026-01-29 after v1.1 definition*
+*v1.1 traceability updated: 2026-01-29*
