@@ -120,42 +120,42 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| AGNT-01 | TBD | Pending |
-| AGNT-02 | TBD | Pending |
-| AGNT-03 | TBD | Pending |
-| AGNT-04 | TBD | Pending |
-| AGNT-05 | TBD | Pending |
-| CAPS-01 | TBD | Pending |
-| CAPS-02 | TBD | Pending |
-| CAPS-03 | TBD | Pending |
-| PIPE-01 | TBD | Pending |
-| PIPE-02 | TBD | Pending |
-| PIPE-03 | TBD | Pending |
-| PIPE-04 | TBD | Pending |
-| PIPE-05 | TBD | Pending |
-| PIPE-06 | TBD | Pending |
-| PIPE-07 | TBD | Pending |
-| PIPE-08 | TBD | Pending |
-| PIPE-09 | TBD | Pending |
-| EXEC-01 | TBD | Pending |
-| EXEC-02 | TBD | Pending |
-| EXEC-03 | TBD | Pending |
-| EXEC-04 | TBD | Pending |
-| EXEC-05 | TBD | Pending |
-| EXEC-06 | TBD | Pending |
-| OUTP-01 | TBD | Pending |
-| OUTP-02 | TBD | Pending |
-| OUTP-03 | TBD | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AGNT-01 | Phase 2 | Pending |
+| AGNT-02 | Phase 2 | Pending |
+| AGNT-03 | Phase 2 | Pending |
+| AGNT-04 | Phase 2 | Pending |
+| AGNT-05 | Phase 2 | Pending |
+| CAPS-01 | Phase 3 | Pending |
+| CAPS-02 | Phase 3 | Pending |
+| CAPS-03 | Phase 3 | Pending |
+| PIPE-01 | Phase 4 | Pending |
+| PIPE-02 | Phase 4 | Pending |
+| PIPE-03 | Phase 4 | Pending |
+| PIPE-04 | Phase 4 | Pending |
+| PIPE-05 | Phase 4 | Pending |
+| PIPE-06 | Phase 4 | Pending |
+| PIPE-07 | Phase 4 | Pending |
+| PIPE-08 | Phase 4 | Pending |
+| PIPE-09 | Phase 4 | Pending |
+| EXEC-01 | Phase 5 | Pending |
+| EXEC-02 | Phase 5 | Pending |
+| EXEC-03 | Phase 5 | Pending |
+| EXEC-04 | Phase 5 | Pending |
+| EXEC-05 | Phase 5 | Pending |
+| EXEC-06 | Phase 5 | Pending |
+| OUTP-01 | Phase 6 | Pending |
+| OUTP-02 | Phase 6 | Pending |
+| OUTP-03 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 30 total
-- Mapped to phases: 0
-- Unmapped: 30 (pending roadmap creation)
+- Mapped to phases: 30
+- Unmapped: 0
 
 ---
 *Requirements defined: 2025-01-28*
-*Last updated: 2025-01-28 after initial definition*
+*Last updated: 2026-01-28 after roadmap creation*
