@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** Phase 3 - Agent Capabilities
+**Current focus:** Phase 4 - Pipeline Builder
 
 ## Current Position
 
-Phase: 3 of 6 (Agent Capabilities)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-01-28 — Completed 03-02-PLAN.md (Web Search + URL Fetch Capabilities)
+Phase: 3 of 6 (Agent Capabilities) - COMPLETE
+Plan: 3 of 3 complete
+Status: Phase complete
+Last activity: 2026-01-28 — Completed 03-03-PLAN.md (Agent Execution API and Testing UI)
 
-Progress: [█████░░░░░] 47%
+Progress: [██████░░░░] 53%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 14 min
-- Total execution time: 1.7 hours
+- Total plans completed: 8
+- Average duration: 13 min
+- Total execution time: 1.8 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [█████░░░░░] 47%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 78 min | 26 min |
 | 02-agent-management | 2 | 16 min | 8 min |
-| 03-agent-capabilities | 2 | 3 min | 1.5 min |
+| 03-agent-capabilities | 3 | 11 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (8 min), 02-02 (8 min), 03-01 (1 min), 03-02 (2 min)
+- Last 5 plans: 02-02 (8 min), 03-01 (1 min), 03-02 (2 min), 03-03 (8 min)
 
 *Updated after each plan completion*
 
@@ -61,6 +61,8 @@ Recent decisions affecting current work:
 - Capabilities mutually exclusive for now (combined in Phase 5)
 - Default max_uses 5 for both web_search and web_fetch
 - Default max_content_tokens 25000 for URL fetch
+- Select component for capability selection (cleaner UI than RadioGroup)
+- Cmd+Enter keyboard shortcut for running agents
 
 ### Pending Todos
 
@@ -72,9 +74,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T09:35:30Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-01-28T10:10:00Z
+Stopped at: Completed 03-03-PLAN.md (Phase 3 complete)
 Resume file: None
 
 ---
-*Next: Execute 03-03-PLAN.md (Capability UI or next phase plan)*
+*Next: Begin Phase 4 - Pipeline Builder*
