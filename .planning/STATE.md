@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-28)
 
 ## Current Position
 
-Phase: 3 of 6 (Agent Capabilities) - COMPLETE
-Plan: 3 of 3 complete
-Status: Phase complete
-Last activity: 2026-01-28 — Completed 03-03-PLAN.md (Agent Execution API and Testing UI)
+Phase: 4 of 6 (Pipeline Builder)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-01-28 - Completed 04-01-PLAN.md (Pipeline Infrastructure)
 
-Progress: [██████░░░░] 53%
+Progress: [███████░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 13 min
-- Total execution time: 1.8 hours
+- Total plans completed: 9
+- Average duration: 12 min
+- Total execution time: 1.9 hours
 
 **By Phase:**
 
@@ -30,9 +30,10 @@ Progress: [██████░░░░] 53%
 | 01-foundation | 3 | 78 min | 26 min |
 | 02-agent-management | 2 | 16 min | 8 min |
 | 03-agent-capabilities | 3 | 11 min | 4 min |
+| 04-pipeline-builder | 1 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (8 min), 03-01 (1 min), 03-02 (2 min), 03-03 (8 min)
+- Last 5 plans: 03-01 (1 min), 03-02 (2 min), 03-03 (8 min), 04-01 (6 min)
 
 *Updated after each plan completion*
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - Default max_content_tokens 25000 for URL fetch
 - Select component for capability selection (cleaner UI than RadioGroup)
 - Cmd+Enter keyboard shortcut for running agents
+- Index signature on AgentNodeData for React Flow Node<T> compatibility
+- JSONB columns for flowData and variables (flexible structured storage)
 
 ### Pending Todos
 
@@ -74,9 +77,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T10:10:00Z
-Stopped at: Completed 03-03-PLAN.md (Phase 3 complete)
+Last session: 2026-01-28T10:21:00Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
 
 ---
-*Next: Begin Phase 4 - Pipeline Builder*
+*Next: Continue Phase 4 - Plan 04-02 (Canvas UI)*
