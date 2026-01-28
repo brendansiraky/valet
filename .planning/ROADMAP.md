@@ -60,11 +60,12 @@ Plans:
   1. Agent can generate text responses by calling the Anthropic API
   2. Agent can perform web searches and incorporate results
   3. Agent can fetch and read content from provided URLs
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Agent runner and text generation capability
+- [ ] 03-02-PLAN.md — Web search and URL fetch capabilities
+- [ ] 03-03-PLAN.md — Agent execution API and testing UI
 
 ### Phase 4: Pipeline Builder
 **Goal**: Users can visually construct pipelines by arranging and connecting agents
@@ -123,7 +124,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Agent Management | 2/2 | Complete | 2026-01-28 |
-| 3. Agent Capabilities | 0/2 | Not started | - |
+| 3. Agent Capabilities | 0/3 | Planned | - |
 | 4. Pipeline Builder | 0/3 | Not started | - |
 | 5. Execution Engine | 0/3 | Not started | - |
 | 6. Output & Export | 0/2 | Not started | - |
