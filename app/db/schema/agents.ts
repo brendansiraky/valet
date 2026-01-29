@@ -1,6 +1,8 @@
 import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
+export type AgentCapability = "none" | "search" | "fetch";
+
 export const agents = pgTable(
   "agents",
   {
@@ -12,6 +14,8 @@ export const agents = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     instructions: text("instructions").notNull(),
+    capability: text("capability").notNull().default("none"),
+    model: text("model"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
