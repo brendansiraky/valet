@@ -146,9 +146,9 @@ Milestone v1.3 improves UX for non-technical users through human-centric naming 
 
 ## Phases
 
-### Phase 15: Agent DNA & Testing UX
+### Phase 15: Agent DNA & Simplification
 
-**Goal:** Rename "Instructions" to "DNA" with layman-friendly tooltip, add temporary trait picker for agent testing
+**Goal:** Rename "Instructions" to "DNA", add test trait picker, remove template variable system
 **Depends on:** v1.2 complete
 **Status:** Not started
 
@@ -158,14 +158,21 @@ Milestone v1.3 improves UX for non-technical users through human-centric naming 
 - Remove trait selector from agent create/edit screen (traits move to pipelines)
 - Add temporary trait picker in agent test modal
 - Test runs apply selected traits without persisting
+- **Remove template variable system entirely:**
+  - Delete VariableFillDialog component
+  - Remove substituteVariables function from executor
+  - Remove variable UI from template creation
+  - Remove variables columns from DB (pipeline_templates, pipeline_runs)
 
-**Requirements:** AGUX-01, AGUX-02, AGUX-03, TEST-01, TEST-02
+**Requirements:** AGUX-01, AGUX-02, AGUX-03, TEST-01, TEST-02, CLEN-01, CLEN-02, CLEN-03, DATA-03, DATA-04
 
 **Success Criteria:**
 1. User sees "DNA" label with explanatory tooltip on agent form
 2. Agent form has no trait selector
 3. User can select traits temporarily when testing an agent
 4. Test uses DNA + selected traits, then clears trait selection on close
+5. No `{{placeholder}}` variable system exists — pipelines run without variable dialog
+6. Pipeline execution relies on DNA + traits + output flow only
 
 ### Phase 16: Trait Colors
 
@@ -225,6 +232,7 @@ Milestone v1.3 improves UX for non-technical users through human-centric naming 
 | Preset swatches only | Simpler UX, ensures consistent warm aesthetic |
 | Set deduplication | Simplest approach — drop succeeds, duplicates naturally ignored |
 | Traits attach to node edges | Clear visual association without cluttering the flow diagram |
+| Remove template variables | Over-engineered; DNA + traits + flow is sufficient, simplifies UX |
 
 ---
 
@@ -232,9 +240,9 @@ Milestone v1.3 improves UX for non-technical users through human-centric naming 
 
 | Phase | Requirements | Status |
 |-------|--------------|--------|
-| 15 - Agent DNA & Testing | 5 | Not started |
+| 15 - Agent DNA & Simplification | 10 | Not started |
 | 16 - Trait Colors | 4 | Not started |
-| 17 - Dynamic Pipeline Traits | 8 | Not started |
+| 17 - Dynamic Pipeline Traits | 7 | Not started |
 
 ---
 *v1.3 created: 2026-01-29*
