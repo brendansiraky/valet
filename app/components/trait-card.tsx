@@ -44,7 +44,7 @@ export function TraitCard({ trait }: TraitCardProps) {
       style={{ borderLeftColor: trait.color }}
     >
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">{trait.name}</CardTitle>
+        <CardTitle className="text-base font-semibold">{trait.name}</CardTitle>
         <CardDescription>
           Updated {formatRelativeTime(trait.updatedAt)}
         </CardDescription>

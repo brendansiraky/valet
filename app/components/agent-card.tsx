@@ -48,7 +48,7 @@ export function AgentCard({ agent, configuredProviders, onTest }: AgentCardProps
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-row items-start justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-semibold">{agent.name}</CardTitle>
+        <CardTitle className="text-base font-semibold">{agent.name}</CardTitle>
         <div className="flex gap-1">
           {onTest && (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onTest}>
