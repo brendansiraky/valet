@@ -2,32 +2,34 @@
 
 ## What This Is
 
-A GUI application that wraps the Anthropic API, enabling non-technical users to create, configure, and run sequential AI agent pipelines. Users like content writers can define agents with traits (reusable context snippets), wire them into reusable templates, and execute pipelines that produce downloadable documents with cost visibility — all without writing code.
+A GUI application that wraps the Anthropic and OpenAI APIs, enabling non-technical users to create, configure, and run sequential AI agent pipelines. Users like content writers can define agents with traits (reusable context snippets), wire them into reusable templates, and execute pipelines that produce downloadable documents with cost visibility — all without writing code.
 
 ## Core Value
 
 Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
 
-## Current State (v1.2 in progress)
+## Current State (v1.2 shipped)
 
-**v1.1 shipped:** 2026-01-29
+**v1.2 shipped:** 2026-01-29
 
 **What's working:**
-- User authentication with encrypted API key storage
+- User authentication with encrypted API key storage (Anthropic + OpenAI)
 - Agent management with natural language instructions
 - Traits system — reusable context snippets assignable to agents
-- Per-agent model selection (defaults to user's global preference)
+- Per-agent model selection with multi-provider support
 - Unified tools — all agents have web search + URL fetch available
 - Visual pipeline builder — drag-drop agents, connect in sequence, save templates
 - Pipeline execution with streaming progress and cost visibility
+- Orphan detection — fail-fast when pipelines reference deleted agents
+- Artifact storage — pipeline outputs stored with metadata, viewable at /artifacts
 - Output viewing and download (text/markdown)
 
-**v1.2 focus:** Multi-provider support (Anthropic + OpenAI), model selection UX, artifact storage
+**v1.3 focus:** Agent DNA (human-centric naming), dynamic pipeline traits, trait colors
 
 **Codebase:**
-- ~8,600 lines of TypeScript
+- ~8,500 lines of TypeScript
 - Tech stack: Remix (React Router v7), PostgreSQL, Drizzle, Tailwind, shadcn/ui
-- 10 phases complete (6 in v1.0, 4 in v1.1)
+- 14 phases complete (6 in v1.0, 4 in v1.1, 4 in v1.2)
 
 ## Requirements
 
@@ -53,17 +55,13 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 - ✓ User can set model per agent — v1.1
 - ✓ User sees token count per pipeline run — v1.1
 - ✓ User sees estimated cost per pipeline run — v1.1
+- ✓ User can add API keys for multiple providers (Anthropic, OpenAI) — v1.2
+- ✓ User can select models from any configured provider — v1.2
+- ✓ Agents can use models from different providers in same pipeline — v1.2
+- ✓ Pipeline outputs are stored and viewable later — v1.2
+- ✓ Deleted agents are handled gracefully in existing pipelines — v1.2
 
 ### Active
-
-<!-- v1.2 scope -->
-
-**v1.2 Multi-Provider & Artifacts:**
-- [ ] User can add API keys for multiple providers (Anthropic, OpenAI)
-- [ ] User can select models from any configured provider
-- [ ] Agents can use models from different providers in same pipeline
-- [ ] Pipeline outputs are stored and viewable later
-- [ ] Deleted agents are handled gracefully in existing pipelines
 
 <!-- v1.3 scope -->
 
@@ -73,6 +71,9 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 - [ ] Traits draggable in pipeline builder, attach to agent nodes
 - [ ] Traits have assignable colors (warm preset palette)
 - [ ] Agent testing includes temporary trait picker
+- [ ] Trait context formatted with named headers ("Your assigned traits: **Trait Name**: content")
+- [ ] Pipeline runs require initial prompt input (kickoff command to first agent)
+- [ ] Remove redundant "Save Template" modal (existing Save button sufficient)
 
 ### Out of Scope
 
@@ -95,9 +96,9 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 
 ## Constraints
 
-- **Tech stack**: Remix (React Router v7), PostgreSQL, Drizzle, @anthropic-ai/sdk, TanStack Query, Tailwind CSS, shadcn/ui, Docker Compose — already decided
-- **API model**: BYOK (bring your own key) — users provide their own Anthropic API keys
-- **AI provider**: Anthropic API only for v1
+- **Tech stack**: Remix (React Router v7), PostgreSQL, Drizzle, @anthropic-ai/sdk, openai, TanStack Query, Tailwind CSS, shadcn/ui, Docker Compose — already decided
+- **API model**: BYOK (bring your own key) — users provide their own API keys
+- **AI providers**: Anthropic and OpenAI APIs for v1.2+
 
 ## Key Decisions
 
@@ -109,6 +110,10 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 | Sequential pipelines only | Simpler execution model for v1 | ✓ Good |
 | Unified tools (no capability dropdown) | Model infers from context, simpler UX | ✓ Good |
 | Traits as text (not files) | Start simple, file attachments later | — Pending |
+| Provider abstraction layer | Clean separation enables multi-provider | ✓ Good |
+| Factory pattern for providers | Need API key at construction | ✓ Good |
+| JSONB for artifacts | Structured storage, queryable, extensible | ✓ Good |
+| View-only artifacts | Start simple, add editing later | — Pending |
 
 ---
-*Last updated: 2026-01-29 after v1.1 milestone*
+*Last updated: 2026-01-29 after v1.2 milestone*

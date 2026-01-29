@@ -13,23 +13,33 @@
 - Add color picker for traits (warm preset palette)
 - Temporary trait picker for agent testing
 
-**Status:** Planned (after v1.2)
+**Status:** Planned
 
 ---
 
-## v1.2 Multi-Provider & Artifacts (In Progress)
+## v1.2 Multi-Provider & Artifacts (Shipped: 2026-01-29)
 
-**Goal:** Add multi-provider support (Anthropic + OpenAI), unified model selection, and persistent artifact storage
+**Delivered:** Multi-provider support (Anthropic + OpenAI), unified model selection UX, orphan detection for deleted agents, and persistent artifact storage
 
-**Phases:** 11-14
+**Phases completed:** 11-14 (9 plans total)
 
-**Key scope:**
-- Provider abstraction layer with Anthropic + OpenAI implementations
-- Live agent-pipeline relationships with orphan handling
-- Flat model dropdown grouped by provider
-- JSONB artifact storage with metadata
+**Key accomplishments:**
+- Provider abstraction layer with factory pattern and self-registration
+- OpenAI integration with GPT-4o and GPT-4o Mini (feature-parity best-effort handling)
+- Multi-provider API key storage in settings
+- Model selection UX with flat dropdown grouped by provider, filtered by configured keys
+- Orphan detection with fail-fast behavior for pipelines referencing deleted agents
+- Artifact storage with JSONB metadata (cost, model, tokens) and viewer at /artifacts
 
-**Status:** Planning Phase 11
+**Stats:**
+- 51 files created/modified
+- 8,506 lines of TypeScript
+- 4 phases, 9 plans, ~35 tasks
+- 2 days from v1.1 to v1.2
+
+**Git range:** `feat(11-01)` → `feat(14-02)`
+
+**What's next:** v1.3 Agent DNA & Dynamic Traits — human-centric naming, pipeline-level trait assignment, trait colors
 
 ---
 

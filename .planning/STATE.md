@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** v1.2 Multi-Provider & Artifacts
+**Current focus:** v1.3 Agent DNA & Dynamic Traits
 
 ## Current Position
 
-Phase: 14 of 14 - Artifact Storage
-Plan: 2/2 complete
-Status: Phase complete (v1.2 milestone complete)
-Last activity: 2026-01-29 - Completed 14-02-PLAN.md
+Phase: 15 of 17 - Agent DNA & Simplification
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-01-29 — v1.2 milestone complete
 
-Progress: [██████████] 100% (v1.2: 4/4 phases complete)
+Progress: [          ] 0% (v1.3: 0/3 phases complete)
 
 ## Performance Metrics
 
@@ -52,36 +52,7 @@ Progress: [██████████] 100% (v1.2: 4/4 phases complete)
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-v1.1 decisions archived in milestones/v1.1-ROADMAP.md.
-
-**Phase 11 decisions:**
-- Factory pattern for providers (need API key at construction)
-- Self-registration at module import (avoids initialization races)
-- AVAILABLE_MODELS kept for backward compatibility
-- Reuse provider instance across pipeline steps (same API key)
-- Keep run-with-tools.server.ts for now (unused but not breaking)
-
-**Phase 12 decisions:**
-- Use Chat Completions API (not Responses API) for message-based interface consistency
-- Skip unsupported tools (web_search, web_fetch) with console.warn instead of throwing
-- Start with GPT-4o models; GPT-5.x can be added when user has access
-- Pulled multi-provider API key storage forward from Phase 13 to enable testing
-- Added provider logging for debugging (`[Provider] chat() called with model: ...`)
-
-**Phase 13 decisions:**
-- Special `__default__` value for "Use default from settings" option
-- Disabled select with helpful message when no providers configured
-- Provider filtering via configuredProviders array prop
-- Inline grouped select for settings (different layout needs than ModelSelector component)
-- Renamed "Model Preference" to "Default Model" for clarity
-
-**Phase 14 decisions:**
-- JSONB for artifactData (enables flexible queries, future evolution)
-- Cost stored as string (numeric type for precision)
-- Backward compat: finalOutput still populated alongside artifactData
-- Metadata stored at completion (not calculated on read)
-- Reuse OutputViewer component for artifact detail display
-- Calculate cost from tokens as fallback for pre-14-01 runs
+v1.2 decisions archived in milestones/v1.2-ROADMAP.md.
 
 ### Pending Todos
 
@@ -102,8 +73,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 14-02-PLAN.md (v1.2 milestone complete)
+Stopped at: v1.2 milestone archived
 Resume file: None
 
 ---
-*v1.2 Multi-Provider & Artifacts milestone complete. All 4 phases (11-14) delivered.*
+*v1.2 milestone complete. Ready for v1.3 planning via /gsd:new-milestone or /gsd:plan-phase 15*
