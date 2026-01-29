@@ -1,13 +1,6 @@
 import { Trash2 } from "lucide-react";
-import { Link } from "react-router";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
+import { ResourceCard } from "./resource-card";
 import { PipelineDeleteDialog } from "./pipeline-delete-dialog";
 
 interface PipelineCardProps {
@@ -15,37 +8,28 @@ interface PipelineCardProps {
     id: string;
     name: string;
     description: string | null;
+    updatedAt: Date | string;
   };
 }
 
 export function PipelineCard({ pipeline }: PipelineCardProps) {
   return (
-    <Card className="hover:border-primary transition-colors h-full flex flex-col">
-      <CardHeader className="flex-row items-start justify-between space-y-0">
-        <Link to={`/pipelines/${pipeline.id}`} className="flex-1 min-w-0">
-          <CardTitle className="text-base font-semibold">{pipeline.name}</CardTitle>
-          {pipeline.description && (
-            <CardDescription className="mt-1">{pipeline.description}</CardDescription>
-          )}
-        </Link>
+    <ResourceCard
+      title={pipeline.name}
+      updatedAt={pipeline.updatedAt}
+      description={pipeline.description ?? "No description"}
+      titleHref={`/pipelines/${pipeline.id}`}
+      actions={
         <PipelineDeleteDialog
           pipeline={pipeline}
           trigger={
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
-              onClick={(e) => e.preventDefault()}
-            >
-              <Trash2 className="size-4" />
-              <span className="sr-only">Delete {pipeline.name}</span>
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+              <Trash2 className="mr-2 size-4" />
+              Delete
             </Button>
           }
         />
-      </CardHeader>
-      <CardContent className="flex-1">
-        <Link to={`/pipelines/${pipeline.id}`} className="block h-full" />
-      </CardContent>
-    </Card>
+      }
+    />
   );
 }
