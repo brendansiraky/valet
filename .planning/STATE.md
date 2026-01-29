@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 11 of 14 - Provider Abstraction Layer
-Plan: 3/3 complete
-Status: Phase 11 verified and complete
-Last activity: 2026-01-29 — Phase 11 executed and verified
+Phase: 12 of 14 - OpenAI Integration
+Plan: 1/3 complete
+Status: In progress
+Last activity: 2026-01-29 — Completed 12-01-PLAN.md
 
-Progress: [██░░░░░░░░] 25% (v1.2: 1/4 phases)
+Progress: [███░░░░░░░] 35% (v1.2: 1.33/4 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
+- Total plans completed: 30
 - Average duration: 7 min
-- Total execution time: 3.28 hours
+- Total execution time: 3.31 hours
 
 **By Phase:**
 
@@ -38,9 +38,10 @@ Progress: [██░░░░░░░░] 25% (v1.2: 1/4 phases)
 | 09-pipeline-cost | 2 | 3 min | 2 min |
 | 10-agent-ux | 1 | 2 min | 2 min |
 | 11-provider-abstraction | 3 | 6 min | 2 min |
+| 12-openai-integration | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 10-01 (2 min), 11-01 (2 min), 11-02 (2 min), 11-03 (2 min)
+- Last 5 plans: 11-01 (2 min), 11-02 (2 min), 11-03 (2 min), 12-01 (2 min)
 
 *Updated after each plan completion*
 
@@ -57,6 +58,11 @@ v1.1 decisions archived in milestones/v1.1-ROADMAP.md.
 - AVAILABLE_MODELS kept for backward compatibility
 - Reuse provider instance across pipeline steps (same API key)
 - Keep run-with-tools.server.ts for now (unused but not breaking)
+
+**Phase 12 decisions:**
+- Use Chat Completions API (not Responses API) for message-based interface consistency
+- Skip unsupported tools (web_search, web_fetch) with console.warn instead of throwing
+- Start with GPT-4o models; GPT-5.x can be added when user has access
 
 ### Pending Todos
 
@@ -77,8 +83,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed quick task 003 - Prevent running pipelines with deleted agents
+Stopped at: Completed 12-01-PLAN.md - OpenAI SDK integration
 Resume file: None
 
 ---
-*Phase 11 complete. Next: `/gsd:discuss-phase 12` to plan OpenAI Integration*
+*Phase 12 in progress. Next: 12-02-PLAN.md (API key configuration UI)*
