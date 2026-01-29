@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 9 - Pipeline & Cost
-Plan: 0 of ?
-Status: Ready to plan
-Last activity: 2026-01-29 - Completed quick task 002: Show current model on agent test run
+Plan: 1 of ?
+Status: In progress
+Last activity: 2026-01-29 - Completed 09-01-PLAN.md
 
 Progress: [███████░░░] 75% (Milestone v1.1: 3/4 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
+- Total plans completed: 24
 - Average duration: 8 min
-- Total execution time: 3.10 hours
+- Total execution time: 3.13 hours
 
 **By Phase:**
 
@@ -35,9 +35,10 @@ Progress: [███████░░░] 75% (Milestone v1.1: 3/4 phases)
 | 06-output-export | 2 | 13 min | 7 min |
 | 07-navigation-traits | 2 | 9 min | 5 min |
 | 08-agent-configuration | 3 | 8 min | 3 min |
+| 09-pipeline-cost | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-02 (4 min), 08-01 (4 min), 08-02 (2 min), 08-03 (2 min)
+- Last 5 plans: 08-01 (4 min), 08-02 (2 min), 08-03 (2 min), 09-01 (2 min)
 
 *Updated after each plan completion*
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - buildSystemPrompt helper centralizes trait context injection
 - Model cascade: agent.model -> apiKey.modelPreference -> default
 - Unified tools: all agents have web_search + web_fetch, model infers from context (no capability dropdown)
+- Pricing fallback to Sonnet if model unknown
+- Pipeline uses single model for all steps (first agent's preference or user default)
+- Usage accumulator pattern for multi-step token tracking
 
 ### Pending Todos
 
@@ -124,8 +128,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Phase 8 verified, ready for Phase 9 planning
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
 
 ---
-*Phase 8 complete. Agent configuration with traits and model. Simplified to unified tools (no capability dropdown). 26 plans total.*
+*Phase 9 in progress. Pipeline unified tools and usage tracking. 24 plans complete.*
