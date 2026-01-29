@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { redirect } from "react-router";
@@ -79,13 +79,14 @@ export default function PipelineBuilderPage() {
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
   const [isStartingRun, setIsStartingRun] = useState(false);
   const [completedOutput, setCompletedOutput] = useState<{
-    steps: Array<{ agentName: string; output: string }>;
+    steps: Array<{ agentName: string; output: string; input: string }>;
     finalOutput: string;
     usage: { inputTokens: number; outputTokens: number } | null;
     model: string | null;
   } | null>(null);
   const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
   const [runInput, setRunInput] = useState("");
+  const runInputRef = useRef<string>("");
 
   const {
     nodes,
@@ -282,6 +283,7 @@ export default function PipelineBuilderPage() {
 
   const handleRunSubmit = async () => {
     setIsRunDialogOpen(false);
+    runInputRef.current = runInput; // Store for handleRunComplete
     await startPipelineRun(runInput);
     setRunInput(""); // Reset for next run
   };
@@ -292,10 +294,12 @@ export default function PipelineBuilderPage() {
     usage: { inputTokens: number; outputTokens: number } | null,
     model: string | null
   ) => {
-    // Convert stepOutputs map to array with agent names
+    // Convert stepOutputs map to array with agent names and computed inputs
+    // Step 0 input = original runInput, Step N input = Step N-1 output
     const steps = pipelineSteps.map((step, index) => ({
       agentName: step.agentName,
       output: stepOutputs.get(index) || "",
+      input: index === 0 ? runInputRef.current : (stepOutputs.get(index - 1) || ""),
     }));
 
     setCompletedOutput({ steps, finalOutput, usage, model });
