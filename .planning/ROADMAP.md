@@ -65,6 +65,10 @@ Plans:
 **Goal:** Add color customization to traits with warm preset palette
 **Depends on:** Phase 15
 **Status:** Not started
+**Plans:** 1 plan
+
+Plans:
+- [ ] 16-01-PLAN.md — Add color field, swatch picker, and card display
 
 **Scope:**
 - Add color field to traits database table
