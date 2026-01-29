@@ -1,10 +1,21 @@
-import { index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, numeric, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { pipelines } from "./pipelines";
 import { users } from "./users";
 
 // Status types for runs and steps
 export type RunStatus = "pending" | "running" | "completed" | "failed";
 export type StepStatus = "pending" | "running" | "completed" | "failed";
+
+// Structured artifact output for completed pipeline runs
+export interface ArtifactOutput {
+  steps: Array<{
+    agentId: string;
+    agentName: string;
+    output: string;
+    stepOrder: number;
+  }>;
+  finalOutput: string;
+}
 
 export const pipelineRuns = pgTable(
   "pipeline_runs",
@@ -22,6 +33,11 @@ export const pipelineRuns = pgTable(
     input: text("input").notNull(),
     variables: jsonb("variables").$type<Record<string, string>>(),
     finalOutput: text("final_output"),
+    artifactData: jsonb("artifact_data").$type<ArtifactOutput>(),
+    model: text("model"),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    cost: numeric("cost", { precision: 10, scale: 6 }),
     error: text("error"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     completedAt: timestamp("completed_at"),

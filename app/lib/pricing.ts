@@ -9,9 +9,13 @@
  * Pricing per million tokens for each model.
  */
 export const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  // Anthropic models
   "claude-opus-4-5-20251101": { input: 5, output: 25 },
   "claude-sonnet-4-5-20250929": { input: 3, output: 15 },
   "claude-haiku-4-5-20251001": { input: 1, output: 5 },
+  // OpenAI models
+  "gpt-4o": { input: 2.5, output: 10 },
+  "gpt-4o-mini": { input: 0.15, output: 0.6 },
 };
 
 /**
