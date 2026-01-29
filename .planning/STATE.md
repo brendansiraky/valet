@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 17 of 18 - Dynamic Pipeline Traits
 Plan: 03 of 3 complete
 Status: Phase complete
-Last activity: 2026-01-29 - Completed quick task 007: Add input/output tabs to pipeline output
+Last activity: 2026-01-29 - Completed quick task 008: Fix design system inconsistencies across screens
 
 Progress: [######    ] 60% (v1.3: 3/4 phases complete)
 
@@ -80,11 +80,12 @@ None.
 | 005 | Fix trait drag-drop to canvas for multi-agent | 2026-01-29 | 6741565 | [005-fix-trait-drag-drop-to-canvas-for-multi-](./quick/005-fix-trait-drag-drop-to-canvas-for-multi-/) |
 | 006 | Add pipeline run input dialog with textarea | 2026-01-29 | dedbbd9 | [006-add-pipeline-run-input-dialog-with-texta](./quick/006-add-pipeline-run-input-dialog-with-texta/) |
 | 007 | Add input/output tabs to pipeline output | 2026-01-29 | 5597503 | [007-add-input-output-tabs-to-pipeline-output](./quick/007-add-input-output-tabs-to-pipeline-output/) |
+| 008 | Fix design system inconsistencies across screens | 2026-01-29 | cf032f6 | [008-audit-screens-for-design-system-consiste](./quick/008-audit-screens-for-design-system-consiste/) |
 
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed quick task 007
+Stopped at: Completed quick task 008
 Resume file: None
 
 ---
