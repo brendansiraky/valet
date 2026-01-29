@@ -47,67 +47,76 @@ export async function registerPipelineWorker() {
   await queue.work<PipelineRunJob>("pipeline-run", async ([job]: Job<PipelineRunJob>[]) => {
     const { runId, pipelineId, userId, input, variables } = job.data;
 
-    // Update run status to 'running'
-    await db
-      .update(pipelineRuns)
-      .set({ status: "running" })
-      .where(eq(pipelineRuns.id, runId));
-
-    // Load pipeline flow data to get steps
-    const [pipeline] = await db
-      .select()
-      .from(pipelines)
-      .where(eq(pipelines.id, pipelineId));
-
-    if (!pipeline) {
+    try {
+      // Update run status to 'running'
       await db
         .update(pipelineRuns)
-        .set({ status: "failed", error: "Pipeline not found" })
+        .set({ status: "running" })
         .where(eq(pipelineRuns.id, runId));
-      return;
-    }
 
-    // Get user's API key and model
-    const [apiKey] = await db
-      .select()
-      .from(apiKeys)
-      .where(eq(apiKeys.userId, userId));
+      // Load pipeline flow data to get steps
+      const [pipeline] = await db
+        .select()
+        .from(pipelines)
+        .where(eq(pipelines.id, pipelineId));
 
-    if (!apiKey) {
-      await db
-        .update(pipelineRuns)
-        .set({ status: "failed", error: "API key not configured" })
-        .where(eq(pipelineRuns.id, runId));
-      return;
-    }
+      if (!pipeline) {
+        await db
+          .update(pipelineRuns)
+          .set({ status: "failed", error: "Pipeline not found" })
+          .where(eq(pipelineRuns.id, runId));
+        return;
+      }
 
-    // Extract steps from flow data (nodes in topological order by edges)
-    const flowData = pipeline.flowData as { nodes: any[]; edges: any[] };
-    const steps = await buildStepsFromFlow(flowData, apiKey.modelPreference);
+      // Get user's API key and model
+      const [apiKey] = await db
+        .select()
+        .from(apiKeys)
+        .where(eq(apiKeys.userId, userId));
 
-    // Create step records
-    for (const step of steps) {
-      await db.insert(pipelineRunSteps).values({
+      if (!apiKey) {
+        await db
+          .update(pipelineRuns)
+          .set({ status: "failed", error: "API key not configured" })
+          .where(eq(pipelineRuns.id, runId));
+        return;
+      }
+
+      // Extract steps from flow data (nodes in topological order by edges)
+      const flowData = pipeline.flowData as { nodes: any[]; edges: any[] };
+      const steps = await buildStepsFromFlow(flowData, apiKey.modelPreference);
+
+      // Create step records
+      for (const step of steps) {
+        await db.insert(pipelineRunSteps).values({
+          runId,
+          agentId: step.agentId,
+          stepOrder: step.order,
+          status: "pending",
+        });
+      }
+
+      // Determine model: use first agent's model if set, otherwise fallback to user preference or default
+      // Note: For simplicity, pipeline uses a single model for all steps (the first agent's preference)
+      const pipelineModel = steps[0]?.model ?? apiKey.modelPreference ?? "claude-sonnet-4-5-20250929";
+
+      // Execute pipeline
+      await executePipeline({
         runId,
-        agentId: step.agentId,
-        stepOrder: step.order,
-        status: "pending",
+        steps,
+        initialInput: input,
+        encryptedApiKey: apiKey.encryptedKey,
+        model: pipelineModel,
+        variables,
       });
+    } catch (error) {
+      // Handle errors (including orphaned agent detection) by marking run as failed
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      await db
+        .update(pipelineRuns)
+        .set({ status: "failed", error: errorMessage })
+        .where(eq(pipelineRuns.id, runId));
     }
-
-    // Determine model: use first agent's model if set, otherwise fallback to user preference or default
-    // Note: For simplicity, pipeline uses a single model for all steps (the first agent's preference)
-    const pipelineModel = steps[0]?.model ?? apiKey.modelPreference ?? "claude-sonnet-4-5-20250929";
-
-    // Execute pipeline
-    await executePipeline({
-      runId,
-      steps,
-      initialInput: input,
-      encryptedApiKey: apiKey.encryptedKey,
-      model: pipelineModel,
-      variables,
-    });
   });
 
   isWorkerRegistered = true;
@@ -155,7 +164,10 @@ async function buildStepsFromFlow(
   }
 
   // Map to PipelineStep with agent details and trait context
+  // Track orphaned agents (deleted but still referenced in pipeline)
+  const orphanedAgents: string[] = [];
   const steps: (PipelineStep & { model?: string | null })[] = [];
+
   for (let i = 0; i < sorted.length; i++) {
     const node = nodes.find((n) => n.id === sorted[i]);
     if (!node || node.type !== "agent") continue;
@@ -163,26 +175,38 @@ async function buildStepsFromFlow(
     const agentId = node.data.agentId;
     const [agent] = await db.select().from(agents).where(eq(agents.id, agentId));
 
-    if (agent) {
-      // Load trait assignments for this agent
-      const assignments = await db.query.agentTraits.findMany({
-        where: eq(agentTraits.agentId, agent.id),
-        with: { trait: { columns: { name: true, context: true } } },
-      });
-
-      const traitContext = assignments.length > 0
-        ? assignments.map((a) => `## ${a.trait.name}\n\n${a.trait.context}`).join("\n\n---\n\n")
-        : undefined;
-
-      steps.push({
-        agentId: agent.id,
-        agentName: agent.name,
-        instructions: agent.instructions,
-        order: steps.length,
-        traitContext,
-        model: agent.model,
-      });
+    if (!agent) {
+      // Agent was deleted - use stored name from node data if available
+      const agentName = node.data.agentName ?? agentId;
+      orphanedAgents.push(agentName);
+      continue;
     }
+
+    // Load trait assignments for this agent
+    const assignments = await db.query.agentTraits.findMany({
+      where: eq(agentTraits.agentId, agent.id),
+      with: { trait: { columns: { name: true, context: true } } },
+    });
+
+    const traitContext = assignments.length > 0
+      ? assignments.map((a) => `## ${a.trait.name}\n\n${a.trait.context}`).join("\n\n---\n\n")
+      : undefined;
+
+    steps.push({
+      agentId: agent.id,
+      agentName: agent.name,
+      instructions: agent.instructions,
+      order: steps.length,
+      traitContext,
+      model: agent.model,
+    });
+  }
+
+  // Fail fast if any agents have been deleted
+  if (orphanedAgents.length > 0) {
+    throw new Error(
+      `Pipeline cannot run: ${orphanedAgents.length} agent(s) have been deleted: ${orphanedAgents.join(", ")}. Please update the pipeline.`
+    );
   }
 
   return steps;
