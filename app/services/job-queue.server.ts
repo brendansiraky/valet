@@ -1,6 +1,6 @@
 import { PgBoss, type Job } from "pg-boss";
-import { and, eq } from "drizzle-orm";
-import { db, pipelineRuns, pipelineRunSteps, agents, pipelines, apiKeys, agentTraits } from "~/db";
+import { and, eq, inArray } from "drizzle-orm";
+import { db, pipelineRuns, pipelineRunSteps, agents, pipelines, apiKeys, traits } from "~/db";
 import { executePipeline, type PipelineStep } from "./pipeline-executor.server";
 import { getProviderForModel } from "~/lib/providers/registry";
 import { runEmitter } from "./run-emitter.server";
@@ -192,15 +192,24 @@ async function buildStepsFromFlow(
       continue;
     }
 
-    // Load trait assignments for this agent
-    const assignments = await db.query.agentTraits.findMany({
-      where: eq(agentTraits.agentId, agent.id),
-      with: { trait: { columns: { name: true, context: true } } },
-    });
+    // Load trait assignments from node data (pipeline-level, not agent-level)
+    const traitIds: string[] = node.data.traitIds ?? [];
+    let traitContext: string | undefined;
 
-    const traitContext = assignments.length > 0
-      ? assignments.map((a) => `## ${a.trait.name}\n\n${a.trait.context}`).join("\n\n---\n\n")
-      : undefined;
+    if (traitIds.length > 0) {
+      const nodeTraits = await db
+        .select({ name: traits.name, context: traits.context })
+        .from(traits)
+        .where(inArray(traits.id, traitIds));
+
+      // Note: nodeTraits may have fewer items than traitIds if some traits were deleted
+      // This gracefully handles deleted traits by simply not including them
+      if (nodeTraits.length > 0) {
+        traitContext = nodeTraits
+          .map((t) => `## ${t.name}\n\n${t.context}`)
+          .join("\n\n---\n\n");
+      }
+    }
 
     steps.push({
       agentId: agent.id,
