@@ -30,20 +30,24 @@ interface PipelineCanvasProps {
     traitColor: string,
     position: { x: number; y: number }
   ) => void;
+  /** Lock canvas to prevent editing during pipeline execution */
+  isLocked?: boolean;
 }
 
-function PipelineCanvasInner({ onDropAgent, onDropTrait }: PipelineCanvasProps) {
+function PipelineCanvasInner({ onDropAgent, onDropTrait, isLocked }: PipelineCanvasProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } =
     usePipelineStore();
   const { screenToFlowPosition } = useReactFlow();
 
   const onDragOver = useCallback((event: React.DragEvent) => {
+    if (isLocked) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-  }, []);
+  }, [isLocked]);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
+      if (isLocked) return;
       event.preventDefault();
 
       // Use React Flow's screenToFlowPosition to get correct coordinates
@@ -72,7 +76,7 @@ function PipelineCanvasInner({ onDropAgent, onDropTrait }: PipelineCanvasProps) 
         onDropTrait(traitId, traitName, traitColor, position);
       }
     },
-    [screenToFlowPosition, onDropAgent, onDropTrait]
+    [isLocked, screenToFlowPosition, onDropAgent, onDropTrait]
   );
 
   return (
@@ -81,13 +85,18 @@ function PipelineCanvasInner({ onDropAgent, onDropTrait }: PipelineCanvasProps) 
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        onNodesChange={isLocked ? undefined : onNodesChange}
+        onEdgesChange={isLocked ? undefined : onEdgesChange}
+        onConnect={isLocked ? undefined : onConnect}
         onDragOver={onDragOver}
         onDrop={onDrop}
         fitView
         className="bg-muted/30"
+        // Lock all interactions during pipeline execution
+        nodesDraggable={!isLocked}
+        nodesConnectable={!isLocked}
+        elementsSelectable={!isLocked}
+        deleteKeyCode={isLocked ? null : "Backspace"}
       >
         <Background />
         <Controls />
