@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db, pipelineRuns, pipelineRunSteps } from "~/db";
 import { createAnthropicClient } from "./anthropic.server";
+import { runWithTools } from "./capabilities/run-with-tools.server";
 import { runEmitter } from "./run-emitter.server";
 
 /**
@@ -11,6 +12,7 @@ export interface PipelineStep {
   agentName: string;
   instructions: string;
   order: number;
+  traitContext?: string;
 }
 
 /**
@@ -41,8 +43,19 @@ function substituteVariables(
 }
 
 /**
+ * Build the system prompt by prepending trait context to agent instructions.
+ */
+function buildSystemPrompt(instructions: string, traitContext?: string): string {
+  if (!traitContext) return instructions;
+
+  // Prepend trait context to instructions with separator
+  return `${traitContext}\n\n---\n\n${instructions}`;
+}
+
+/**
  * Execute a pipeline by running agents sequentially, passing output forward.
- * Streams events via runEmitter for real-time updates.
+ * Uses unified tools (web_search + web_fetch) and tracks token usage.
+ * Emits events via runEmitter for real-time updates.
  */
 export async function executePipeline(
   params: ExecutePipelineParams
@@ -52,6 +65,7 @@ export async function executePipeline(
 
   const client = createAnthropicClient(encryptedApiKey);
   let currentInput = initialInput;
+  const usage = { totalInputTokens: 0, totalOutputTokens: 0 };
 
   try {
     // Update run status to running
@@ -92,34 +106,24 @@ export async function executePipeline(
       // Use default prompt if no input (first agent case)
       const userMessage = currentInput.trim() || "Please proceed with your instructions.";
 
-      // Stream the response
-      const stream = client.messages.stream({
+      // Run with unified tools (web_search + web_fetch available)
+      const result = await runWithTools({
+        client,
         model,
-        max_tokens: 4096,
-        system: substitutedInstructions,
-        messages: [{ role: "user", content: userMessage }],
+        systemPrompt: buildSystemPrompt(substitutedInstructions, step.traitContext),
+        userInput: userMessage,
       });
 
-      let fullOutput = "";
-
-      stream.on("text", (text) => {
-        fullOutput += text;
-        runEmitter.emitRunEvent(runId, {
-          type: "text_delta",
-          stepIndex: step.order,
-          text,
-        });
-      });
-
-      // Wait for stream to complete
-      await stream.finalMessage();
+      // Accumulate usage
+      usage.totalInputTokens += result.usage.inputTokens;
+      usage.totalOutputTokens += result.usage.outputTokens;
 
       // Update step with output
       await db
         .update(pipelineRunSteps)
         .set({
           status: "completed",
-          output: fullOutput,
+          output: result.content,
           completedAt: new Date(),
         })
         .where(
@@ -133,11 +137,11 @@ export async function executePipeline(
       runEmitter.emitRunEvent(runId, {
         type: "step_complete",
         stepIndex: step.order,
-        output: fullOutput,
+        output: result.content,
       });
 
       // Pass output as input to next step
-      currentInput = fullOutput;
+      currentInput = result.content;
     }
 
     // All steps complete - update run
@@ -150,10 +154,15 @@ export async function executePipeline(
       })
       .where(eq(pipelineRuns.id, runId));
 
-    // Emit pipeline complete event
+    // Emit pipeline complete event with usage data
     runEmitter.emitRunEvent(runId, {
       type: "pipeline_complete",
       finalOutput: currentInput,
+      usage: {
+        inputTokens: usage.totalInputTokens,
+        outputTokens: usage.totalOutputTokens,
+      },
+      model,
     });
   } catch (error) {
     const errorMessage =

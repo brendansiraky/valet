@@ -8,7 +8,12 @@ export type RunEvent =
   | { type: "step_start"; stepIndex: number; agentName: string }
   | { type: "text_delta"; stepIndex: number; text: string }
   | { type: "step_complete"; stepIndex: number; output: string }
-  | { type: "pipeline_complete"; finalOutput: string }
+  | {
+      type: "pipeline_complete";
+      finalOutput: string;
+      usage?: { inputTokens: number; outputTokens: number };
+      model?: string;
+    }
   | { type: "error"; stepIndex?: number; message: string };
 
 /**

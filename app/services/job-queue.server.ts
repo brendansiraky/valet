@@ -1,6 +1,6 @@
 import { PgBoss, type Job } from "pg-boss";
 import { eq } from "drizzle-orm";
-import { db, pipelineRuns, pipelineRunSteps, agents, pipelines, apiKeys } from "~/db";
+import { db, pipelineRuns, pipelineRunSteps, agents, pipelines, apiKeys, agentTraits } from "~/db";
 import { executePipeline, type PipelineStep } from "./pipeline-executor.server";
 
 /**
@@ -83,7 +83,7 @@ export async function registerPipelineWorker() {
 
     // Extract steps from flow data (nodes in topological order by edges)
     const flowData = pipeline.flowData as { nodes: any[]; edges: any[] };
-    const steps = await buildStepsFromFlow(flowData);
+    const steps = await buildStepsFromFlow(flowData, apiKey.modelPreference);
 
     // Create step records
     for (const step of steps) {
@@ -95,13 +95,17 @@ export async function registerPipelineWorker() {
       });
     }
 
+    // Determine model: use first agent's model if set, otherwise fallback to user preference or default
+    // Note: For simplicity, pipeline uses a single model for all steps (the first agent's preference)
+    const pipelineModel = steps[0]?.model ?? apiKey.modelPreference ?? "claude-sonnet-4-5-20250929";
+
     // Execute pipeline
     await executePipeline({
       runId,
       steps,
       initialInput: input,
       encryptedApiKey: apiKey.encryptedKey,
-      model: apiKey.modelPreference || "claude-sonnet-4-5-20250929",
+      model: pipelineModel,
       variables,
     });
   });
@@ -112,11 +116,12 @@ export async function registerPipelineWorker() {
 /**
  * Build PipelineStep array from React Flow graph using topological sort.
  * Uses Kahn's algorithm to ensure steps are ordered by dependencies.
+ * Loads trait context for each agent.
  */
-async function buildStepsFromFlow(flowData: {
-  nodes: any[];
-  edges: any[];
-}): Promise<PipelineStep[]> {
+async function buildStepsFromFlow(
+  flowData: { nodes: any[]; edges: any[] },
+  defaultModel?: string | null
+): Promise<(PipelineStep & { model?: string | null })[]> {
   const { nodes, edges } = flowData;
 
   // Build adjacency list and in-degree map
@@ -149,8 +154,8 @@ async function buildStepsFromFlow(flowData: {
     }
   }
 
-  // Map to PipelineStep with agent details
-  const steps: PipelineStep[] = [];
+  // Map to PipelineStep with agent details and trait context
+  const steps: (PipelineStep & { model?: string | null })[] = [];
   for (let i = 0; i < sorted.length; i++) {
     const node = nodes.find((n) => n.id === sorted[i]);
     if (!node || node.type !== "agent") continue;
@@ -159,11 +164,23 @@ async function buildStepsFromFlow(flowData: {
     const [agent] = await db.select().from(agents).where(eq(agents.id, agentId));
 
     if (agent) {
+      // Load trait assignments for this agent
+      const assignments = await db.query.agentTraits.findMany({
+        where: eq(agentTraits.agentId, agent.id),
+        with: { trait: { columns: { name: true, context: true } } },
+      });
+
+      const traitContext = assignments.length > 0
+        ? assignments.map((a) => `## ${a.trait.name}\n\n${a.trait.context}`).join("\n\n---\n\n")
+        : undefined;
+
       steps.push({
         agentId: agent.id,
         agentName: agent.name,
         instructions: agent.instructions,
         order: steps.length,
+        traitContext,
+        model: agent.model,
       });
     }
   }
