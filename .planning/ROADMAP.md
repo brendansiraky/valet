@@ -152,7 +152,12 @@ Plans:
   2. User can set model per agent (defaults to global setting)
   3. User can assign traits to agents
   4. Agent execution includes assigned trait context in the prompt
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 08-01-PLAN.md - Schema extension (capability, model columns, agent-traits junction table)
+- [ ] 08-02-PLAN.md - Agent form UI (capability/model/traits configuration)
+- [ ] 08-03-PLAN.md - Data integration (loader/action, trait context in execution)
 
 ### Phase 9: Pipeline & Cost
 **Goal**: Pipeline execution supports all capabilities and shows cost information
@@ -196,7 +201,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 7. Navigation & Traits | 2/2 | Complete | 2026-01-29 |
-| 8. Agent Configuration | 0/? | Pending | - |
+| 8. Agent Configuration | 0/3 | Pending | - |
 | 9. Pipeline & Cost | 0/? | Pending | - |
 | 10. Agent UX | 0/? | Pending | - |
 
