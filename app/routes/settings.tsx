@@ -3,7 +3,7 @@ import { Form, Link, redirect, useLoaderData, data } from "react-router";
 import { getSession, commitSession } from "~/services/session.server";
 import { encrypt } from "~/services/encryption.server";
 import { validateApiKey } from "~/services/anthropic.server";
-import { AVAILABLE_MODELS } from "~/lib/models";
+import { ALL_MODELS, ANTHROPIC_MODELS, OPENAI_MODELS } from "~/lib/models";
 import { OpenAIProvider } from "~/lib/providers/openai";
 import { db, users, apiKeys } from "~/db";
 import { eq } from "drizzle-orm";
@@ -21,7 +21,9 @@ import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
@@ -59,8 +61,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       user: { id: user.id, email: user.email },
       hasApiKey: !!anthropicKey,
       hasOpenAIKey: !!openaiKey,
-      modelPreference: anthropicKey?.modelPreference ?? AVAILABLE_MODELS[0].id,
-      availableModels: AVAILABLE_MODELS,
+      modelPreference: anthropicKey?.modelPreference ?? ALL_MODELS[0].id,
       successMessage,
       errorMessage,
     },
@@ -194,7 +195,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const modelPreference = formData.get("modelPreference") as string;
 
     // Validate model exists
-    const validModel = AVAILABLE_MODELS.find((m) => m.id === modelPreference);
+    const validModel = ALL_MODELS.find((m) => m.id === modelPreference);
     if (!validModel) {
       session.flash("error", "Invalid model selection");
       return redirect("/settings", {
@@ -222,7 +223,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Settings() {
-  const { user, hasApiKey, hasOpenAIKey, modelPreference, availableModels, successMessage, errorMessage } = useLoaderData<typeof loader>();
+  const { user, hasApiKey, hasOpenAIKey, modelPreference, successMessage, errorMessage } = useLoaderData<typeof loader>();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-8">
@@ -311,29 +312,44 @@ export default function Settings() {
             )}
           </div>
 
-          {/* Model Selection Section - Only show if API key exists */}
-          {hasApiKey && (
+          {/* Model Selection Section - Only show if any API key exists */}
+          {(hasApiKey || hasOpenAIKey) && (
             <div className="space-y-4 border-t pt-6">
               <div className="space-y-2">
-                <h3 className="text-lg font-medium">Model Preference</h3>
+                <h3 className="text-lg font-medium">Default Model</h3>
                 <p className="text-sm text-muted-foreground">
-                  Select which Claude model to use for your agents.
+                  Select the default model for your agents. Agents can override this with their own model selection.
                 </p>
               </div>
               <Form method="post" className="space-y-4">
                 <input type="hidden" name="intent" value="update-model" />
                 <div className="space-y-2">
-                  <Label htmlFor="modelPreference">Claude Model</Label>
+                  <Label htmlFor="modelPreference">Model</Label>
                   <Select name="modelPreference" defaultValue={modelPreference}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a model" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableModels.map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          {model.name}
-                        </SelectItem>
-                      ))}
+                      {hasApiKey && (
+                        <SelectGroup>
+                          <SelectLabel>Anthropic</SelectLabel>
+                          {ANTHROPIC_MODELS.map((model) => (
+                            <SelectItem key={model.id} value={model.id}>
+                              {model.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
+                      {hasOpenAIKey && (
+                        <SelectGroup>
+                          <SelectLabel>OpenAI</SelectLabel>
+                          {OPENAI_MODELS.map((model) => (
+                            <SelectItem key={model.id} value={model.id}>
+                              {model.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
