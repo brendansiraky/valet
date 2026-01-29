@@ -5,6 +5,7 @@ import { Progress } from "~/components/ui/progress";
 import { Badge } from "~/components/ui/badge";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Loader2, CheckCircle2, XCircle, Circle } from "lucide-react";
+import { calculateCost, formatCost, formatTokens } from "~/lib/pricing";
 
 interface RunProgressProps {
   runId: string | null;
@@ -31,6 +32,8 @@ export function RunProgress({
     stepOutputs,
     finalOutput,
     error,
+    usage,
+    model,
   } = useRunStream(runId);
 
   // Calculate progress percentage
@@ -98,12 +101,35 @@ export function RunProgress({
           </div>
         )}
 
-        {/* Completion message */}
+        {/* Completion message and usage summary */}
         {status === "completed" && (
-          <div className="border border-green-500 rounded-lg p-3 bg-green-500/10">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
-              Pipeline completed successfully
-            </p>
+          <div className="space-y-3">
+            <div className="border border-green-500 rounded-lg p-3 bg-green-500/10">
+              <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                Pipeline completed successfully
+              </p>
+            </div>
+            {usage && model && (
+              <div className="p-3 bg-muted rounded-lg">
+                <h4 className="text-sm font-medium mb-2">Usage Summary</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Input tokens:</span>
+                    <span className="ml-2 font-mono">{formatTokens(usage.inputTokens)}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Output tokens:</span>
+                    <span className="ml-2 font-mono">{formatTokens(usage.outputTokens)}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Estimated cost:</span>
+                    <span className="ml-2 font-medium">
+                      {formatCost(calculateCost(model, usage.inputTokens, usage.outputTokens))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
