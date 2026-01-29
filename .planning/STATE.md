@@ -77,7 +77,7 @@ None.
 | 002 | Show current model on agent test run | 2026-01-29 | 031fc3e | [002-show-current-model-on-agent-test-run](./quick/002-show-current-model-on-agent-test-run/) |
 | 003 | Prevent running pipelines with deleted agents | 2026-01-29 | 19af045 | [003-prevent-running-pipelines-with-deleted-a](./quick/003-prevent-running-pipelines-with-deleted-a/) |
 | 004 | Fix trait drag-drop onto React Flow canvas | 2026-01-29 | 05dfdf4 | [004-fix-trait-drag-drop-onto-react-flow-canv](./quick/004-fix-trait-drag-drop-onto-react-flow-canv/) |
-| 005 | Fix trait drag-drop to canvas for multi-agent | 2026-01-29 | a46a3a6 | [005-fix-trait-drag-drop-to-canvas-for-multi-](./quick/005-fix-trait-drag-drop-to-canvas-for-multi-/) |
+| 005 | Fix trait drag-drop to canvas for multi-agent | 2026-01-29 | 6741565 | [005-fix-trait-drag-drop-to-canvas-for-multi-](./quick/005-fix-trait-drag-drop-to-canvas-for-multi-/) |
 
 ## Session Continuity
 
