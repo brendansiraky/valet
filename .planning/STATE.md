@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 8 - Agent Configuration
-Plan: 1 of 3
+Plan: 2 of 3
 Status: In progress
-Last activity: 2026-01-29 - Completed 08-01-PLAN.md
+Last activity: 2026-01-29 - Completed 08-02-PLAN.md
 
-Progress: [███░░░░░░░] 30% (Milestone v1.1: 1/4 phases + 1 plan)
+Progress: [████░░░░░░] 35% (Milestone v1.1: 1/4 phases + 2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: 9 min
-- Total execution time: 3.03 hours
+- Total execution time: 3.07 hours
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: [███░░░░░░░] 30% (Milestone v1.1: 1/4 phases + 1 p
 | 05-execution-engine | 3 | 24 min | 8 min |
 | 06-output-export | 2 | 13 min | 7 min |
 | 07-navigation-traits | 2 | 9 min | 5 min |
-| 08-agent-configuration | 1 | 4 min | 4 min |
+| 08-agent-configuration | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-02 (8 min), 07-01 (5 min), 07-02 (4 min), 08-01 (4 min)
+- Last 5 plans: 07-01 (5 min), 07-02 (4 min), 08-01 (4 min), 08-02 (2 min)
 
 *Updated after each plan completion*
 
@@ -99,6 +99,8 @@ Recent decisions affecting current work:
 - Capability default 'none' for backward compatibility (existing agents work)
 - Model nullable means use user's default from settings
 - Composite primary key for junction tables (prevents duplicates)
+- Optional capability/model props for gradual adoption (route updates in 08-03)
+- traitsUpdated hidden marker for detecting empty trait submissions
 
 ### Pending Todos
 
@@ -111,8 +113,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 08-01-PLAN.md
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
 
 ---
-*Phase 8 in progress. Agent configuration schema extended. 21 plans total.*
+*Phase 8 in progress. Agent form UI extended with config fields. 22 plans total.*
