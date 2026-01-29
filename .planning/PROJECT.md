@@ -8,9 +8,9 @@ A GUI application that wraps the Anthropic API, enabling non-technical users to 
 
 Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
 
-## Current State (v1.1)
+## Current State (v1.2 in progress)
 
-**Shipped:** 2026-01-29
+**v1.1 shipped:** 2026-01-29
 
 **What's working:**
 - User authentication with encrypted API key storage
@@ -21,6 +21,8 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 - Visual pipeline builder — drag-drop agents, connect in sequence, save templates
 - Pipeline execution with streaming progress and cost visibility
 - Output viewing and download (text/markdown)
+
+**v1.2 focus:** Multi-provider support (Anthropic + OpenAI), model selection UX, artifact storage
 
 **Codebase:**
 - ~8,600 lines of TypeScript
@@ -54,9 +56,23 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 
 ### Active
 
-<!-- Next milestone scope -->
+<!-- v1.2 scope -->
 
-(Planning next milestone)
+**v1.2 Multi-Provider & Artifacts:**
+- [ ] User can add API keys for multiple providers (Anthropic, OpenAI)
+- [ ] User can select models from any configured provider
+- [ ] Agents can use models from different providers in same pipeline
+- [ ] Pipeline outputs are stored and viewable later
+- [ ] Deleted agents are handled gracefully in existing pipelines
+
+<!-- v1.3 scope -->
+
+**v1.3 Agent DNA & Dynamic Traits:**
+- [ ] Agent instructions renamed to "DNA" with explanatory tooltip
+- [ ] Traits assigned per-pipeline-step (not per-agent)
+- [ ] Traits draggable in pipeline builder, attach to agent nodes
+- [ ] Traits have assignable colors (warm preset palette)
+- [ ] Agent testing includes temporary trait picker
 
 ### Out of Scope
 

@@ -1,5 +1,38 @@
 # Project Milestones: Valet
 
+## v1.3 Agent DNA & Dynamic Traits (Planned)
+
+**Goal:** Improve UX for non-technical users with human-centric naming (DNA), dynamic trait assignment at pipeline level, and visual trait customization
+
+**Phases:** 15-17
+
+**Key scope:**
+- Rename "Instructions" → "DNA" with explanatory tooltips
+- Move trait assignment from agent-level to pipeline-step-level
+- Drag traits from sidebar to attach to agent nodes in pipeline builder
+- Add color picker for traits (warm preset palette)
+- Temporary trait picker for agent testing
+
+**Status:** Planned (after v1.2)
+
+---
+
+## v1.2 Multi-Provider & Artifacts (In Progress)
+
+**Goal:** Add multi-provider support (Anthropic + OpenAI), unified model selection, and persistent artifact storage
+
+**Phases:** 11-14
+
+**Key scope:**
+- Provider abstraction layer with Anthropic + OpenAI implementations
+- Live agent-pipeline relationships with orphan handling
+- Flat model dropdown grouped by provider
+- JSONB artifact storage with metadata
+
+**Status:** Planning Phase 11
+
+---
+
 ## v1.1 Enhanced Agents (Shipped: 2026-01-29)
 
 **Delivered:** Traits system for reusable context, per-agent model configuration, unified pipeline tools, and cost visibility
