@@ -571,6 +571,7 @@
 
   /* Hide scrollbar while maintaining scroll functionality */
   html {
+    font-size: 18px;
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
