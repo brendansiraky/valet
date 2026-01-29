@@ -68,12 +68,13 @@ Plans:
 
 **Goal**: Unified model selection across providers with clean UX
 **Depends on**: Phase 12 (both providers available)
-**Status**: Not started
+**Status**: Complete ✓
+**Completed**: 2026-01-29
 **Plans:** 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Create ModelSelector component, integrate into agent form
-- [ ] 13-02-PLAN.md — Update settings page model selector with provider grouping
+- [x] 13-01-PLAN.md — Create ModelSelector component, integrate into agent form
+- [x] 13-02-PLAN.md — Update settings page model selector with provider grouping
 
 **Scope:**
 - ~~Per-provider API key storage in settings~~ (done in Phase 12)
@@ -124,8 +125,8 @@ Plans:
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 11 - Provider Abstraction | 3 plans | Complete ✓ |
-| 12 - OpenAI Integration | 2 plans | Complete |
-| 13 - Model Selection UX | 2 plans | Not started |
+| 12 - OpenAI Integration | 2 plans | Complete ✓ |
+| 13 - Model Selection UX | 2 plans | Complete ✓ |
 | 14 - Artifact Storage | TBD | Not started |
 
 ---
