@@ -4,6 +4,7 @@ import { ScrollArea } from "~/components/ui/scroll-area";
 import { Button } from "~/components/ui/button";
 import { MarkdownViewer } from "./markdown-viewer";
 import { DownloadButtons } from "./download-buttons";
+import { calculateCost, formatCost, formatTokens } from "~/lib/pricing";
 
 interface StepOutput {
   agentName: string;
@@ -14,6 +15,8 @@ interface OutputViewerProps {
   steps: StepOutput[];
   finalOutput: string;
   pipelineName: string;
+  usage?: { inputTokens: number; outputTokens: number } | null;
+  model?: string | null;
   onClose?: () => void;
 }
 
@@ -26,6 +29,8 @@ export function OutputViewer({
   steps,
   finalOutput,
   pipelineName,
+  usage,
+  model,
   onClose,
 }: OutputViewerProps) {
   const defaultTab = steps.length > 0 ? "final" : "step-0";
@@ -63,6 +68,29 @@ export function OutputViewer({
             </ScrollArea>
           </TabsContent>
         </Tabs>
+
+        {/* Usage Summary */}
+        {usage && model && (
+          <div className="mt-4 p-3 bg-muted rounded-lg">
+            <h4 className="text-sm font-medium mb-2">Usage Summary</h4>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Input tokens:</span>
+                <span className="ml-2 font-mono">{formatTokens(usage.inputTokens)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Output tokens:</span>
+                <span className="ml-2 font-mono">{formatTokens(usage.outputTokens)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Estimated cost:</span>
+                <span className="ml-2 font-medium">
+                  {formatCost(calculateCost(model, usage.inputTokens, usage.outputTokens))}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {onClose && (
           <div className="flex justify-end mt-4">

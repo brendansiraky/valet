@@ -103,8 +103,22 @@ export async function executePipeline(
         variables
       );
 
-      // Use default prompt if no input (first agent case)
-      const userMessage = currentInput.trim() || "Please proceed with your instructions.";
+      // Build user message: use previous output, or for first agent with variables,
+      // pass the variable values as context, otherwise use a generic prompt
+      let userMessage: string;
+      if (currentInput.trim()) {
+        // Pass previous agent's output
+        userMessage = currentInput;
+      } else if (variables && Object.keys(variables).length > 0) {
+        // First agent with variables: provide them clearly and instruct to proceed
+        const variableContext = Object.entries(variables)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n");
+        userMessage = `Here are your input values:\n\n${variableContext}\n\nProceed with your task using these values. Do not ask for clarification - use the values provided above.`;
+      } else {
+        // No input and no variables
+        userMessage = "Please proceed with your instructions.";
+      }
 
       // Run with unified tools (web_search + web_fetch available)
       const result = await runWithTools({

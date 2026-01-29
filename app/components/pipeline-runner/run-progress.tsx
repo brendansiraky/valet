@@ -10,7 +10,12 @@ import { calculateCost, formatCost, formatTokens } from "~/lib/pricing";
 interface RunProgressProps {
   runId: string | null;
   steps: Array<{ agentId: string; agentName: string }>;
-  onComplete?: (finalOutput: string, stepOutputs: Map<number, string>) => void;
+  onComplete?: (
+    finalOutput: string,
+    stepOutputs: Map<number, string>,
+    usage: { inputTokens: number; outputTokens: number } | null,
+    model: string | null
+  ) => void;
   onError?: (error: string) => void;
 }
 
@@ -47,12 +52,12 @@ export function RunProgress({
   // Notify on completion/error
   useEffect(() => {
     if (status === "completed" && finalOutput && onComplete) {
-      onComplete(finalOutput, stepOutputs);
+      onComplete(finalOutput, stepOutputs, usage, model);
     }
     if (status === "failed" && error && onError) {
       onError(error);
     }
-  }, [status, finalOutput, stepOutputs, error, onComplete, onError]);
+  }, [status, finalOutput, stepOutputs, usage, model, error, onComplete, onError]);
 
   if (!runId) return null;
 

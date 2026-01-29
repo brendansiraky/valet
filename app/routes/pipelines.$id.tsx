@@ -80,6 +80,8 @@ export default function PipelineBuilderPage() {
   const [completedOutput, setCompletedOutput] = useState<{
     steps: Array<{ agentName: string; output: string }>;
     finalOutput: string;
+    usage: { inputTokens: number; outputTokens: number } | null;
+    model: string | null;
   } | null>(null);
 
   const {
@@ -274,7 +276,12 @@ export default function PipelineBuilderPage() {
     await startPipelineRun("", values);
   };
 
-  const handleRunComplete = useCallback((finalOutput: string, stepOutputs: Map<number, string>) => {
+  const handleRunComplete = useCallback((
+    finalOutput: string,
+    stepOutputs: Map<number, string>,
+    usage: { inputTokens: number; outputTokens: number } | null,
+    model: string | null
+  ) => {
     console.log("Pipeline completed:", finalOutput);
 
     // Convert stepOutputs map to array with agent names
@@ -283,7 +290,7 @@ export default function PipelineBuilderPage() {
       output: stepOutputs.get(index) || "",
     }));
 
-    setCompletedOutput({ steps, finalOutput });
+    setCompletedOutput({ steps, finalOutput, usage, model });
     setCurrentRunId(null);
   }, [pipelineSteps]);
 
@@ -379,6 +386,8 @@ export default function PipelineBuilderPage() {
               steps={completedOutput.steps}
               finalOutput={completedOutput.finalOutput}
               pipelineName={pipelineName}
+              usage={completedOutput.usage}
+              model={completedOutput.model}
               onClose={() => setCompletedOutput(null)}
             />
           </div>
