@@ -8,14 +8,14 @@ Requirements by milestone. Each maps to roadmap phases.
 
 ## Agent UX (AGUX)
 
-- [ ] **AGUX-01**: "Instructions" field renamed to "DNA" in agent create/edit
-- [ ] **AGUX-02**: Info tooltip on DNA field explains concept in layman terms
-- [ ] **AGUX-03**: Trait selector removed from agent create/edit screen
+- [x] **AGUX-01**: "Instructions" field renamed to "DNA" in agent create/edit
+- [x] **AGUX-02**: Info tooltip on DNA field explains concept in layman terms
+- [x] **AGUX-03**: Trait selector removed from agent create/edit screen
 
 ## Agent Testing (TEST)
 
-- [ ] **TEST-01**: Temporary trait picker in agent test modal
-- [ ] **TEST-02**: Selected traits apply only to current test run (no persistence)
+- [x] **TEST-01**: Temporary trait picker in agent test modal
+- [x] **TEST-02**: Selected traits apply only to current test run (no persistence)
 
 ## Trait Colors (TCOL)
 
@@ -36,29 +36,29 @@ Requirements by milestone. Each maps to roadmap phases.
 
 - [ ] **DATA-01**: Pipeline steps store trait IDs (not agent-level traits)
 - [ ] **DATA-02**: Color field added to traits table
-- [ ] **DATA-03**: Remove template variables from pipeline_templates table
-- [ ] **DATA-04**: Remove variables from pipeline_runs table
+- [x] **DATA-03**: Remove template variables from pipeline_templates table
+- [x] **DATA-04**: Remove variables from pipeline_runs table
 
 ## Cleanup (CLEN)
 
-- [ ] **CLEN-01**: Remove VariableFillDialog component
-- [ ] **CLEN-02**: Remove substituteVariables function from executor
-- [ ] **CLEN-03**: Remove variable-related UI from template creation
+- [x] **CLEN-01**: Remove VariableFillDialog component
+- [x] **CLEN-02**: Remove substituteVariables function from executor
+- [x] **CLEN-03**: Remove variable-related UI from template creation
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AGUX-01 | Phase 15 | Pending |
-| AGUX-02 | Phase 15 | Pending |
-| AGUX-03 | Phase 15 | Pending |
-| TEST-01 | Phase 15 | Pending |
-| TEST-02 | Phase 15 | Pending |
-| CLEN-01 | Phase 15 | Pending |
-| CLEN-02 | Phase 15 | Pending |
-| CLEN-03 | Phase 15 | Pending |
-| DATA-03 | Phase 15 | Pending |
-| DATA-04 | Phase 15 | Pending |
+| AGUX-01 | Phase 15 | Complete |
+| AGUX-02 | Phase 15 | Complete |
+| AGUX-03 | Phase 15 | Complete |
+| TEST-01 | Phase 15 | Complete |
+| TEST-02 | Phase 15 | Complete |
+| CLEN-01 | Phase 15 | Complete |
+| CLEN-02 | Phase 15 | Complete |
+| CLEN-03 | Phase 15 | Complete |
+| DATA-03 | Phase 15 | Complete |
+| DATA-04 | Phase 15 | Complete |
 | TCOL-01 | Phase 16 | Pending |
 | TCOL-02 | Phase 16 | Pending |
 | TCOL-03 | Phase 16 | Pending |
