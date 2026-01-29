@@ -3,7 +3,7 @@ import { redirect, useLoaderData, data } from "react-router";
 import { z } from "zod";
 import { getSession } from "~/services/session.server";
 import { db, users, traits } from "~/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import {
   Card,
@@ -45,7 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Query traits for this user, ordered by updatedAt desc
   const userTraits = await db.query.traits.findMany({
     where: eq(traits.userId, userId),
-    orderBy: [desc(traits.updatedAt)],
+    orderBy: [asc(traits.name)],
     columns: {
       id: true,
       name: true,

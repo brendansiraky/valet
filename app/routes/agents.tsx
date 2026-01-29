@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getSession } from "~/services/session.server";
 import { db, users, agents, agentTraits, traits, apiKeys } from "~/db";
 import type { Agent } from "~/db/schema/agents";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import {
   Card,
@@ -45,7 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Query agents with their trait assignments
   const userAgents = await db.query.agents.findMany({
     where: eq(agents.userId, userId),
-    orderBy: [desc(agents.updatedAt)],
+    orderBy: [asc(agents.name)],
     with: {
       agentTraits: {
         columns: { traitId: true },
@@ -62,7 +62,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Query user's traits for form population
   const userTraits = await db.query.traits.findMany({
     where: eq(traits.userId, userId),
-    orderBy: [desc(traits.updatedAt)],
+    orderBy: [asc(traits.name)],
     columns: {
       id: true,
       name: true,
