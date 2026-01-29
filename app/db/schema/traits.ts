@@ -12,6 +12,7 @@ export const traits = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     context: text("context").notNull(),
+    color: text("color").notNull().default("#f59e0b"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
