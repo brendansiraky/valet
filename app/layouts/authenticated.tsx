@@ -32,9 +32,7 @@ export default function AuthenticatedLayout() {
     <SidebarProvider>
       <AppSidebar user={user} />
       <SidebarInset>
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
+        <Outlet />
       </SidebarInset>
     </SidebarProvider>
   );
