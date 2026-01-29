@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Home, Bot, GitBranch, FileText, Sparkles, Settings } from "lucide-react";
+import { Home, Bot, GitBranch, Sparkles, Settings } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -12,7 +12,6 @@ const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Agents", url: "/agents", icon: Bot },
   { title: "Pipelines", url: "/pipelines", icon: GitBranch },
-  { title: "Artifacts", url: "/artifacts", icon: FileText },
   { title: "Traits", url: "/traits", icon: Sparkles },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
