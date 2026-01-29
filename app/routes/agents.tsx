@@ -209,7 +209,6 @@ export default function Agents() {
             </p>
           </div>
           <AgentFormDialog
-            traits={userTraits}
             configuredProviders={configuredProviders}
             trigger={
               <Button>
@@ -231,7 +230,6 @@ export default function Agents() {
             </CardHeader>
             <CardContent className="flex justify-center">
               <AgentFormDialog
-                traits={userTraits}
                 configuredProviders={configuredProviders}
                 trigger={
                   <Button>
@@ -248,7 +246,6 @@ export default function Agents() {
               <AgentCard
                 key={agent.id}
                 agent={agent}
-                traits={userTraits}
                 configuredProviders={configuredProviders}
                 onTest={() => setTestingAgent({ id: agent.id, name: agent.name })}
               />

@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useFetcher } from "react-router";
 import type { Agent } from "~/db";
+import { Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,19 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "~/components/ui/tooltip";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { Checkbox } from "~/components/ui/checkbox";
 import { ModelSelector } from "~/components/model-selector";
 
 interface AgentFormDialogProps {
   agent?: Pick<Agent, "id" | "name" | "instructions"> & {
     model?: string | null;
-    traitIds?: string[];
   };
-  traits?: Array<{ id: string; name: string }>;
   configuredProviders: string[];
   trigger: ReactNode;
 }
@@ -35,42 +38,22 @@ interface ActionData {
   };
 }
 
-export function AgentFormDialog({ agent, traits, configuredProviders, trigger }: AgentFormDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [selectedTraitIds, setSelectedTraitIds] = useState<string[]>([]);
+export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFormDialogProps) {
   const fetcher = useFetcher<ActionData>();
   const isEditing = !!agent;
   const isSubmitting = fetcher.state !== "idle";
-
-  // Close dialog on successful submission
-  useEffect(() => {
-    if (fetcher.state === "idle" && fetcher.data?.success) {
-      setOpen(false);
-    }
-  }, [fetcher.state, fetcher.data]);
-
-  // Initialize selectedTraitIds from agent when dialog opens
-  useEffect(() => {
-    if (open) {
-      setSelectedTraitIds(agent?.traitIds ?? []);
-    }
-  }, [open, agent?.traitIds]);
-
-  // Reset form when dialog opens
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-  };
+  const isSuccess = fetcher.state === "idle" && fetcher.data?.success;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog key={isSuccess ? "closed" : "open"}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Agent" : "Create Agent"}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Update your agent's name and instructions."
-              : "Create a new agent with a name and instructions that define its behavior."}
+              ? "Update your agent's name and DNA."
+              : "Create a new agent with a name and DNA that define its behavior."}
           </DialogDescription>
         </DialogHeader>
         <fetcher.Form method="post" className="space-y-4">
@@ -97,7 +80,21 @@ export function AgentFormDialog({ agent, traits, configuredProviders, trigger }:
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="instructions">Instructions</Label>
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="instructions">DNA</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="inline-flex">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <span className="sr-only">What is DNA?</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-[240px]">
+                  Your agent's DNA defines its core personality and behavior -
+                  the fundamental instructions that shape how it thinks and responds.
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <Textarea
               id="instructions"
               name="instructions"
@@ -115,7 +112,7 @@ export function AgentFormDialog({ agent, traits, configuredProviders, trigger }:
               </p>
             )}
             <p className="text-xs text-muted-foreground">
-              Define how this agent should behave. Be specific about its role, tone, and any constraints.
+              Define the core personality and behavior of your agent.
             </p>
           </div>
 
@@ -130,47 +127,6 @@ export function AgentFormDialog({ agent, traits, configuredProviders, trigger }:
               Override the default model for this agent.
             </p>
           </div>
-
-          <div className="space-y-2">
-            <Label>Traits</Label>
-            <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-3">
-              {(!traits || traits.length === 0) ? (
-                <p className="text-sm text-muted-foreground">
-                  No traits available. Create traits in the Traits library.
-                </p>
-              ) : (
-                traits.map((trait) => (
-                  <div key={trait.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`trait-${trait.id}`}
-                      checked={selectedTraitIds.includes(trait.id)}
-                      onCheckedChange={(checked) => {
-                        setSelectedTraitIds((prev) =>
-                          checked
-                            ? [...prev, trait.id]
-                            : prev.filter((id) => id !== trait.id)
-                        );
-                      }}
-                    />
-                    <label
-                      htmlFor={`trait-${trait.id}`}
-                      className="text-sm cursor-pointer"
-                    >
-                      {trait.name}
-                    </label>
-                  </div>
-                ))
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Assign traits to include their context in the agent's prompt.
-            </p>
-          </div>
-
-          <input type="hidden" name="traitsUpdated" value="true" />
-          {selectedTraitIds.map((id) => (
-            <input key={id} type="hidden" name="traitIds" value={id} />
-          ))}
 
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
