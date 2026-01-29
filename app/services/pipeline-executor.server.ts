@@ -33,13 +33,14 @@ export interface ExecutePipelineParams {
 }
 
 /**
- * Build the system prompt by prepending trait context to agent instructions.
+ * Build the system prompt with agent DNA first, then trait modifiers.
+ * DNA is the core purpose/identity; traits modify behavior.
  */
 function buildSystemPrompt(instructions: string, traitContext?: string): string {
   if (!traitContext) return instructions;
 
-  // Prepend trait context to instructions with separator
-  return `${traitContext}\n\n---\n\n${instructions}`;
+  // DNA (core purpose) first, then trait modifiers
+  return `## Agent DNA\n\n${instructions}\n\n---\n\n## Trait Modifiers\n\n${traitContext}`;
 }
 
 /**
@@ -77,12 +78,26 @@ export async function executePipeline(
       .where(eq(pipelineRuns.id, runId));
 
     for (const step of steps) {
-      // Update step status to running
+      // Build user message: use previous output, or generic prompt for first agent
+      let userMessage: string;
+      if (currentInput.trim()) {
+        userMessage = currentInput;
+      } else {
+        userMessage = "Please proceed with your instructions.";
+      }
+
+      // Build system prompt (instructions + traits)
+      const systemPrompt = buildSystemPrompt(step.instructions, step.traitContext);
+
+      // Format full input as sent to LLM (for display in output viewer)
+      const fullInput = `## System Prompt\n\n${systemPrompt}\n\n---\n\n## User Input\n\n${userMessage}`;
+
+      // Update step status to running with full input
       await db
         .update(pipelineRunSteps)
         .set({
           status: "running",
-          input: currentInput,
+          input: fullInput,
           startedAt: new Date(),
         })
         .where(
@@ -99,16 +114,7 @@ export async function executePipeline(
         agentName: step.agentName,
       });
 
-      // Build user message: use previous output, or generic prompt for first agent
-      let userMessage: string;
-      if (currentInput.trim()) {
-        userMessage = currentInput;
-      } else {
-        userMessage = "Please proceed with your instructions.";
-      }
-
       // Build messages for provider chat
-      const systemPrompt = buildSystemPrompt(step.instructions, step.traitContext);
       const messages: ChatMessage[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
@@ -148,6 +154,7 @@ export async function executePipeline(
         type: "step_complete",
         stepIndex: step.order,
         output: result.content,
+        input: fullInput,
       });
 
       // Pass output as input to next step

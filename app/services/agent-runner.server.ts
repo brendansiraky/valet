@@ -1,7 +1,8 @@
 import type { Agent } from "~/db/schema/agents";
 import type { ModelId } from "~/lib/models";
-// Import provider abstraction layer - registers Anthropic factory on import
+// Import provider abstraction layer - registers factories on import
 import "~/lib/providers/anthropic";
+import "~/lib/providers/openai";
 import { getProvider, getProviderForModel } from "~/lib/providers/registry";
 import type { ChatMessage, ToolConfig } from "~/lib/providers/types";
 import { decrypt } from "./encryption.server";
@@ -11,7 +12,7 @@ export interface AgentRunParams {
   userInput: string;
   encryptedApiKey: string;
   model: ModelId;
-  traitContext?: string; // Combined trait context to prepend to instructions
+  traitContext?: string; // Trait modifiers to append after agent DNA
 }
 
 export interface AgentRunResult {
@@ -27,13 +28,14 @@ export interface AgentRunResult {
 }
 
 /**
- * Build the system prompt by prepending trait context to agent instructions.
+ * Build the system prompt with agent DNA first, then trait modifiers.
+ * DNA is the core purpose/identity; traits modify behavior.
  */
 function buildSystemPrompt(instructions: string, traitContext?: string): string {
   if (!traitContext) return instructions;
 
-  // Prepend trait context to instructions with separator
-  return `${traitContext}\n\n---\n\n${instructions}`;
+  // DNA (core purpose) first, then trait modifiers
+  return `## Agent DNA\n\n${instructions}\n\n---\n\n## Trait Modifiers\n\n${traitContext}`;
 }
 
 export async function runAgent(
