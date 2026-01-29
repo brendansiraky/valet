@@ -72,6 +72,7 @@ None.
 |---|-------------|------|--------|-----------|
 | 001 | Add Haiku and Sonnet model options | 2026-01-29 | db285b3 | [001-add-haiku-and-sonnet-model-options-to-se](./quick/001-add-haiku-and-sonnet-model-options-to-se/) |
 | 002 | Show current model on agent test run | 2026-01-29 | 031fc3e | [002-show-current-model-on-agent-test-run](./quick/002-show-current-model-on-agent-test-run/) |
+| 003 | Prevent running pipelines with deleted agents | 2026-01-29 | 19af045 | [003-prevent-running-pipelines-with-deleted-a](./quick/003-prevent-running-pipelines-with-deleted-a/) |
 
 ## Session Continuity
 
