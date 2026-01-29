@@ -4,6 +4,7 @@ import { getSession, commitSession } from "~/services/session.server";
 import { encrypt } from "~/services/encryption.server";
 import { validateApiKey } from "~/services/anthropic.server";
 import { AVAILABLE_MODELS } from "~/lib/models";
+import { OpenAIProvider } from "~/lib/providers/openai";
 import { db, users, apiKeys } from "~/db";
 import { eq } from "drizzle-orm";
 import {
@@ -41,10 +42,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect("/login");
   }
 
-  // Check if user has an API key stored
-  const apiKey = await db.query.apiKeys.findFirst({
+  // Check if user has API keys stored (per provider)
+  const userApiKeys = await db.query.apiKeys.findMany({
     where: eq(apiKeys.userId, userId),
   });
+
+  const anthropicKey = userApiKeys.find((k) => k.provider === "anthropic");
+  const openaiKey = userApiKeys.find((k) => k.provider === "openai");
 
   // Get flash messages (reading clears them)
   const successMessage = session.get("success") as string | undefined;
@@ -53,8 +57,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return data(
     {
       user: { id: user.id, email: user.email },
-      hasApiKey: !!apiKey,
-      modelPreference: apiKey?.modelPreference ?? AVAILABLE_MODELS[0].id,
+      hasApiKey: !!anthropicKey,
+      hasOpenAIKey: !!openaiKey,
+      modelPreference: anthropicKey?.modelPreference ?? AVAILABLE_MODELS[0].id,
       availableModels: AVAILABLE_MODELS,
       successMessage,
       errorMessage,
@@ -123,7 +128,61 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     }
 
-    session.flash("success", "API key saved successfully");
+    session.flash("success", "Anthropic API key saved successfully");
+    return redirect("/settings", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  }
+
+  if (intent === "save-openai-key") {
+    const apiKeyValue = formData.get("openaiKey") as string;
+
+    // Validate format - OpenAI keys start with sk-
+    if (!apiKeyValue || !apiKeyValue.startsWith("sk-")) {
+      session.flash("error", "Invalid OpenAI API key format. Key must start with 'sk-'");
+      return redirect("/settings", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
+    // Validate against OpenAI API
+    const provider = new OpenAIProvider(apiKeyValue);
+    const isValid = await provider.validateKey(apiKeyValue);
+    if (!isValid) {
+      session.flash("error", "Invalid OpenAI API key. Please check your key and try again.");
+      return redirect("/settings", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
+    // Encrypt and store
+    const encryptedKey = encrypt(apiKeyValue);
+
+    // Upsert OpenAI API key
+    const existingKey = await db.query.apiKeys.findFirst({
+      where: (keys, { and, eq }) => and(eq(keys.userId, userId), eq(keys.provider, "openai")),
+    });
+
+    if (existingKey) {
+      await db
+        .update(apiKeys)
+        .set({ encryptedKey, updatedAt: new Date() })
+        .where(eq(apiKeys.id, existingKey.id));
+    } else {
+      await db.insert(apiKeys).values({
+        userId,
+        encryptedKey,
+        provider: "openai",
+      });
+    }
+
+    session.flash("success", "OpenAI API key saved successfully");
     return redirect("/settings", {
       headers: {
         "Set-Cookie": await commitSession(session),
@@ -163,7 +222,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Settings() {
-  const { user, hasApiKey, modelPreference, availableModels, successMessage, errorMessage } = useLoaderData<typeof loader>();
+  const { user, hasApiKey, hasOpenAIKey, modelPreference, availableModels, successMessage, errorMessage } = useLoaderData<typeof loader>();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-8">
@@ -215,6 +274,39 @@ export default function Settings() {
             {hasApiKey && (
               <p className="text-sm text-green-600 dark:text-green-400">
                 API key is saved and validated
+              </p>
+            )}
+          </div>
+
+          {/* OpenAI API Key Section */}
+          <div className="space-y-4 border-t pt-6">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">OpenAI API Key</h3>
+              <p className="text-sm text-muted-foreground">
+                {hasOpenAIKey
+                  ? "Your OpenAI API key is saved. Enter a new key to update it."
+                  : "Enter your OpenAI API key to use GPT models."}
+              </p>
+            </div>
+            <Form method="post" className="space-y-4">
+              <input type="hidden" name="intent" value="save-openai-key" />
+              <div className="space-y-2">
+                <Label htmlFor="openaiKey">API Key</Label>
+                <Input
+                  id="openaiKey"
+                  name="openaiKey"
+                  type="password"
+                  placeholder="sk-proj-..."
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                {hasOpenAIKey ? "Update OpenAI Key" : "Save OpenAI Key"}
+              </Button>
+            </Form>
+            {hasOpenAIKey && (
+              <p className="text-sm text-green-600 dark:text-green-400">
+                OpenAI API key is saved and validated
               </p>
             )}
           </div>

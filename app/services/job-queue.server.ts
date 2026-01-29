@@ -1,7 +1,8 @@
 import { PgBoss, type Job } from "pg-boss";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, pipelineRuns, pipelineRunSteps, agents, pipelines, apiKeys, agentTraits } from "~/db";
 import { executePipeline, type PipelineStep } from "./pipeline-executor.server";
+import { getProviderForModel } from "~/lib/providers/registry";
 import { runEmitter } from "./run-emitter.server";
 
 /**
@@ -69,23 +70,15 @@ export async function registerPipelineWorker() {
         return;
       }
 
-      // Get user's API key and model
-      const [apiKey] = await db
+      // Get user's default API key for model preference lookup
+      const [defaultApiKey] = await db
         .select()
         .from(apiKeys)
-        .where(eq(apiKeys.userId, userId));
-
-      if (!apiKey) {
-        await db
-          .update(pipelineRuns)
-          .set({ status: "failed", error: "API key not configured" })
-          .where(eq(pipelineRuns.id, runId));
-        return;
-      }
+        .where(and(eq(apiKeys.userId, userId), eq(apiKeys.provider, "anthropic")));
 
       // Extract steps from flow data (nodes in topological order by edges)
       const flowData = pipeline.flowData as { nodes: any[]; edges: any[] };
-      const steps = await buildStepsFromFlow(flowData, apiKey.modelPreference);
+      const steps = await buildStepsFromFlow(flowData, defaultApiKey?.modelPreference);
 
       // Create step records
       for (const step of steps) {
@@ -99,7 +92,22 @@ export async function registerPipelineWorker() {
 
       // Determine model: use first agent's model if set, otherwise fallback to user preference or default
       // Note: For simplicity, pipeline uses a single model for all steps (the first agent's preference)
-      const pipelineModel = steps[0]?.model ?? apiKey.modelPreference ?? "claude-sonnet-4-5-20250929";
+      const pipelineModel = steps[0]?.model ?? defaultApiKey?.modelPreference ?? "claude-sonnet-4-5-20250929";
+
+      // Get the correct API key for the model's provider
+      const providerId = getProviderForModel(pipelineModel);
+      const [apiKey] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(eq(apiKeys.userId, userId), eq(apiKeys.provider, providerId)));
+
+      if (!apiKey) {
+        await db
+          .update(pipelineRuns)
+          .set({ status: "failed", error: `${providerId} API key not configured. Please add your API key in Settings.` })
+          .where(eq(pipelineRuns.id, runId));
+        return;
+      }
 
       // Execute pipeline
       await executePipeline({

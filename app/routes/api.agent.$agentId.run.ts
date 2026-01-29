@@ -5,6 +5,7 @@ import { db, agents, apiKeys, agentTraits } from "~/db";
 import { eq, and } from "drizzle-orm";
 import { runAgent, type AgentRunResult } from "~/services/agent-runner.server";
 import type { ModelId } from "~/lib/models";
+import { getProviderForModel } from "~/lib/providers/registry";
 
 const RunAgentSchema = z.object({
   input: z.string().min(1, "Input is required"),
@@ -47,17 +48,10 @@ export async function action({
     return jsonResponse({ success: false, error: "Agent not found" }, 404);
   }
 
-  // Fetch user's API key
-  const apiKey = await db.query.apiKeys.findFirst({
-    where: eq(apiKeys.userId, userId),
+  // Get default API key for model preference fallback
+  const defaultApiKey = await db.query.apiKeys.findFirst({
+    where: and(eq(apiKeys.userId, userId), eq(apiKeys.provider, "anthropic")),
   });
-
-  if (!apiKey) {
-    return jsonResponse(
-      { success: false, error: "Please configure your API key in settings" },
-      400
-    );
-  }
 
   // Parse request body
   let body: unknown;
@@ -97,8 +91,21 @@ export async function action({
     : undefined;
 
   // Use agent's model if set, otherwise user's default from API key
-  const modelToUse = (agent.model ?? apiKey.modelPreference ??
+  const modelToUse = (agent.model ?? defaultApiKey?.modelPreference ??
     "claude-sonnet-4-5-20250929") as ModelId;
+
+  // Get the correct API key for the model's provider
+  const providerId = getProviderForModel(modelToUse);
+  const apiKey = await db.query.apiKeys.findFirst({
+    where: and(eq(apiKeys.userId, userId), eq(apiKeys.provider, providerId)),
+  });
+
+  if (!apiKey) {
+    return jsonResponse(
+      { success: false, error: `Please configure your ${providerId} API key in settings` },
+      400
+    );
+  }
 
   // Run the agent (all agents have access to web_search and web_fetch)
   const runResult = await runAgent({
