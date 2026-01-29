@@ -313,9 +313,9 @@ export default function PipelineBuilderPage() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full overflow-hidden">
       {/* Header */}
-      <div className="border-b p-4 flex items-center gap-4">
+      <div className="fixed top-0 right-0 left-[var(--sidebar-width)] z-10 h-[76px] border-b bg-background p-4 flex items-center gap-4">
         <Input
           value={pipelineName}
           onChange={handleNameChange}
@@ -369,10 +369,10 @@ export default function PipelineBuilderPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex min-h-0">
+      <div className="pt-[76px] h-full flex">
         <AgentSidebar agents={userAgents} traits={userTraits} />
         <TraitsContext.Provider value={traitsMap}>
-          <div className="flex-1">
+          <div className="flex-1 h-[calc(100dvh-76px)]">
             <PipelineCanvas
               onDropAgent={handleDropAgent}
               onDropTrait={handleDropTrait}
