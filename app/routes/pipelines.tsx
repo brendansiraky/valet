@@ -44,7 +44,7 @@ export default function PipelinesPage() {
         </div>
         <Button asChild>
           <Link to="/pipelines/new">
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="size-4 mr-2" />
             New Pipeline
           </Link>
         </Button>

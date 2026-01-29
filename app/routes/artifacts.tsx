@@ -94,7 +94,7 @@ export default function ArtifactsPage() {
       {artifacts.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <FileText className="size-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground mb-4">
               No pipeline runs yet. Run a pipeline to see artifacts here.
             </p>

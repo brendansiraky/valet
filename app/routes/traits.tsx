@@ -136,54 +136,52 @@ export default function Traits() {
   const { traits: userTraits } = useLoaderData<typeof loader>();
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">My Traits</h1>
-            <p className="text-muted-foreground">
-              Create reusable context snippets for your agents
-            </p>
-          </div>
-          <TraitFormDialog
-            trigger={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Trait
-              </Button>
-            }
-          />
+    <div className="container mx-auto py-8">
+      {/* Header */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">My Traits</h1>
+          <p className="text-muted-foreground">
+            Create reusable context snippets for your agents
+          </p>
         </div>
-
-        {/* Content */}
-        {userTraits.length === 0 ? (
-          <Card className="mx-auto max-w-md">
-            <CardHeader className="text-center">
-              <CardTitle>No traits yet</CardTitle>
-              <CardDescription>
-                Create your first trait to get started. Traits define reusable context that can be attached to agents.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <TraitFormDialog
-                trigger={
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Your First Trait
-                  </Button>
-                }
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {userTraits.map((trait) => (
-              <TraitCard key={trait.id} trait={trait} />
-            ))}
-          </div>
-        )}
+        <TraitFormDialog
+          trigger={
+            <Button>
+              <Plus className="mr-2 size-4" />
+              Create Trait
+            </Button>
+          }
+        />
       </div>
+
+      {/* Content */}
+      {userTraits.length === 0 ? (
+        <Card className="mx-auto max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>No traits yet</CardTitle>
+            <CardDescription>
+              Create your first trait to get started. Traits define reusable context that can be attached to agents.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <TraitFormDialog
+              trigger={
+                <Button>
+                  <Plus className="mr-2 size-4" />
+                  Create Your First Trait
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {userTraits.map((trait) => (
+            <TraitCard key={trait.id} trait={trait} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

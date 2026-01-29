@@ -52,7 +52,7 @@ export function AgentCard({ agent, configuredProviders, onTest }: AgentCardProps
         <div className="flex gap-1">
           {onTest && (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onTest}>
-              <Play className="h-4 w-4" />
+              <Play className="size-4" />
               <span className="sr-only">Test {agent.name}</span>
             </Button>
           )}
@@ -61,7 +61,7 @@ export function AgentCard({ agent, configuredProviders, onTest }: AgentCardProps
             configuredProviders={configuredProviders}
             trigger={
               <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Pencil className="h-4 w-4" />
+                <Pencil className="size-4" />
                 <span className="sr-only">Edit {agent.name}</span>
               </Button>
             }
@@ -70,7 +70,7 @@ export function AgentCard({ agent, configuredProviders, onTest }: AgentCardProps
             agent={agent}
             trigger={
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-4" />
                 <span className="sr-only">Delete {agent.name}</span>
               </Button>
             }

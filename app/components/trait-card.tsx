@@ -59,7 +59,7 @@ export function TraitCard({ trait }: TraitCardProps) {
           trait={trait}
           trigger={
             <Button variant="outline" size="sm">
-              <Pencil className="mr-2 h-4 w-4" />
+              <Pencil className="mr-2 size-4" />
               Edit
             </Button>
           }
@@ -68,7 +68,7 @@ export function TraitCard({ trait }: TraitCardProps) {
           <input type="hidden" name="intent" value="delete" />
           <input type="hidden" name="traitId" value={trait.id} />
           <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="mr-2 size-4" />
             Delete
           </Button>
         </Form>

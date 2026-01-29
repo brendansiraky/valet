@@ -198,71 +198,69 @@ export default function Agents() {
   const [testingAgent, setTestingAgent] = useState<TestableAgent | null>(null);
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">My Agents</h1>
-            <p className="text-muted-foreground">
-              Create and manage your AI agents
-            </p>
-          </div>
-          <AgentFormDialog
-            configuredProviders={configuredProviders}
-            trigger={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Agent
-              </Button>
-            }
-          />
+    <div className="container mx-auto py-8">
+      {/* Header */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">My Agents</h1>
+          <p className="text-muted-foreground">
+            Create and manage your AI agents
+          </p>
         </div>
-
-        {/* Content */}
-        {userAgents.length === 0 ? (
-          <Card className="mx-auto max-w-md">
-            <CardHeader className="text-center">
-              <CardTitle>No agents yet</CardTitle>
-              <CardDescription>
-                Create your first agent to get started. Agents define how your AI assistants behave.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <AgentFormDialog
-                configuredProviders={configuredProviders}
-                trigger={
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Your First Agent
-                  </Button>
-                }
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {userAgents.map((agent) => (
-              <AgentCard
-                key={agent.id}
-                agent={agent}
-                configuredProviders={configuredProviders}
-                onTest={() => setTestingAgent({ id: agent.id, name: agent.name })}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Test Dialog */}
-        {testingAgent && (
-          <AgentTestDialog
-            agent={testingAgent}
-            traits={userTraits}
-            open={!!testingAgent}
-            onOpenChange={(open) => !open && setTestingAgent(null)}
-          />
-        )}
+        <AgentFormDialog
+          configuredProviders={configuredProviders}
+          trigger={
+            <Button>
+              <Plus className="mr-2 size-4" />
+              Create Agent
+            </Button>
+          }
+        />
       </div>
+
+      {/* Content */}
+      {userAgents.length === 0 ? (
+        <Card className="mx-auto max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>No agents yet</CardTitle>
+            <CardDescription>
+              Create your first agent to get started. Agents define how your AI assistants behave.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <AgentFormDialog
+              configuredProviders={configuredProviders}
+              trigger={
+                <Button>
+                  <Plus className="mr-2 size-4" />
+                  Create Your First Agent
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {userAgents.map((agent) => (
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              configuredProviders={configuredProviders}
+              onTest={() => setTestingAgent({ id: agent.id, name: agent.name })}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Test Dialog */}
+      {testingAgent && (
+        <AgentTestDialog
+          agent={testingAgent}
+          traits={userTraits}
+          open={!!testingAgent}
+          onOpenChange={(open) => !open && setTestingAgent(null)}
+        />
+      )}
     </div>
   );
 }

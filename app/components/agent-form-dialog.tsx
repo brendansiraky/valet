@@ -85,7 +85,7 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button type="button" className="inline-flex">
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <Info className="size-4 text-muted-foreground" />
                     <span className="sr-only">What is DNA?</span>
                   </button>
                 </TooltipTrigger>
