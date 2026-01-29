@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Form, Link, redirect, useLoaderData, data } from "react-router";
+import { Form, redirect, useLoaderData, data } from "react-router";
 import { getSession, commitSession } from "~/services/session.server";
 import { encrypt } from "~/services/encryption.server";
 import { validateApiKey } from "~/services/anthropic.server";
@@ -11,7 +11,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
@@ -27,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { ThemeSwitcher } from "~/components/ui/theme-switcher";
+import { CheckCircle2, Info } from "lucide-react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -226,147 +227,195 @@ export default function Settings() {
   const { user, hasApiKey, hasOpenAIKey, modelPreference, successMessage, errorMessage } = useLoaderData<typeof loader>();
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-8">
-      <Card className="w-full max-w-md">
+    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your account, API keys, and preferences
+        </p>
+      </div>
+
+      {/* Flash Messages */}
+      {successMessage && (
+        <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Profile Section */}
+      <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Settings</CardTitle>
+          <CardTitle className="text-lg">Profile</CardTitle>
+          <CardDescription>Manage your account details</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">Email</Label>
+            <p className="text-sm font-medium">{user.email}</p>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Profile picture and name settings coming soon.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Anthropic API Key Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Anthropic</CardTitle>
           <CardDescription>
-            Manage your API key and preferences
+            Connect your Anthropic API key to use Claude models
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Flash Messages */}
-          {successMessage && (
-            <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-              {successMessage}
-            </div>
-          )}
-          {errorMessage && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-              {errorMessage}
-            </div>
-          )}
-          {/* API Key Section */}
-          <div className="space-y-4">
+        <CardContent className="space-y-4">
+          <Form method="post" className="space-y-4">
+            <input type="hidden" name="intent" value="save-api-key" />
             <div className="space-y-2">
-              <h3 className="text-lg font-medium">Anthropic API Key</h3>
-              <p className="text-sm text-muted-foreground">
-                {hasApiKey
-                  ? "Your API key is saved. Enter a new key to update it."
-                  : "Enter your Anthropic API key to use Claude models."}
-              </p>
+              <Label htmlFor="apiKey">API Key</Label>
+              <Input
+                id="apiKey"
+                name="apiKey"
+                type="password"
+                placeholder="sk-ant-..."
+                required
+              />
             </div>
-            <Form method="post" className="space-y-4">
-              <input type="hidden" name="intent" value="save-api-key" />
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  name="apiKey"
-                  type="password"
-                  placeholder="sk-ant-..."
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {hasApiKey ? "Update API Key" : "Save API Key"}
-              </Button>
-            </Form>
-            {hasApiKey && (
-              <p className="text-sm text-green-600 dark:text-green-400">
-                API key is saved and validated
-              </p>
-            )}
-          </div>
-
-          {/* OpenAI API Key Section */}
-          <div className="space-y-4 border-t pt-6">
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">OpenAI API Key</h3>
-              <p className="text-sm text-muted-foreground">
-                {hasOpenAIKey
-                  ? "Your OpenAI API key is saved. Enter a new key to update it."
-                  : "Enter your OpenAI API key to use GPT models."}
-              </p>
-            </div>
-            <Form method="post" className="space-y-4">
-              <input type="hidden" name="intent" value="save-openai-key" />
-              <div className="space-y-2">
-                <Label htmlFor="openaiKey">API Key</Label>
-                <Input
-                  id="openaiKey"
-                  name="openaiKey"
-                  type="password"
-                  placeholder="sk-proj-..."
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {hasOpenAIKey ? "Update OpenAI Key" : "Save OpenAI Key"}
-              </Button>
-            </Form>
-            {hasOpenAIKey && (
-              <p className="text-sm text-green-600 dark:text-green-400">
-                OpenAI API key is saved and validated
-              </p>
-            )}
-          </div>
-
-          {/* Model Selection Section - Only show if any API key exists */}
-          {(hasApiKey || hasOpenAIKey) && (
-            <div className="space-y-4 border-t pt-6">
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Default Model</h3>
-                <p className="text-sm text-muted-foreground">
-                  Select the default model for your agents. Agents can override this with their own model selection.
-                </p>
-              </div>
-              <Form method="post" className="space-y-4">
-                <input type="hidden" name="intent" value="update-model" />
-                <div className="space-y-2">
-                  <Label htmlFor="modelPreference">Model</Label>
-                  <Select name="modelPreference" defaultValue={modelPreference}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hasApiKey && (
-                        <SelectGroup>
-                          <SelectLabel>Anthropic</SelectLabel>
-                          {ANTHROPIC_MODELS.map((model) => (
-                            <SelectItem key={model.id} value={model.id}>
-                              {model.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      )}
-                      {hasOpenAIKey && (
-                        <SelectGroup>
-                          <SelectLabel>OpenAI</SelectLabel>
-                          {OPENAI_MODELS.map((model) => (
-                            <SelectItem key={model.id} value={model.id}>
-                              {model.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" variant="outline" className="w-full">
-                  Save Model Preference
-                </Button>
-              </Form>
+            <Button type="submit">
+              {hasApiKey ? "Update API Key" : "Save API Key"}
+            </Button>
+          </Form>
+          {hasApiKey && (
+            <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+              <CheckCircle2 className="size-4" />
+              <span>API key saved and validated</span>
             </div>
           )}
         </CardContent>
-        <CardFooter>
-          <Link to="/dashboard" className="w-full">
-            <Button variant="ghost" className="w-full">
-              Back to Dashboard
+      </Card>
+
+      {/* OpenAI API Key Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">OpenAI</CardTitle>
+          <CardDescription>
+            Connect your OpenAI API key to use GPT models
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Form method="post" className="space-y-4">
+            <input type="hidden" name="intent" value="save-openai-key" />
+            <div className="space-y-2">
+              <Label htmlFor="openaiKey">API Key</Label>
+              <Input
+                id="openaiKey"
+                name="openaiKey"
+                type="password"
+                placeholder="sk-proj-..."
+                required
+              />
+            </div>
+            <Button type="submit">
+              {hasOpenAIKey ? "Update OpenAI Key" : "Save OpenAI Key"}
             </Button>
-          </Link>
-        </CardFooter>
+          </Form>
+          {hasOpenAIKey && (
+            <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+              <CheckCircle2 className="size-4" />
+              <span>OpenAI API key saved and validated</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Default Model Section - Only show if any API key exists */}
+      {(hasApiKey || hasOpenAIKey) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Default Model</CardTitle>
+            <CardDescription>
+              Global setting applied to new agents
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-2 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+              <Info className="mt-0.5 size-4 shrink-0" />
+              <span>
+                This sets the default model for new agents. Individual agents can override this with their own model selection.
+              </span>
+            </div>
+            <Form method="post" className="space-y-4">
+              <input type="hidden" name="intent" value="update-model" />
+              <div className="space-y-2">
+                <Label htmlFor="modelPreference">Model</Label>
+                <Select name="modelPreference" defaultValue={modelPreference}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hasApiKey && (
+                      <SelectGroup>
+                        <SelectLabel>Anthropic</SelectLabel>
+                        {ANTHROPIC_MODELS.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            {model.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    )}
+                    {hasOpenAIKey && (
+                      <SelectGroup>
+                        <SelectLabel>OpenAI</SelectLabel>
+                        {OPENAI_MODELS.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            {model.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" variant="outline">
+                Save Model Preference
+              </Button>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Appearance Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Appearance</CardTitle>
+          <CardDescription>Customize how Valet looks</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label>Theme</Label>
+            <ThemeSwitcher />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Account Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Account</CardTitle>
+          <CardDescription>Manage your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form method="post" action="/logout">
+            <Button type="submit" variant="destructive">
+              Sign out
+            </Button>
+          </Form>
+        </CardContent>
       </Card>
     </div>
   );
