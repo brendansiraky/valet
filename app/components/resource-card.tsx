@@ -59,8 +59,8 @@ export function ResourceCard({
 
   return (
     <Card
-      className="flex flex-col border-l-4"
-      style={{ borderLeftColor: accentColor ?? "transparent" }}
+      className="flex flex-col border-l-4 border-l-muted-foreground/30"
+      style={accentColor ? { borderLeftColor: accentColor } : undefined}
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">{titleElement}</CardTitle>
