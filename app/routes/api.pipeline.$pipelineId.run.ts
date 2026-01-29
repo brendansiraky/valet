@@ -41,8 +41,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
   // Parse request body
   const formData = await request.formData();
   const input = (formData.get("input") as string) || "";
-  const variablesJson = formData.get("variables") as string;
-  const variables = variablesJson ? JSON.parse(variablesJson) : undefined;
 
   // Create run record
   const [run] = await db
@@ -51,7 +49,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
       pipelineId,
       userId,
       input,
-      variables,
       status: "pending",
     })
     .returning();
@@ -67,7 +64,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
       pipelineId,
       userId,
       input,
-      variables,
     },
     {
       retryLimit: 2,

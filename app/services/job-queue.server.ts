@@ -13,7 +13,6 @@ interface PipelineRunJob {
   pipelineId: string;
   userId: string;
   input: string;
-  variables?: Record<string, string>;
 }
 
 let boss: PgBoss | null = null;
@@ -47,7 +46,7 @@ export async function registerPipelineWorker() {
   const queue = await getJobQueue();
 
   await queue.work<PipelineRunJob>("pipeline-run", async ([job]: Job<PipelineRunJob>[]) => {
-    const { runId, pipelineId, userId, input, variables } = job.data;
+    const { runId, pipelineId, userId, input } = job.data;
 
     try {
       // Update run status to 'running'
@@ -116,7 +115,6 @@ export async function registerPipelineWorker() {
         initialInput: input,
         encryptedApiKey: apiKey.encryptedKey,
         model: pipelineModel,
-        variables,
       });
     } catch (error) {
       // Handle errors (including orphaned agent detection) by marking run as failed
