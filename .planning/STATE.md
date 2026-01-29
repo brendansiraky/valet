@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 17 of 18 - Dynamic Pipeline Traits
 Plan: 03 of 3 complete
 Status: Phase complete
-Last activity: 2026-01-29 - Completed 17-03-PLAN.md
+Last activity: 2026-01-29 - Completed quick task 004: Fix trait drag-drop
 
 Progress: [######    ] 60% (v1.3: 3/4 phases complete)
 
