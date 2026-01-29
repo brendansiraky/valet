@@ -83,6 +83,7 @@ export default function PipelineBuilderPage() {
     pipelineName,
     setPipelineMetadata,
     addAgentNode,
+    addTraitNode,
     setNodes,
     setEdges,
     reset,
@@ -149,6 +150,15 @@ export default function PipelineBuilderPage() {
       { id: agentId, name: agentName, instructions: agentInstructions },
       position
     );
+  };
+
+  const handleDropTrait = (
+    traitId: string,
+    traitName: string,
+    traitColor: string,
+    position: { x: number; y: number }
+  ) => {
+    addTraitNode({ id: traitId, name: traitName, color: traitColor }, position);
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -343,7 +353,7 @@ export default function PipelineBuilderPage() {
         <AgentSidebar agents={userAgents} traits={userTraits} />
         <TraitsContext.Provider value={traitsMap}>
           <div className="flex-1">
-            <PipelineCanvas onDropAgent={handleDropAgent} />
+            <PipelineCanvas onDropAgent={handleDropAgent} onDropTrait={handleDropTrait} />
           </div>
         </TraitsContext.Provider>
       </div>
