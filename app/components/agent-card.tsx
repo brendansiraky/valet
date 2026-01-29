@@ -11,32 +11,11 @@ import { AgentFormDialog } from "./agent-form-dialog";
 import { AgentDeleteDialog } from "./agent-delete-dialog";
 
 interface AgentCardProps {
-  agent: Pick<Agent, "id" | "name" | "instructions" | "updatedAt"> & {
+  agent: Pick<Agent, "id" | "name" | "instructions"> & {
     model?: string | null;
   };
   configuredProviders: string[];
   onTest?: () => void;
-}
-
-function formatRelativeTime(date: Date | string): string {
-  const now = new Date();
-  const then = new Date(date);
-  const diffMs = now.getTime() - then.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
-
-  if (diffDay > 0) {
-    return diffDay === 1 ? "1 day ago" : `${diffDay} days ago`;
-  }
-  if (diffHour > 0) {
-    return diffHour === 1 ? "1 hour ago" : `${diffHour} hours ago`;
-  }
-  if (diffMin > 0) {
-    return diffMin === 1 ? "1 minute ago" : `${diffMin} minutes ago`;
-  }
-  return "just now";
 }
 
 function truncateText(text: string, maxLength: number): string {
@@ -82,11 +61,6 @@ export function AgentCard({ agent, configuredProviders, onTest }: AgentCardProps
           {truncateText(agent.instructions, 100)}
         </p>
       </CardContent>
-      <div className="px-6 pb-4">
-        <p className="text-xs text-muted-foreground">
-          Updated {formatRelativeTime(agent.updatedAt)}
-        </p>
-      </div>
     </Card>
   );
 }
