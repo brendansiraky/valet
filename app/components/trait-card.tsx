@@ -1,5 +1,4 @@
 import { Pencil, Trash2 } from "lucide-react";
-import { Form } from "react-router";
 import type { Trait } from "~/db";
 import {
   Card,
@@ -11,6 +10,7 @@ import {
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { TraitFormDialog } from "./trait-form-dialog";
+import { TraitDeleteDialog } from "./trait-delete-dialog";
 
 interface TraitCardProps {
   trait: Pick<Trait, "id" | "name" | "context" | "color" | "updatedAt">;
@@ -64,14 +64,15 @@ export function TraitCard({ trait }: TraitCardProps) {
             </Button>
           }
         />
-        <Form method="post">
-          <input type="hidden" name="intent" value="delete" />
-          <input type="hidden" name="traitId" value={trait.id} />
-          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-            <Trash2 className="mr-2 size-4" />
-            Delete
-          </Button>
-        </Form>
+        <TraitDeleteDialog
+          trait={trait}
+          trigger={
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+              <Trash2 className="mr-2 size-4" />
+              Delete
+            </Button>
+          }
+        />
       </CardFooter>
     </Card>
   );
