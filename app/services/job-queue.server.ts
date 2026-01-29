@@ -135,7 +135,12 @@ export async function registerPipelineWorker() {
 /**
  * Build PipelineStep array from React Flow graph using topological sort.
  * Uses Kahn's algorithm to ensure steps are ordered by dependencies.
- * Loads trait context for each agent.
+ *
+ * Trait Loading (v1.3+):
+ * - Traits are loaded from node.data.traitIds (pipeline-level assignment)
+ * - This replaced agent_traits table lookup (agent-level assignment)
+ * - Same agent can have different traits in different pipelines
+ * - Deleted traits are gracefully skipped (no error, just excluded)
  */
 async function buildStepsFromFlow(
   flowData: { nodes: any[]; edges: any[] },
