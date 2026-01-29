@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 9 - Pipeline & Cost
 Plan: 0 of ?
 Status: Ready to plan
-Last activity: 2026-01-29 - Phase 8 verified complete
+Last activity: 2026-01-29 - Completed quick task 001: Add Haiku and Sonnet model options
 
 Progress: [███████░░░] 75% (Milestone v1.1: 3/4 phases)
 
@@ -113,6 +113,12 @@ None yet.
 ### Blockers/Concerns
 
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 001 | Add Haiku and Sonnet model options | 2026-01-29 | db285b3 | [001-add-haiku-and-sonnet-model-options-to-se](./quick/001-add-haiku-and-sonnet-model-options-to-se/) |
 
 ## Session Continuity
 
