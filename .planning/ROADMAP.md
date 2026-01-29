@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Navigation & Traits** - Sidebar navigation and reusable context snippets
 - [x] **Phase 8: Agent Configuration** - Capability, model, and trait settings per agent
 - [x] **Phase 9: Pipeline & Cost** - Capabilities in pipeline execution, cost visibility
-- [ ] **Phase 10: Agent UX** - Dead code cleanup and UX polish
+- [x] **Phase 10: Agent UX** - Dead code cleanup and UX polish
 
 ## Phase Details
 
@@ -184,7 +184,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 10-01-PLAN.md - Delete unused capability files and remove dead code
+- [x] 10-01-PLAN.md - Delete unused capability files and remove dead code
 
 ## Progress
 
@@ -209,7 +209,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 7. Navigation & Traits | 2/2 | Complete | 2026-01-29 |
 | 8. Agent Configuration | 3/3 | Complete | 2026-01-29 |
 | 9. Pipeline & Cost | 2/2 | Complete | 2026-01-29 |
-| 10. Polish & Cleanup | 0/1 | Planned | - |
+| 10. Polish & Cleanup | 1/1 | Complete | 2026-01-29 |
 
 ---
 *Roadmap created: 2026-01-28*
