@@ -8,6 +8,7 @@ import { eq, and } from "drizzle-orm";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { PipelineCanvas } from "~/components/pipeline-builder/pipeline-canvas";
 import { AgentSidebar } from "~/components/pipeline-builder/agent-sidebar";
+import { TraitsContext } from "~/components/pipeline-builder/traits-context";
 import { RunProgress } from "~/components/pipeline-runner/run-progress";
 import { OutputViewer } from "~/components/output-viewer/output-viewer";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
@@ -122,6 +123,12 @@ export default function PipelineBuilderPage() {
       (n) => n.data.agentId && !validAgentIds.has(n.data.agentId)
     );
   }, [nodes, userAgents]);
+
+  // Create traits lookup map for AgentNode to access trait details
+  const traitsMap = useMemo(
+    () => new Map(userTraits.map((t) => [t.id, t])),
+    [userTraits]
+  );
 
   const handleDropAgent = (
     agentId: string,
@@ -323,9 +330,11 @@ export default function PipelineBuilderPage() {
       {/* Main content */}
       <div className="flex-1 flex">
         <AgentSidebar agents={userAgents} traits={userTraits} />
-        <div className="flex-1">
-          <PipelineCanvas onDropAgent={handleDropAgent} />
-        </div>
+        <TraitsContext.Provider value={traitsMap}>
+          <div className="flex-1">
+            <PipelineCanvas onDropAgent={handleDropAgent} />
+          </div>
+        </TraitsContext.Provider>
       </div>
 
       {/* Run Progress */}
