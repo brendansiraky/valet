@@ -328,7 +328,7 @@ export default function PipelineBuilderPage() {
     return (
         <div className='flex h-full flex-col overflow-hidden'>
             {/* Header */}
-            <div className='z-10 border-b bg-background p-4 flex items-center gap-4'>
+            <div className='h-[78px] z-10 border-b bg-background p-4 flex items-center gap-4'>
                 <Input
                     value={pipelineName}
                     onChange={handleNameChange}
@@ -387,7 +387,7 @@ export default function PipelineBuilderPage() {
 
             {/* Main content */}
             <div className='flex flex-1 min-h-0'>
-                {/* <AgentSidebar agents={userAgents} traits={userTraits} /> */}
+                <AgentSidebar agents={userAgents} traits={userTraits} />
                 <TraitsContext.Provider value={traitsMap}>
                     <div className='flex-1'>
                         <PipelineCanvas
