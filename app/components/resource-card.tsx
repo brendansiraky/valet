@@ -12,7 +12,8 @@ import {
 interface ResourceCardProps {
   title: string;
   updatedAt: Date | string;
-  description: string;
+  /** Optional description - CardContent only renders if provided */
+  description?: string;
   actions: ReactNode;
   /** Optional left border color (e.g., for traits) */
   accentColor?: string;
@@ -68,11 +69,13 @@ export function ResourceCard({
           Updated {formatRelativeTime(updatedAt)}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1">
-        <p className="line-clamp-3 text-sm text-muted-foreground">
-          {description}
-        </p>
-      </CardContent>
+      {description && (
+        <CardContent className="flex-1">
+          <p className="line-clamp-3 text-sm text-muted-foreground">
+            {description}
+          </p>
+        </CardContent>
+      )}
       <CardFooter className="gap-2">{actions}</CardFooter>
     </Card>
   );

@@ -17,7 +17,6 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
     <ResourceCard
       title={pipeline.name}
       updatedAt={pipeline.updatedAt}
-      description={pipeline.description ?? "No description"}
       titleHref={`/pipelines/${pipeline.id}`}
       actions={
         <PipelineDeleteDialog
