@@ -21,13 +21,6 @@ export interface FlowData {
   };
 }
 
-// Type for template variables
-export interface TemplateVariable {
-  name: string;
-  description?: string;
-  defaultValue?: string;
-}
-
 export const pipelines = pgTable(
   "pipelines",
   {
@@ -58,7 +51,6 @@ export const pipelineTemplates = pgTable(
     pipelineId: text("pipeline_id")
       .notNull()
       .references(() => pipelines.id, { onDelete: "cascade" }),
-    variables: jsonb("variables").notNull().$type<TemplateVariable[]>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [index("pipeline_templates_pipeline_id_idx").on(table.pipelineId)]

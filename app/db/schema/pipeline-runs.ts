@@ -31,7 +31,6 @@ export const pipelineRuns = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     status: text("status").notNull().$type<RunStatus>().default("pending"),
     input: text("input").notNull(),
-    variables: jsonb("variables").$type<Record<string, string>>(),
     finalOutput: text("final_output"),
     artifactData: jsonb("artifact_data").$type<ArtifactOutput>(),
     model: text("model"),
