@@ -1,7 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { db, pipelineRuns, pipelineRunSteps } from "~/db";
-import { createAnthropicClient } from "./anthropic.server";
-import { runWithTools } from "./capabilities/run-with-tools.server";
+// Import provider abstraction layer - registers Anthropic factory on import
+import "~/lib/providers/anthropic";
+import { getProvider, getProviderForModel } from "~/lib/providers/registry";
+import type { ChatMessage, ToolConfig } from "~/lib/providers/types";
+import { decrypt } from "./encryption.server";
 import { runEmitter } from "./run-emitter.server";
 
 /**
@@ -63,7 +66,17 @@ export async function executePipeline(
   const { runId, steps, initialInput, encryptedApiKey, model, variables } =
     params;
 
-  const client = createAnthropicClient(encryptedApiKey);
+  // Get provider using abstraction layer
+  const providerId = getProviderForModel(model);
+  const decryptedKey = decrypt(encryptedApiKey);
+  const provider = getProvider(providerId, decryptedKey);
+
+  // Define tools for all steps (web_search + web_fetch available)
+  const tools: ToolConfig[] = [
+    { type: "web_search", maxUses: 5 },
+    { type: "web_fetch", maxUses: 5 },
+  ];
+
   let currentInput = initialInput;
   const usage = { totalInputTokens: 0, totalOutputTokens: 0 };
 
@@ -120,13 +133,15 @@ export async function executePipeline(
         userMessage = "Please proceed with your instructions.";
       }
 
-      // Run with unified tools (web_search + web_fetch available)
-      const result = await runWithTools({
-        client,
-        model,
-        systemPrompt: buildSystemPrompt(substitutedInstructions, step.traitContext),
-        userInput: userMessage,
-      });
+      // Build messages for provider chat
+      const systemPrompt = buildSystemPrompt(substitutedInstructions, step.traitContext);
+      const messages: ChatMessage[] = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ];
+
+      // Run with provider chat (web_search + web_fetch available)
+      const result = await provider.chat(messages, { model, tools });
 
       // Accumulate usage
       usage.totalInputTokens += result.usage.inputTokens;

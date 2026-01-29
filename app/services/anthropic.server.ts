@@ -1,14 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { decrypt } from "./encryption.server";
 
-// Re-export from shared module for server-side consumers
-export { AVAILABLE_MODELS, type ModelId } from "~/lib/models";
-
-export function createAnthropicClient(encryptedApiKey: string): Anthropic {
-  const apiKey = decrypt(encryptedApiKey);
-  return new Anthropic({ apiKey });
-}
-
+/**
+ * Validate that an Anthropic API key is functional.
+ * Used during API key setup flow.
+ */
 export async function validateApiKey(apiKey: string): Promise<boolean> {
   try {
     const client = new Anthropic({ apiKey });
