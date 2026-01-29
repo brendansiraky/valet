@@ -87,8 +87,8 @@ export async function action({
       ),
     });
     traitContext = selectedTraits
-      .map((t) => `## ${t.name}\n\n${t.context}`)
-      .join("\n\n---\n\n");
+      .map((t) => `### ${t.name}\n\n${t.context}`)
+      .join("\n\n");
   } else {
     // Fall back to agent's assigned traits (for backward compatibility)
     const assignments = await db.query.agentTraits.findMany({
@@ -101,8 +101,8 @@ export async function action({
     });
     traitContext = assignments.length > 0
       ? assignments
-          .map((a) => `## ${a.trait.name}\n\n${a.trait.context}`)
-          .join("\n\n---\n\n")
+          .map((a) => `### ${a.trait.name}\n\n${a.trait.context}`)
+          .join("\n\n")
       : undefined;
   }
 

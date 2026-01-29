@@ -137,8 +137,7 @@ export async function registerPipelineWorker() {
  * Uses Kahn's algorithm to ensure steps are ordered by dependencies.
  *
  * Trait Loading (v1.3+):
- * - Traits are loaded from node.data.traitIds (pipeline-level assignment)
- * - This replaced agent_traits table lookup (agent-level assignment)
+ * - Traits loaded from BOTH node.data.traitIds (drop-onto-agent) AND edges (trait-node connections)
  * - Same agent can have different traits in different pipelines
  * - Deleted traits are gracefully skipped (no error, just excluded)
  */
@@ -148,7 +147,26 @@ async function buildStepsFromFlow(
 ): Promise<(PipelineStep & { model?: string | null })[]> {
   const { nodes, edges } = flowData;
 
-  // Build adjacency list and in-degree map
+  // Build map of trait nodes: nodeId -> traitId
+  const traitNodeMap = new Map<string, string>();
+  nodes.forEach((node) => {
+    if (node.type === "trait" && node.data?.traitId) {
+      traitNodeMap.set(node.id, node.data.traitId);
+    }
+  });
+
+  // Build map of trait assignments from edges: agentNodeId -> traitIds[]
+  const edgeTraitMap = new Map<string, string[]>();
+  edges.forEach((edge) => {
+    const traitId = traitNodeMap.get(edge.source);
+    if (traitId) {
+      // This edge connects a trait node to another node (presumably an agent)
+      const existing = edgeTraitMap.get(edge.target) || [];
+      edgeTraitMap.set(edge.target, [...existing, traitId]);
+    }
+  });
+
+  // Build adjacency list and in-degree map (only for agent-to-agent edges)
   const inDegree = new Map<string, number>();
   const adjacency = new Map<string, string[]>();
 
@@ -158,6 +176,9 @@ async function buildStepsFromFlow(
   });
 
   edges.forEach((edge) => {
+    // Skip trait-to-agent edges for topological sort (they don't affect execution order)
+    if (traitNodeMap.has(edge.source)) return;
+
     inDegree.set(edge.target, (inDegree.get(edge.target) || 0) + 1);
     adjacency.get(edge.source)?.push(edge.target);
   });
@@ -197,8 +218,12 @@ async function buildStepsFromFlow(
       continue;
     }
 
-    // Load trait assignments from node data (pipeline-level, not agent-level)
-    const traitIds: string[] = node.data.traitIds ?? [];
+    // Load trait assignments from BOTH sources:
+    // 1. node.data.traitIds - traits dropped directly onto agent node
+    // 2. edgeTraitMap - traits connected via edges from trait nodes
+    const directTraitIds: string[] = node.data.traitIds ?? [];
+    const edgeTraitIds: string[] = edgeTraitMap.get(node.id) ?? [];
+    const traitIds = [...new Set([...directTraitIds, ...edgeTraitIds])]; // Dedupe
     let traitContext: string | undefined;
 
     if (traitIds.length > 0) {
@@ -211,8 +236,8 @@ async function buildStepsFromFlow(
       // This gracefully handles deleted traits by simply not including them
       if (nodeTraits.length > 0) {
         traitContext = nodeTraits
-          .map((t) => `## ${t.name}\n\n${t.context}`)
-          .join("\n\n---\n\n");
+          .map((t) => `### ${t.name}\n\n${t.context}`)
+          .join("\n\n");
       }
     }
 

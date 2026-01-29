@@ -28,14 +28,14 @@ export interface AgentRunResult {
 }
 
 /**
- * Build the system prompt with agent DNA first, then trait modifiers.
- * DNA is the core purpose/identity; traits modify behavior.
+ * Build the system prompt with core purpose first, then trait modifiers.
+ * Core purpose is the fundamental identity; traits modify behavior.
  */
 function buildSystemPrompt(instructions: string, traitContext?: string): string {
   if (!traitContext) return instructions;
 
-  // DNA (core purpose) first, then trait modifiers
-  return `## Agent DNA\n\n${instructions}\n\n---\n\n## Trait Modifiers\n\n${traitContext}`;
+  // Core purpose first, then trait modifiers
+  return `## Core Purpose\n\n${instructions}\n\n---\n\n## Trait Modifiers\n\n${traitContext}`;
 }
 
 export async function runAgent(
