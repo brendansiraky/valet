@@ -40,7 +40,7 @@ Progress: [██░░░░░░░░] 20% (v1.2: 2/10 plans)
 | 11-provider-abstraction | 2 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-02 (1 min), 10-01 (2 min), 11-01 (2 min), 11-03 (2 min)
+- Last 5 plans: 09-02 (1 min), 10-01 (2 min), 11-01 (2 min), 11-02 (2 min)
 
 *Updated after each plan completion*
 
@@ -55,8 +55,8 @@ v1.1 decisions archived in milestones/v1.1-ROADMAP.md.
 - Factory pattern for providers (need API key at construction)
 - Self-registration at module import (avoids initialization races)
 - AVAILABLE_MODELS kept for backward compatibility
-- Fail-fast with all orphans (collect ALL missing agents before failing)
-- Use stored agentName from node.data for user-friendly error messages
+- Reuse provider instance across pipeline steps (same API key)
+- Keep run-with-tools.server.ts for now (unused but not breaking)
 
 ### Pending Todos
 
