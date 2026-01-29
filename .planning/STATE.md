@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 17 of 18 - Dynamic Pipeline Traits
 Plan: 03 of 3 complete
 Status: Phase complete
-Last activity: 2026-01-29 - Completed quick task 004: Fix trait drag-drop
+Last activity: 2026-01-29 - Completed quick task 005: Fix trait drag-drop to canvas for multi-agent
 
 Progress: [######    ] 60% (v1.3: 3/4 phases complete)
 
@@ -77,11 +77,12 @@ None.
 | 002 | Show current model on agent test run | 2026-01-29 | 031fc3e | [002-show-current-model-on-agent-test-run](./quick/002-show-current-model-on-agent-test-run/) |
 | 003 | Prevent running pipelines with deleted agents | 2026-01-29 | 19af045 | [003-prevent-running-pipelines-with-deleted-a](./quick/003-prevent-running-pipelines-with-deleted-a/) |
 | 004 | Fix trait drag-drop onto React Flow canvas | 2026-01-29 | 05dfdf4 | [004-fix-trait-drag-drop-onto-react-flow-canv](./quick/004-fix-trait-drag-drop-onto-react-flow-canv/) |
+| 005 | Fix trait drag-drop to canvas for multi-agent | 2026-01-29 | a46a3a6 | [005-fix-trait-drag-drop-to-canvas-for-multi-](./quick/005-fix-trait-drag-drop-to-canvas-for-multi-/) |
 
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 17-03-PLAN.md
+Stopped at: Completed quick task 005
 Resume file: None
 
 ---
