@@ -14,6 +14,7 @@ export interface AgentRunParams {
     webSearch?: boolean;
     urlFetch?: boolean;
   };
+  traitContext?: string; // Combined trait context to prepend to instructions
 }
 
 export interface AgentRunResult {
@@ -27,13 +28,24 @@ export interface AgentRunResult {
   };
 }
 
+/**
+ * Build the system prompt by prepending trait context to agent instructions.
+ */
+function buildSystemPrompt(instructions: string, traitContext?: string): string {
+  if (!traitContext) return instructions;
+
+  // Prepend trait context to instructions with separator
+  return `${traitContext}\n\n---\n\n${instructions}`;
+}
+
 export async function runAgent(
   params: AgentRunParams
 ): Promise<AgentRunResult> {
-  const { agent, userInput, encryptedApiKey, model, capabilities } = params;
+  const { agent, userInput, encryptedApiKey, model, capabilities, traitContext } = params;
 
   try {
     const client = createAnthropicClient(encryptedApiKey);
+    const systemPrompt = buildSystemPrompt(agent.instructions, traitContext);
 
     // Route to appropriate capability based on flags
     // For now, webSearch and urlFetch are mutually exclusive with text-only
@@ -43,7 +55,7 @@ export async function runAgent(
       const result = await runWithWebSearch({
         client,
         model,
-        systemPrompt: agent.instructions,
+        systemPrompt,
         userInput,
       });
 
@@ -59,7 +71,7 @@ export async function runAgent(
       const result = await runWithUrlFetch({
         client,
         model,
-        systemPrompt: agent.instructions,
+        systemPrompt,
         userInput,
       });
 
@@ -75,7 +87,7 @@ export async function runAgent(
     const result = await generateText({
       client,
       model,
-      systemPrompt: agent.instructions,
+      systemPrompt,
       messages: [{ role: "user", content: userInput }],
     });
 
