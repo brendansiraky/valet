@@ -1,5 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db, pipelineRuns, pipelineRunSteps } from "~/db";
+import type { ArtifactOutput } from "~/db/schema/pipeline-runs";
+import { calculateCost } from "~/lib/pricing";
 // Import provider abstraction layer - registers providers on import
 import "~/lib/providers/anthropic";
 import "~/lib/providers/openai";
@@ -80,6 +82,9 @@ export async function executePipeline(
 
   let currentInput = initialInput;
   const usage = { totalInputTokens: 0, totalOutputTokens: 0 };
+
+  // Track step outputs for artifact storage
+  const stepOutputs = new Map<number, { agentId: string; agentName: string; output: string }>();
 
   try {
     // Update run status to running
@@ -163,6 +168,13 @@ export async function executePipeline(
           )
         );
 
+      // Track step output for artifact storage
+      stepOutputs.set(step.order, {
+        agentId: step.agentId,
+        agentName: step.agentName,
+        output: result.content,
+      });
+
       // Emit step complete event
       runEmitter.emitRunEvent(runId, {
         type: "step_complete",
@@ -174,12 +186,31 @@ export async function executePipeline(
       currentInput = result.content;
     }
 
-    // All steps complete - update run
+    // Build artifact data from collected step outputs
+    const artifactData: ArtifactOutput = {
+      steps: Array.from(stepOutputs.entries())
+        .sort(([a], [b]) => a - b)
+        .map(([stepOrder, data]) => ({
+          ...data,
+          stepOrder,
+        })),
+      finalOutput: currentInput,
+    };
+
+    // Calculate cost for this run
+    const cost = calculateCost(model, usage.totalInputTokens, usage.totalOutputTokens);
+
+    // All steps complete - update run with artifact data and metadata
     await db
       .update(pipelineRuns)
       .set({
         status: "completed",
-        finalOutput: currentInput,
+        finalOutput: currentInput, // Keep for backward compat
+        artifactData,
+        model,
+        inputTokens: usage.totalInputTokens,
+        outputTokens: usage.totalOutputTokens,
+        cost: cost.toString(),
         completedAt: new Date(),
       })
       .where(eq(pipelineRuns.id, runId));
