@@ -16,7 +16,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { LayoutGrid, Save, Trash2, Play, Loader2, AlertTriangle } from "lucide-react";
 import type { Node, Edge } from "@xyflow/react";
-import type { AgentNodeData } from "~/stores/pipeline-store";
+import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -97,18 +97,25 @@ export default function PipelineBuilderPage() {
         pipeline.description || ""
       );
       const flowData = pipeline.flowData as {
-        nodes: Node<AgentNodeData>[];
+        nodes: Node<PipelineNodeData>[];
         edges: Edge[];
       };
-      // Enrich nodes with isOrphaned status
+      // Enrich agent nodes with isOrphaned status
       const validAgentIds = new Set(userAgents.map((a) => a.id));
-      const enrichedNodes = (flowData.nodes || []).map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          isOrphaned: !validAgentIds.has(node.data.agentId),
-        },
-      }));
+      const enrichedNodes = (flowData.nodes || []).map((node) => {
+        // Only agent nodes need orphan checking
+        if (node.type === "agent") {
+          const agentData = node.data as AgentNodeData;
+          return {
+            ...node,
+            data: {
+              ...agentData,
+              isOrphaned: !validAgentIds.has(agentData.agentId),
+            },
+          };
+        }
+        return node;
+      });
       setNodes(enrichedNodes);
       setEdges(flowData.edges || []);
     } else {
@@ -119,9 +126,11 @@ export default function PipelineBuilderPage() {
   // Detect if any agents in the pipeline are orphaned (deleted)
   const hasOrphanedAgents = useMemo(() => {
     const validAgentIds = new Set(userAgents.map((a) => a.id));
-    return nodes.some(
-      (n) => n.data.agentId && !validAgentIds.has(n.data.agentId)
-    );
+    return nodes.some((n) => {
+      if (n.type !== "agent") return false;
+      const agentData = n.data as AgentNodeData;
+      return agentData.agentId && !validAgentIds.has(agentData.agentId);
+    });
   }, [nodes, userAgents]);
 
   // Create traits lookup map for AgentNode to access trait details
@@ -208,12 +217,14 @@ export default function PipelineBuilderPage() {
     navigate("/pipelines");
   };
 
-  // Get steps from store nodes for progress display
+  // Get steps from store nodes for progress display (agent nodes only)
   const pipelineSteps = useMemo(() => {
-    return nodes.map((node) => ({
-      agentId: node.data.agentId,
-      agentName: node.data.agentName,
-    }));
+    return nodes
+      .filter((node): node is Node<AgentNodeData> => node.type === "agent")
+      .map((node) => ({
+        agentId: node.data.agentId,
+        agentName: node.data.agentName,
+      }));
   }, [nodes]);
 
   // Start pipeline execution by calling API and tracking run ID

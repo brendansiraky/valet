@@ -21,6 +21,17 @@ export type AgentNodeData = {
   [key: string]: unknown;
 };
 
+// Type for trait node data (standalone trait nodes on canvas)
+export type TraitNodeData = {
+  traitId: string;
+  traitName: string;
+  traitColor: string;
+  [key: string]: unknown;
+};
+
+// Union type for all node data types
+export type PipelineNodeData = AgentNodeData | TraitNodeData;
+
 interface PipelineState {
   // Current pipeline metadata
   pipelineId: string | null;
@@ -28,19 +39,23 @@ interface PipelineState {
   pipelineDescription: string;
 
   // React Flow state
-  nodes: Node<AgentNodeData>[];
+  nodes: Node<PipelineNodeData>[];
   edges: Edge[];
 
   // React Flow callbacks
-  onNodesChange: OnNodesChange<Node<AgentNodeData>>;
+  onNodesChange: OnNodesChange<Node<PipelineNodeData>>;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
 
   // Actions
-  setNodes: (nodes: Node<AgentNodeData>[]) => void;
+  setNodes: (nodes: Node<PipelineNodeData>[]) => void;
   setEdges: (edges: Edge[]) => void;
   addAgentNode: (
     agent: { id: string; name: string; instructions?: string },
+    position: { x: number; y: number }
+  ) => void;
+  addTraitNode: (
+    trait: { id: string; name: string; color: string },
     position: { x: number; y: number }
   ) => void;
   removeNode: (nodeId: string) => void;
@@ -58,7 +73,7 @@ const initialState = {
   pipelineId: null,
   pipelineName: "Untitled Pipeline",
   pipelineDescription: "",
-  nodes: [] as Node<AgentNodeData>[],
+  nodes: [] as Node<PipelineNodeData>[],
   edges: [] as Edge[],
 };
 
@@ -95,6 +110,20 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
     set({ nodes: [...get().nodes, newNode] });
   },
 
+  addTraitNode: (trait, position) => {
+    const newNode: Node<TraitNodeData> = {
+      id: crypto.randomUUID(),
+      type: "trait",
+      position,
+      data: {
+        traitId: trait.id,
+        traitName: trait.name,
+        traitColor: trait.color,
+      },
+    };
+    set({ nodes: [...get().nodes, newNode] });
+  },
+
   removeNode: (nodeId) => {
     set({
       nodes: get().nodes.filter((n) => n.id !== nodeId),
@@ -110,33 +139,35 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
 
   addTraitToNode: (nodeId, traitId) => {
     set({
-      nodes: get().nodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                traitIds: [...new Set([...(node.data.traitIds || []), traitId])],
-              },
-            }
-          : node
-      ),
+      nodes: get().nodes.map((node) => {
+        // Only agent nodes have traitIds
+        if (node.id !== nodeId || node.type !== "agent") return node;
+        const agentData = node.data as AgentNodeData;
+        return {
+          ...node,
+          data: {
+            ...agentData,
+            traitIds: [...new Set([...(agentData.traitIds || []), traitId])],
+          },
+        };
+      }),
     });
   },
 
   removeTraitFromNode: (nodeId, traitId) => {
     set({
-      nodes: get().nodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                traitIds: (node.data.traitIds || []).filter((id) => id !== traitId),
-              },
-            }
-          : node
-      ),
+      nodes: get().nodes.map((node) => {
+        // Only agent nodes have traitIds
+        if (node.id !== nodeId || node.type !== "agent") return node;
+        const agentData = node.data as AgentNodeData;
+        return {
+          ...node,
+          data: {
+            ...agentData,
+            traitIds: (agentData.traitIds || []).filter((id) => id !== traitId),
+          },
+        };
+      }),
     });
   },
 
