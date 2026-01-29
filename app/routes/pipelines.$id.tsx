@@ -3,7 +3,7 @@ import { useLoaderData, useNavigate } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { redirect } from "react-router";
 import { getSession } from "~/services/session.server";
-import { db, pipelines, agents } from "~/db";
+import { db, pipelines, agents, traits } from "~/db";
 import { eq, and } from "drizzle-orm";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { PipelineCanvas } from "~/components/pipeline-builder/pipeline-canvas";
@@ -33,9 +33,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     .from(agents)
     .where(eq(agents.userId, userId));
 
+  // Fetch user's traits for sidebar
+  const userTraits = await db
+    .select()
+    .from(traits)
+    .where(eq(traits.userId, userId))
+    .orderBy(traits.name);
+
   // For new pipelines, return null pipeline
   if (id === "new") {
-    return { pipeline: null, agents: userAgents };
+    return { pipeline: null, agents: userAgents, traits: userTraits };
   }
 
   // Load existing pipeline
@@ -48,13 +55,14 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response("Pipeline not found", { status: 404 });
   }
 
-  return { pipeline, agents: userAgents };
+  return { pipeline, agents: userAgents, traits: userTraits };
 }
 
 export default function PipelineBuilderPage() {
   const {
     pipeline,
     agents: userAgents,
+    traits: userTraits,
   } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
@@ -314,7 +322,7 @@ export default function PipelineBuilderPage() {
 
       {/* Main content */}
       <div className="flex-1 flex">
-        <AgentSidebar agents={userAgents} />
+        <AgentSidebar agents={userAgents} traits={userTraits} />
         <div className="flex-1">
           <PipelineCanvas onDropAgent={handleDropAgent} />
         </div>

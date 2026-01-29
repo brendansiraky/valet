@@ -1,12 +1,14 @@
 import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
 import type { Agent } from "~/db/schema/agents";
+import type { Trait } from "~/db/schema/traits";
 
 interface AgentSidebarProps {
   agents: Agent[];
+  traits: Trait[];
 }
 
-export function AgentSidebar({ agents }: AgentSidebarProps) {
-  const onDragStart = (event: React.DragEvent, agent: Agent) => {
+export function AgentSidebar({ agents, traits }: AgentSidebarProps) {
+  const onAgentDragStart = (event: React.DragEvent, agent: Agent) => {
     event.dataTransfer.setData("application/agent-id", agent.id);
     event.dataTransfer.setData("application/agent-name", agent.name);
     event.dataTransfer.setData(
@@ -14,6 +16,13 @@ export function AgentSidebar({ agents }: AgentSidebarProps) {
       agent.instructions || ""
     );
     event.dataTransfer.effectAllowed = "move";
+  };
+
+  const onTraitDragStart = (event: React.DragEvent, trait: Trait) => {
+    event.dataTransfer.setData("application/trait-id", trait.id);
+    event.dataTransfer.setData("application/trait-name", trait.name);
+    event.dataTransfer.setData("application/trait-color", trait.color);
+    event.dataTransfer.effectAllowed = "copy";
   };
 
   return (
@@ -29,7 +38,7 @@ export function AgentSidebar({ agents }: AgentSidebarProps) {
             <Card
               key={agent.id}
               draggable
-              onDragStart={(e) => onDragStart(e, agent)}
+              onDragStart={(e) => onAgentDragStart(e, agent)}
               className="cursor-grab active:cursor-grabbing hover:border-primary transition-colors py-0"
             >
               <CardHeader className="py-2 px-3">
@@ -40,6 +49,29 @@ export function AgentSidebar({ agents }: AgentSidebarProps) {
                   {agent.instructions}
                 </p>
               </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <h2 className="font-semibold mb-4 mt-6">Traits</h2>
+      {traits.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No traits yet. Create traits first.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {traits.map((trait) => (
+            <Card
+              key={trait.id}
+              draggable
+              onDragStart={(e) => onTraitDragStart(e, trait)}
+              className="cursor-grab active:cursor-grabbing hover:border-primary transition-colors py-0"
+              style={{ borderLeftWidth: "4px", borderLeftColor: trait.color }}
+            >
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm">{trait.name}</CardTitle>
+              </CardHeader>
             </Card>
           ))}
         </div>
