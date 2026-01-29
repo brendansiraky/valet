@@ -167,7 +167,11 @@ Plans:
   1. Pipeline execution uses the unified runWithTools (web search + URL fetch available)
   2. User sees token count after pipeline completes
   3. User sees estimated cost after pipeline completes
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md - Pricing module and unified tools executor
+- [ ] 09-02-PLAN.md - Cost display in pipeline completion UI
 
 ### Phase 10: Polish & Cleanup
 **Goal**: Final UX polish and cleanup of unused code
@@ -201,7 +205,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 |-------|----------------|--------|-----------|
 | 7. Navigation & Traits | 2/2 | Complete | 2026-01-29 |
 | 8. Agent Configuration | 3/3 | Complete | 2026-01-29 |
-| 9. Pipeline & Cost | 0/? | Pending | - |
+| 9. Pipeline & Cost | 0/2 | Pending | - |
 | 10. Polish & Cleanup | 0/? | Pending | - |
 
 ---
