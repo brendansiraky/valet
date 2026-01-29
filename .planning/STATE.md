@@ -80,7 +80,7 @@ None.
 | 005 | Fix trait drag-drop to canvas for multi-agent | 2026-01-29 | 6741565 | [005-fix-trait-drag-drop-to-canvas-for-multi-](./quick/005-fix-trait-drag-drop-to-canvas-for-multi-/) |
 | 006 | Add pipeline run input dialog with textarea | 2026-01-29 | dedbbd9 | [006-add-pipeline-run-input-dialog-with-texta](./quick/006-add-pipeline-run-input-dialog-with-texta/) |
 | 007 | Add input/output tabs to pipeline output | 2026-01-29 | 5597503 | [007-add-input-output-tabs-to-pipeline-output](./quick/007-add-input-output-tabs-to-pipeline-output/) |
-| 008 | Fix design system inconsistencies across screens | 2026-01-29 | cf032f6 | [008-audit-screens-for-design-system-consiste](./quick/008-audit-screens-for-design-system-consiste/) |
+| 008 | Audit screens for design system consistency | 2026-01-29 | 9f1c609 | [008-audit-screens-for-design-system-consiste](./quick/008-audit-screens-for-design-system-consiste/) |
 
 ## Session Continuity
 
