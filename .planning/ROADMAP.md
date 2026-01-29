@@ -88,7 +88,12 @@ Plans:
 
 **Goal**: Persist pipeline outputs for later viewing
 **Depends on**: Phase 11 (can run in parallel with 12-13)
-**Status**: Not started
+**Status**: In progress
+**Plans:** 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Extend schema with artifact columns, update executor
+- [ ] 14-02-PLAN.md — Create artifact list and detail UI routes
 
 **Scope:**
 - Database schema for artifacts (JSONB storage)
@@ -127,7 +132,7 @@ Plans:
 | 11 - Provider Abstraction | 3 plans | Complete ✓ |
 | 12 - OpenAI Integration | 2 plans | Complete ✓ |
 | 13 - Model Selection UX | 2 plans | Complete ✓ |
-| 14 - Artifact Storage | TBD | Not started |
+| 14 - Artifact Storage | 2 plans | In progress |
 
 ---
 *v1.2 created: 2026-01-29*
