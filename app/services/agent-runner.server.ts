@@ -1,7 +1,10 @@
 import type { Agent } from "~/db/schema/agents";
 import type { ModelId } from "~/lib/models";
-import { createAnthropicClient } from "./anthropic.server";
-import { runWithTools } from "./capabilities/run-with-tools.server";
+// Import provider abstraction layer - registers Anthropic factory on import
+import "~/lib/providers/anthropic";
+import { getProvider, getProviderForModel } from "~/lib/providers/registry";
+import type { ChatMessage, ToolConfig } from "~/lib/providers/types";
+import { decrypt } from "./encryption.server";
 
 export interface AgentRunParams {
   agent: Agent;
@@ -39,17 +42,26 @@ export async function runAgent(
   const { agent, userInput, encryptedApiKey, model, traitContext } = params;
 
   try {
-    const client = createAnthropicClient(encryptedApiKey);
+    // Get provider using abstraction layer
+    const providerId = getProviderForModel(model);
+    const decryptedKey = decrypt(encryptedApiKey);
+    const provider = getProvider(providerId, decryptedKey);
+
+    // Build messages for chat
     const systemPrompt = buildSystemPrompt(agent.instructions, traitContext);
+    const messages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userInput },
+    ];
 
     // All agents have access to web_search and web_fetch tools
     // The model decides which to use based on instructions and input
-    const result = await runWithTools({
-      client,
-      model,
-      systemPrompt,
-      userInput,
-    });
+    const tools: ToolConfig[] = [
+      { type: "web_search", maxUses: 5 },
+      { type: "web_fetch", maxUses: 5 },
+    ];
+
+    const result = await provider.chat(messages, { model, tools });
 
     return {
       success: true,
