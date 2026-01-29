@@ -17,6 +17,7 @@ export type AgentNodeData = {
   agentName: string;
   agentInstructions?: string;
   isOrphaned?: boolean;
+  traitIds: string[]; // Array of trait IDs assigned to this pipeline step
   [key: string]: unknown;
 };
 
@@ -48,6 +49,8 @@ interface PipelineState {
     name: string,
     description: string
   ) => void;
+  addTraitToNode: (nodeId: string, traitId: string) => void;
+  removeTraitFromNode: (nodeId: string, traitId: string) => void;
   reset: () => void;
 }
 
@@ -86,6 +89,7 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         agentId: agent.id,
         agentName: agent.name,
         agentInstructions: agent.instructions,
+        traitIds: [], // Initialize empty trait array
       },
     };
     set({ nodes: [...get().nodes, newNode] });
@@ -102,6 +106,38 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
 
   setPipelineMetadata: (id, name, description) => {
     set({ pipelineId: id, pipelineName: name, pipelineDescription: description });
+  },
+
+  addTraitToNode: (nodeId, traitId) => {
+    set({
+      nodes: get().nodes.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                traitIds: [...new Set([...(node.data.traitIds || []), traitId])],
+              },
+            }
+          : node
+      ),
+    });
+  },
+
+  removeTraitFromNode: (nodeId, traitId) => {
+    set({
+      nodes: get().nodes.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                traitIds: (node.data.traitIds || []).filter((id) => id !== traitId),
+              },
+            }
+          : node
+      ),
+    });
   },
 
   reset: () => set(initialState),
