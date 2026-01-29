@@ -50,10 +50,10 @@ export function getProviderForModel(modelId: string): string {
   if (modelId.startsWith("claude-")) {
     return "anthropic";
   }
-  // OpenAI models will be added in Phase 12
-  // if (modelId.startsWith("gpt-")) {
-  //   return "openai";
-  // }
+  // OpenAI models (gpt-*, o3-*, o4-*)
+  if (modelId.startsWith("gpt-") || modelId.startsWith("o3-") || modelId.startsWith("o4-")) {
+    return "openai";
+  }
   throw new Error(`Unknown model provider: ${modelId}`);
 }
 
