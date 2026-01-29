@@ -1,6 +1,8 @@
 import { memo } from "react";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
+import { Unplug } from "lucide-react";
+import { cn } from "~/lib/utils";
 import type { AgentNodeData } from "~/stores/pipeline-store";
 
 // Define the full node type for React Flow
@@ -11,7 +13,11 @@ export const AgentNode = memo(
   ({ data, selected }: NodeProps<AgentNodeType>) => {
     return (
       <Card
-        className={`w-[250px] py-0 ${selected ? "ring-2 ring-primary" : ""}`}
+        className={cn(
+          "w-[250px] py-0",
+          selected && "ring-2 ring-primary",
+          data.isOrphaned && "opacity-70 border-destructive/50 bg-destructive/5"
+        )}
       >
         <Handle
           type="target"
@@ -19,7 +25,10 @@ export const AgentNode = memo(
           className="!bg-muted-foreground !w-3 !h-3"
         />
         <CardHeader className="py-3 px-4">
-          <CardTitle className="text-sm font-medium">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            {data.isOrphaned && (
+              <Unplug className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+            )}
             {data.agentName}
           </CardTitle>
         </CardHeader>

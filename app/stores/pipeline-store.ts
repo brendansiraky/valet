@@ -16,6 +16,7 @@ export type AgentNodeData = {
   agentId: string;
   agentName: string;
   agentInstructions?: string;
+  isOrphaned?: boolean;
   [key: string]: unknown;
 };
 
