@@ -120,7 +120,14 @@ Plans:
 
 **Goal:** Enable conditional TRUE/FALSE routing in pipelines using decision agents
 **Depends on:** Phase 17
-**Status:** Not started
+**Status:** Planned
+**Plans:** 4 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Database schema (maxIterations) and pipeline store extension
+- [ ] 18-02-PLAN.md — DecisionNode component and canvas integration
+- [ ] 18-03-PLAN.md — Decision prompt injection and response parsing
+- [ ] 18-04-PLAN.md — Graph-based executor with decision routing
 
 **Scope:**
 - Add "Decision Mode" toggle to agent nodes in pipeline builder (pipeline-level, not agent-level)
