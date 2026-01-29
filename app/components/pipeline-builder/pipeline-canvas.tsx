@@ -28,8 +28,12 @@ function PipelineCanvasInner({ onDropAgent }: PipelineCanvasProps) {
     usePipelineStore();
 
   const onDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+    // Only handle agent drops at the canvas level
+    // Trait drops should bubble to AgentNode handlers
+    if (event.dataTransfer.types.includes("application/agent-id")) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+    }
   }, []);
 
   const onDrop = useCallback(
