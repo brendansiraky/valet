@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 12 of 14 - OpenAI Integration
-Plan: 1/3 complete
+Phase: 13 of 14 - Model Selection UX
+Plan: 1/2 complete
 Status: In progress
-Last activity: 2026-01-29 — Completed 12-01-PLAN.md
+Last activity: 2026-01-29 — Completed 13-01-PLAN.md
 
-Progress: [███░░░░░░░] 35% (v1.2: 1.33/4 phases)
+Progress: [██████░░░░] 63% (v1.2: 3/4 phases in progress)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
-- Average duration: 7 min
-- Total execution time: 3.31 hours
+- Total plans completed: 32
+- Average duration: 6 min
+- Total execution time: 3.59 hours
 
 **By Phase:**
 
@@ -38,10 +38,11 @@ Progress: [███░░░░░░░] 35% (v1.2: 1.33/4 phases)
 | 09-pipeline-cost | 2 | 3 min | 2 min |
 | 10-agent-ux | 1 | 2 min | 2 min |
 | 11-provider-abstraction | 3 | 6 min | 2 min |
-| 12-openai-integration | 1 | 2 min | 2 min |
+| 12-openai-integration | 2 | 17 min | 9 min |
+| 13-model-selection-ux | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 11-01 (2 min), 11-02 (2 min), 11-03 (2 min), 12-01 (2 min)
+- Last 5 plans: 11-03 (2 min), 12-01 (2 min), 12-02 (15 min), 13-01 (2 min)
 
 *Updated after each plan completion*
 
@@ -63,6 +64,13 @@ v1.1 decisions archived in milestones/v1.1-ROADMAP.md.
 - Use Chat Completions API (not Responses API) for message-based interface consistency
 - Skip unsupported tools (web_search, web_fetch) with console.warn instead of throwing
 - Start with GPT-4o models; GPT-5.x can be added when user has access
+- Pulled multi-provider API key storage forward from Phase 13 to enable testing
+- Added provider logging for debugging (`[Provider] chat() called with model: ...`)
+
+**Phase 13 decisions:**
+- Special `__default__` value for "Use default from settings" option
+- Disabled select with helpful message when no providers configured
+- Provider filtering via configuredProviders array prop
 
 ### Pending Todos
 
@@ -83,8 +91,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 12-01-PLAN.md - OpenAI SDK integration
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
 
 ---
-*Phase 12 in progress. Next: 12-02-PLAN.md (API key configuration UI)*
+*Phase 13 plan 1 complete. Next: 13-02-PLAN.md (Settings Default Model)*
