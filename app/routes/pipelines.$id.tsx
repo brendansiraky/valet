@@ -14,6 +14,15 @@ import { OutputViewer } from "~/components/output-viewer/output-viewer";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import { Textarea } from "~/components/ui/textarea";
 import { LayoutGrid, Save, Trash2, Play, Loader2, AlertTriangle } from "lucide-react";
 import type { Node, Edge } from "@xyflow/react";
 import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
@@ -75,6 +84,8 @@ export default function PipelineBuilderPage() {
     usage: { inputTokens: number; outputTokens: number } | null;
     model: string | null;
   } | null>(null);
+  const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
+  const [runInput, setRunInput] = useState("");
 
   const {
     nodes,
@@ -238,13 +249,13 @@ export default function PipelineBuilderPage() {
   }, [nodes]);
 
   // Start pipeline execution by calling API and tracking run ID
-  const startPipelineRun = async () => {
+  const startPipelineRun = async (input: string) => {
     if (!pipelineId) return;
 
     setIsStartingRun(true);
     try {
       const formData = new FormData();
-      formData.set("input", "");
+      formData.set("input", input);
 
       const response = await fetch(`/api/pipeline/${pipelineId}/run`, {
         method: "POST",
@@ -265,8 +276,14 @@ export default function PipelineBuilderPage() {
     }
   };
 
-  const handleRun = async () => {
-    await startPipelineRun();
+  const handleRun = () => {
+    setIsRunDialogOpen(true);
+  };
+
+  const handleRunSubmit = async () => {
+    setIsRunDialogOpen(false);
+    await startPipelineRun(runInput);
+    setRunInput(""); // Reset for next run
   };
 
   const handleRunComplete = useCallback((
@@ -386,6 +403,33 @@ export default function PipelineBuilderPage() {
         </div>
       )}
 
+      {/* Run Input Dialog */}
+      <Dialog open={isRunDialogOpen} onOpenChange={setIsRunDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Run Pipeline</DialogTitle>
+            <DialogDescription>
+              Enter the input text for this pipeline run.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter your input here..."
+            value={runInput}
+            onChange={(e) => setRunInput(e.target.value)}
+            rows={6}
+            className="resize-none"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRunDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRunSubmit}>
+              <Play className="w-4 h-4 mr-2" />
+              Run Pipeline
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
