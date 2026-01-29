@@ -16,6 +16,7 @@ interface AgentCardProps {
     traitIds?: string[];
   };
   traits?: Array<{ id: string; name: string }>;
+  configuredProviders: string[];
   onTest?: () => void;
 }
 
@@ -45,7 +46,7 @@ function truncateText(text: string, maxLength: number): string {
   return text.slice(0, maxLength).trim() + "...";
 }
 
-export function AgentCard({ agent, traits, onTest }: AgentCardProps) {
+export function AgentCard({ agent, traits, configuredProviders, onTest }: AgentCardProps) {
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-row items-start justify-between space-y-0 pb-2">
@@ -60,6 +61,7 @@ export function AgentCard({ agent, traits, onTest }: AgentCardProps) {
           <AgentFormDialog
             agent={agent}
             traits={traits}
+            configuredProviders={configuredProviders}
             trigger={
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Pencil className="h-4 w-4" />

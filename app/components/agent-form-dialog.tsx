@@ -14,15 +14,8 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Checkbox } from "~/components/ui/checkbox";
-import { AVAILABLE_MODELS } from "~/lib/models";
+import { ModelSelector } from "~/components/model-selector";
 
 interface AgentFormDialogProps {
   agent?: Pick<Agent, "id" | "name" | "instructions"> & {
@@ -30,6 +23,7 @@ interface AgentFormDialogProps {
     traitIds?: string[];
   };
   traits?: Array<{ id: string; name: string }>;
+  configuredProviders: string[];
   trigger: ReactNode;
 }
 
@@ -41,7 +35,7 @@ interface ActionData {
   };
 }
 
-export function AgentFormDialog({ agent, traits, trigger }: AgentFormDialogProps) {
+export function AgentFormDialog({ agent, traits, configuredProviders, trigger }: AgentFormDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedTraitIds, setSelectedTraitIds] = useState<string[]>([]);
   const fetcher = useFetcher<ActionData>();
@@ -127,19 +121,11 @@ export function AgentFormDialog({ agent, traits, trigger }: AgentFormDialogProps
 
           <div className="space-y-2">
             <Label htmlFor="model">Model</Label>
-            <Select name="model" defaultValue={agent?.model ?? "__default__"}>
-              <SelectTrigger id="model" className="w-full">
-                <SelectValue placeholder="Use default from settings" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__default__">Use default from settings</SelectItem>
-                {AVAILABLE_MODELS.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    {model.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ModelSelector
+              name="model"
+              defaultValue={agent?.model ?? "__default__"}
+              configuredProviders={configuredProviders}
+            />
             <p className="text-xs text-muted-foreground">
               Override the default model for this agent.
             </p>

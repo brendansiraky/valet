@@ -3,7 +3,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { redirect, useLoaderData, data } from "react-router";
 import { z } from "zod";
 import { getSession } from "~/services/session.server";
-import { db, users, agents, agentTraits, traits } from "~/db";
+import { db, users, agents, agentTraits, traits, apiKeys } from "~/db";
 import type { Agent } from "~/db/schema/agents";
 import { eq, and, desc } from "drizzle-orm";
 import { Plus } from "lucide-react";
@@ -69,7 +69,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
   });
 
-  return { agents: agentsWithTraitIds, traits: userTraits };
+  // Query user's configured providers
+  const userApiKeys = await db.query.apiKeys.findMany({
+    where: eq(apiKeys.userId, userId),
+    columns: { provider: true },
+  });
+  const configuredProviders = userApiKeys.map((k) => k.provider);
+
+  return { agents: agentsWithTraitIds, traits: userTraits, configuredProviders };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -187,7 +194,7 @@ export async function action({ request }: ActionFunctionArgs) {
 type TestableAgent = Pick<Agent, "id" | "name">;
 
 export default function Agents() {
-  const { agents: userAgents, traits: userTraits } = useLoaderData<typeof loader>();
+  const { agents: userAgents, traits: userTraits, configuredProviders } = useLoaderData<typeof loader>();
   const [testingAgent, setTestingAgent] = useState<TestableAgent | null>(null);
 
   return (
@@ -203,6 +210,7 @@ export default function Agents() {
           </div>
           <AgentFormDialog
             traits={userTraits}
+            configuredProviders={configuredProviders}
             trigger={
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -224,6 +232,7 @@ export default function Agents() {
             <CardContent className="flex justify-center">
               <AgentFormDialog
                 traits={userTraits}
+                configuredProviders={configuredProviders}
                 trigger={
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
@@ -240,6 +249,7 @@ export default function Agents() {
                 key={agent.id}
                 agent={agent}
                 traits={userTraits}
+                configuredProviders={configuredProviders}
                 onTest={() => setTestingAgent({ id: agent.id, name: agent.name })}
               />
             ))}
