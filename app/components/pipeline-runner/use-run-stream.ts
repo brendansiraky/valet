@@ -7,7 +7,7 @@ import { useEventSource } from "remix-utils/sse/react";
 export type StreamEvent =
   | { type: "step_start"; stepIndex: number; agentName: string }
   | { type: "text_delta"; stepIndex: number; text: string }
-  | { type: "step_complete"; stepIndex: number; output: string }
+  | { type: "step_complete"; stepIndex: number; output: string; input: string }
   | {
       type: "pipeline_complete";
       finalOutput: string;
@@ -23,6 +23,7 @@ export interface RunStreamState {
   currentAgentName: string;
   streamingText: string;
   stepOutputs: Map<number, string>;
+  stepInputs: Map<number, string>;
   finalOutput: string | null;
   error: string | null;
   usage: { inputTokens: number; outputTokens: number } | null;
@@ -35,6 +36,7 @@ const initialState: RunStreamState = {
   currentAgentName: "",
   streamingText: "",
   stepOutputs: new Map(),
+  stepInputs: new Map(),
   finalOutput: null,
   error: null,
   usage: null,
@@ -88,9 +90,12 @@ export function useRunStream(runId: string | null) {
           case "step_complete": {
             const newOutputs = new Map(prev.stepOutputs);
             newOutputs.set(event.stepIndex, event.output);
+            const newInputs = new Map(prev.stepInputs);
+            newInputs.set(event.stepIndex, event.input);
             return {
               ...prev,
               stepOutputs: newOutputs,
+              stepInputs: newInputs,
               streamingText: "",
             };
           }

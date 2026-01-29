@@ -8,8 +8,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger,
 } from "~/components/ui/sidebar";
 import { NavMain } from "~/components/nav-main";
+import { ThemeSwitcher } from "~/components/ui/theme-switcher";
 
 interface AppSidebarProps {
   user: {
@@ -22,10 +24,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1">
+        <div className="flex items-center justify-between px-2 py-1 group-data-[collapsible=icon]:justify-center">
           <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
             Valet
           </span>
+          <SidebarTrigger />
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -33,6 +36,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="px-2 py-1 group-data-[collapsible=icon]:hidden">
+              <ThemeSwitcher />
+            </div>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <div className="flex flex-col gap-2 px-2 py-1 group-data-[collapsible=icon]:hidden">
               <span className="text-xs text-muted-foreground truncate">

@@ -13,6 +13,7 @@ interface RunProgressProps {
   onComplete?: (
     finalOutput: string,
     stepOutputs: Map<number, string>,
+    stepInputs: Map<number, string>,
     usage: { inputTokens: number; outputTokens: number } | null,
     model: string | null
   ) => void;
@@ -35,6 +36,7 @@ export function RunProgress({
     currentAgentName,
     streamingText,
     stepOutputs,
+    stepInputs,
     finalOutput,
     error,
     usage,
@@ -52,12 +54,12 @@ export function RunProgress({
   // Notify on completion/error
   useEffect(() => {
     if (status === "completed" && finalOutput && onComplete) {
-      onComplete(finalOutput, stepOutputs, usage, model);
+      onComplete(finalOutput, stepOutputs, stepInputs, usage, model);
     }
     if (status === "failed" && error && onError) {
       onError(error);
     }
-  }, [status, finalOutput, stepOutputs, usage, model, error, onComplete, onError]);
+  }, [status, finalOutput, stepOutputs, stepInputs, usage, model, error, onComplete, onError]);
 
   if (!runId) return null;
 

@@ -38,6 +38,8 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async chat(messages: ChatMessage[], options: ChatOptions): Promise<ChatResult> {
+    console.log(`[Anthropic] chat() called with model: ${options.model}`);
+
     // Extract system message
     const systemMessage = messages.find((m) => m.role === "system");
     const conversationMessages = messages

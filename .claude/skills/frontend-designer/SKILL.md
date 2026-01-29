@@ -155,9 +155,108 @@ Use the spacing scale systematically:
 | Stats row | `grid grid-cols-2 lg:grid-cols-4 gap-4` |
 | Form | `space-y-4` for fields, `space-y-6` for sections |
 
+## Component Sizing (shadcn defaults)
+
+These are the exact values from shadcn/ui. Follow these strictly for consistency.
+
+### Heights
+
+| Element | Default | Small | Large |
+|---------|---------|-------|-------|
+| Button | `h-9` (36px) | `h-8` (32px) | `h-10` (40px) |
+| Input | `h-9` (36px) | `h-8` (32px) | - |
+| Sidebar menu button | `h-8` (32px) | `h-7` (28px) | `h-12` (48px) |
+
+### Icons
+
+| Context | Size |
+|---------|------|
+| Default (buttons, menus) | `size-4` (16px) |
+| Large buttons | `size-4` (16px) - same |
+| Standalone/hero | `size-5` or `size-6` |
+
+### Sidebar
+
+| Property | Value |
+|----------|-------|
+| Width (expanded) | `16rem` (256px) |
+| Width (collapsed) | `3rem` (48px) |
+| Collapsed button | `size-8` (32px) |
+| Icon size | `size-4` (16px) |
+| Gap (icon to text) | `gap-2` (8px) |
+| Padding | `p-2` (8px) |
+
+### Spacing Scale (Tailwind 4px grid)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `1` | 4px | Micro adjustments |
+| `2` | 8px | Icon gaps, tight padding |
+| `3` | 12px | Compact padding |
+| `4` | 16px | Standard padding, gaps |
+| `6` | 24px | Card padding, section gaps |
+| `8` | 32px | Major section breaks |
+
 ## Component Consistency
 
 All components should match shadcn's visual language. Use shadcn components from `~/components/ui` whenever possible.
+
+### Creating Shared Components
+
+**Always check for existing shared components first.** If a component doesn't exist and you need it:
+
+1. **Create it in `app/components/ui/`** - Never inline complex UI patterns in page components
+2. **Follow shadcn's compositional pattern** - Build from primitives, expose composable parts
+3. **Then import and use it** - Reference the shared component, don't duplicate
+
+```typescript
+// ❌ Bad: Inline complex UI in a page
+function AgentPage() {
+  return (
+    <div className="rounded-lg border p-4 flex items-center gap-3...">
+      {/* 50 lines of card-like UI */}
+    </div>
+  )
+}
+
+// ✅ Good: Create shared component first, then use it
+// 1. First create: app/components/ui/agent-card.tsx
+// 2. Then use:
+import { AgentCard } from "~/components/ui/agent-card"
+
+function AgentPage() {
+  return <AgentCard agent={agent} />
+}
+```
+
+### Compositional Pattern (shadcn style)
+
+When creating components, follow shadcn's compositional approach:
+
+```typescript
+// Expose composable parts, not monolithic props
+// ❌ Monolithic
+<Card title="Settings" description="Manage your account" footer={<Button>Save</Button>}>
+  {content}
+</Card>
+
+// ✅ Compositional (shadcn pattern)
+<Card>
+  <CardHeader>
+    <CardTitle>Settings</CardTitle>
+    <CardDescription>Manage your account</CardDescription>
+  </CardHeader>
+  <CardContent>{content}</CardContent>
+  <CardFooter>
+    <Button>Save</Button>
+  </CardFooter>
+</Card>
+```
+
+This pattern:
+- Gives consumers full control over structure
+- Makes components flexible without prop explosion
+- Keeps styling consistent via the sub-components
 
 ### Buttons
 

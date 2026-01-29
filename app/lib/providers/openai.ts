@@ -29,6 +29,8 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async chat(messages: ChatMessage[], options: ChatOptions): Promise<ChatResult> {
+    console.log(`[OpenAI] chat() called with model: ${options.model}`);
+
     // Log warning for unsupported tools
     if (options.tools?.length) {
       const unsupported = options.tools
