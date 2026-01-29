@@ -3,7 +3,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { redirect, useLoaderData, data } from "react-router";
 import { z } from "zod";
 import { getSession } from "~/services/session.server";
-import { db, users, agents } from "~/db";
+import { db, users, agents, agentTraits, traits } from "~/db";
 import type { Agent } from "~/db/schema/agents";
 import { eq, and, desc } from "drizzle-orm";
 import { Plus } from "lucide-react";
@@ -22,6 +22,8 @@ import { AgentTestDialog } from "~/components/agent-test-dialog";
 const AgentSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
   instructions: z.string().min(1, "Instructions are required").max(10000, "Instructions must be 10,000 characters or less"),
+  capability: z.enum(["none", "search", "fetch"]).default("none"),
+  model: z.string().optional().transform(val => val || null), // Empty string becomes null
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -41,19 +43,34 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect("/login");
   }
 
-  // Query agents for this user, ordered by updatedAt desc
+  // Query agents with their trait assignments
   const userAgents = await db.query.agents.findMany({
     where: eq(agents.userId, userId),
     orderBy: [desc(agents.updatedAt)],
-    columns: {
-      id: true,
-      name: true,
-      instructions: true,
-      updatedAt: true,
+    with: {
+      agentTraits: {
+        columns: { traitId: true },
+      },
     },
   });
 
-  return { agents: userAgents };
+  // Transform to include traitIds array
+  const agentsWithTraitIds = userAgents.map((agent) => ({
+    ...agent,
+    traitIds: agent.agentTraits.map((at) => at.traitId),
+  }));
+
+  // Query user's traits for form population
+  const userTraits = await db.query.traits.findMany({
+    where: eq(traits.userId, userId),
+    orderBy: [desc(traits.updatedAt)],
+    columns: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return { agents: agentsWithTraitIds, traits: userTraits };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -68,9 +85,13 @@ export async function action({ request }: ActionFunctionArgs) {
   const intent = formData.get("intent") as string;
 
   if (intent === "create") {
+    const traitIds = formData.getAll("traitIds") as string[];
+
     const result = AgentSchema.safeParse({
       name: formData.get("name"),
       instructions: formData.get("instructions"),
+      capability: formData.get("capability"),
+      model: formData.get("model"),
     });
 
     if (!result.success) {
@@ -80,20 +101,41 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    await db.insert(agents).values({
-      userId,
-      name: result.data.name,
-      instructions: result.data.instructions,
-    });
+    // Insert agent
+    const [newAgent] = await db
+      .insert(agents)
+      .values({
+        userId,
+        name: result.data.name,
+        instructions: result.data.instructions,
+        capability: result.data.capability,
+        model: result.data.model,
+      })
+      .returning({ id: agents.id });
+
+    // Insert trait assignments
+    if (traitIds.length > 0) {
+      await db.insert(agentTraits).values(
+        traitIds.map((traitId) => ({
+          agentId: newAgent.id,
+          traitId,
+        }))
+      );
+    }
 
     return { success: true };
   }
 
   if (intent === "update") {
     const agentId = formData.get("agentId") as string;
+    const traitsUpdated = formData.has("traitsUpdated");
+    const traitIds = formData.getAll("traitIds") as string[];
+
     const result = AgentSchema.safeParse({
       name: formData.get("name"),
       instructions: formData.get("instructions"),
+      capability: formData.get("capability"),
+      model: formData.get("model"),
     });
 
     if (!result.success) {
@@ -103,14 +145,32 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    // Update agent with ownership check
+    // Update agent fields
     await db
       .update(agents)
       .set({
         name: result.data.name,
         instructions: result.data.instructions,
+        capability: result.data.capability,
+        model: result.data.model,
       })
       .where(and(eq(agents.id, agentId), eq(agents.userId, userId)));
+
+    // Update trait assignments if traits section was submitted
+    if (traitsUpdated) {
+      // Delete existing assignments
+      await db.delete(agentTraits).where(eq(agentTraits.agentId, agentId));
+
+      // Insert new assignments
+      if (traitIds.length > 0) {
+        await db.insert(agentTraits).values(
+          traitIds.map((traitId) => ({
+            agentId,
+            traitId,
+          }))
+        );
+      }
+    }
 
     return { success: true };
   }
@@ -132,7 +192,7 @@ export async function action({ request }: ActionFunctionArgs) {
 type TestableAgent = Pick<Agent, "id" | "name">;
 
 export default function Agents() {
-  const { agents: userAgents } = useLoaderData<typeof loader>();
+  const { agents: userAgents, traits: userTraits } = useLoaderData<typeof loader>();
   const [testingAgent, setTestingAgent] = useState<TestableAgent | null>(null);
 
   return (
@@ -147,6 +207,7 @@ export default function Agents() {
             </p>
           </div>
           <AgentFormDialog
+            traits={userTraits}
             trigger={
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -167,6 +228,7 @@ export default function Agents() {
             </CardHeader>
             <CardContent className="flex justify-center">
               <AgentFormDialog
+                traits={userTraits}
                 trigger={
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
@@ -182,6 +244,7 @@ export default function Agents() {
               <AgentCard
                 key={agent.id}
                 agent={agent}
+                traits={userTraits}
                 onTest={() => setTestingAgent({ id: agent.id, name: agent.name })}
               />
             ))}
