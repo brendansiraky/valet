@@ -45,4 +45,4 @@ export type ThemeId = keyof typeof themes;
 
 export const themeIds = Object.keys(themes) as ThemeId[];
 
-export const defaultTheme: ThemeId = "tangerine";
+export const defaultTheme: ThemeId = "notebook";
