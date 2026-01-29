@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useFetcher } from "react-router";
 import type { Agent } from "~/db/schema/agents";
 import type { AgentRunResult } from "~/services/agent-runner.server";
+import { AVAILABLE_MODELS } from "~/lib/models";
 import {
   Dialog,
   DialogContent,
@@ -123,13 +124,20 @@ export function AgentTestDialog({
                     </div>
                   )}
 
-                  {/* Token Usage */}
-                  {result.usage && (
-                    <div className="border-t pt-3">
-                      <p className="text-xs text-muted-foreground">
-                        Tokens used: {result.usage.inputTokens} input /{" "}
-                        {result.usage.outputTokens} output
-                      </p>
+                  {/* Model & Token Usage */}
+                  {(result.model || result.usage) && (
+                    <div className="border-t pt-3 space-y-1">
+                      {result.model && (
+                        <p className="text-xs text-muted-foreground">
+                          Model: {AVAILABLE_MODELS.find((m) => m.id === result.model)?.name ?? result.model}
+                        </p>
+                      )}
+                      {result.usage && (
+                        <p className="text-xs text-muted-foreground">
+                          Tokens: {result.usage.inputTokens} input /{" "}
+                          {result.usage.outputTokens} output
+                        </p>
+                      )}
                     </div>
                   )}
                 </>

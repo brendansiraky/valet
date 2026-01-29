@@ -20,6 +20,7 @@ export interface AgentRunResult {
     inputTokens: number;
     outputTokens: number;
   };
+  model?: string;
 }
 
 /**
@@ -55,6 +56,7 @@ export async function runAgent(
       content: result.content,
       citations: result.citations,
       usage: result.usage,
+      model,
     };
   } catch (error) {
     const errorMessage =
