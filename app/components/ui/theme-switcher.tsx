@@ -20,7 +20,7 @@ export function ThemeSwitcher() {
         <SelectValue placeholder="Select theme" />
       </SelectTrigger>
       <SelectContent>
-        {themeIds.map((id) => (
+        {[...themeIds].sort((a, b) => themes[a].name.localeCompare(themes[b].name)).map((id) => (
           <SelectItem key={id} value={id}>
             {themes[id].name}
           </SelectItem>

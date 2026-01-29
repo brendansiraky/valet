@@ -1,7 +1,13 @@
+import { Form } from "react-router";
+import { LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarTrigger,
 } from "~/components/ui/sidebar";
 import { NavMain } from "~/components/nav-main";
@@ -27,6 +33,18 @@ export function AppSidebar({ user: _user }: AppSidebarProps) {
       <SidebarContent>
         <NavMain />
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Form method="post" action="/logout">
+              <SidebarMenuButton type="submit" tooltip="Sign out">
+                <LogOut />
+                <span>Sign out</span>
+              </SidebarMenuButton>
+            </Form>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
