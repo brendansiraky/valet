@@ -2,6 +2,7 @@ import { PgBoss, type Job } from "pg-boss";
 import { eq } from "drizzle-orm";
 import { db, pipelineRuns, pipelineRunSteps, agents, pipelines, apiKeys, agentTraits } from "~/db";
 import { executePipeline, type PipelineStep } from "./pipeline-executor.server";
+import { runEmitter } from "./run-emitter.server";
 
 /**
  * Job data for pipeline execution.
@@ -116,6 +117,9 @@ export async function registerPipelineWorker() {
         .update(pipelineRuns)
         .set({ status: "failed", error: errorMessage })
         .where(eq(pipelineRuns.id, runId));
+
+      // Emit error event so SSE stream notifies the client
+      runEmitter.emitRunEvent(runId, { type: "error", message: errorMessage });
     }
   });
 
