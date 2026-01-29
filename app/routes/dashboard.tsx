@@ -29,8 +29,8 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Welcome back!</h1>
-      <p className="text-sm text-muted-foreground">
+      <h1 className="text-4xl font-semibold tracking-tight">Welcome back!</h1>
+      <p className="text-lg text-muted-foreground">
         You are signed in as {user.email}
       </p>
     </div>
