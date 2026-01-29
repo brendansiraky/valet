@@ -78,7 +78,7 @@ None.
 | 003 | Prevent running pipelines with deleted agents | 2026-01-29 | 19af045 | [003-prevent-running-pipelines-with-deleted-a](./quick/003-prevent-running-pipelines-with-deleted-a/) |
 | 004 | Fix trait drag-drop onto React Flow canvas | 2026-01-29 | 05dfdf4 | [004-fix-trait-drag-drop-onto-react-flow-canv](./quick/004-fix-trait-drag-drop-onto-react-flow-canv/) |
 | 005 | Fix trait drag-drop to canvas for multi-agent | 2026-01-29 | 6741565 | [005-fix-trait-drag-drop-to-canvas-for-multi-](./quick/005-fix-trait-drag-drop-to-canvas-for-multi-/) |
-| 006 | Add pipeline run input dialog with textarea | 2026-01-29 | dc5d52d | [006-add-pipeline-run-input-dialog-with-texta](./quick/006-add-pipeline-run-input-dialog-with-texta/) |
+| 006 | Add pipeline run input dialog with textarea | 2026-01-29 | dedbbd9 | [006-add-pipeline-run-input-dialog-with-texta](./quick/006-add-pipeline-run-input-dialog-with-texta/) |
 
 ## Session Continuity
 
