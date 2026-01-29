@@ -6,6 +6,7 @@ Redesigned settings page with organized sections, dark/light mode toggle, and hi
 ## Commits
 - `6bdba97` feat(quick-010): add dark/light mode toggle to settings
 - `d13a45f` style(quick-010): hide browser scrollbar while preserving scroll functionality
+- `4265419` fix(quick-010): remove Artifacts nav item causing 404
 
 ## Changes Made
 
@@ -36,6 +37,7 @@ Redesigned settings page with organized sections, dark/light mode toggle, and hi
 | `app/routes/settings.tsx` | Added dark mode toggle to Appearance section |
 | `package.json` | Added @radix-ui/react-switch dependency |
 | `app/app.css` | Added scrollbar hiding CSS for cleaner UI |
+| `app/components/nav-main.tsx` | Removed Artifacts nav item (404 fix) |
 
 ## Dependencies Added
 - `@radix-ui/react-switch` - Radix UI primitive for the toggle switch
@@ -44,6 +46,11 @@ Redesigned settings page with organized sections, dark/light mode toggle, and hi
 - Dark mode is separate from color themes (e.g., can have Tangerine theme in dark mode)
 - CSS already had `.dark` variants for all themes (e.g., `.theme-tangerine.dark`)
 - Uses existing Tailwind custom variant: `@custom-variant dark (&:is(.dark *))`
+
+### Artifacts Nav Removal
+- Removed "Artifacts" navigation item from sidebar that was causing 404 errors
+- The `/artifacts` route does not exist, so the nav link was misleading
+- Also removed unused `FileText` icon import
 
 ### Scrollbar Hiding
 - Added CSS to hide scrollbars across all browsers while maintaining scroll functionality
