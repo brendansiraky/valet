@@ -1,14 +1,15 @@
 import type { ActionFunctionArgs } from "react-router";
 import { z } from "zod";
 import { getSession } from "~/services/session.server";
-import { db, agents, apiKeys, agentTraits } from "~/db";
-import { eq, and } from "drizzle-orm";
+import { db, agents, apiKeys, agentTraits, traits } from "~/db";
+import { eq, and, inArray } from "drizzle-orm";
 import { runAgent, type AgentRunResult } from "~/services/agent-runner.server";
 import type { ModelId } from "~/lib/models";
 import { getProviderForModel } from "~/lib/providers/registry";
 
 const RunAgentSchema = z.object({
   input: z.string().min(1, "Input is required"),
+  traitIds: z.array(z.string()).optional(),
 });
 
 function jsonResponse(data: AgentRunResult, status: number = 200): Response {
@@ -72,23 +73,38 @@ export async function action({
     );
   }
 
-  const { input } = result.data;
+  const { input, traitIds } = result.data;
 
-  // Load trait context for this agent
-  const assignments = await db.query.agentTraits.findMany({
-    where: eq(agentTraits.agentId, agentId),
-    with: {
-      trait: {
-        columns: { name: true, context: true },
+  // Load trait context - use provided traitIds if any, otherwise fall back to agent's traits
+  let traitContext: string | undefined;
+
+  if (traitIds && traitIds.length > 0) {
+    // Use explicitly selected traits from request
+    const selectedTraits = await db.query.traits.findMany({
+      where: and(
+        eq(traits.userId, userId),
+        inArray(traits.id, traitIds)
+      ),
+    });
+    traitContext = selectedTraits
+      .map((t) => `## ${t.name}\n\n${t.context}`)
+      .join("\n\n---\n\n");
+  } else {
+    // Fall back to agent's assigned traits (for backward compatibility)
+    const assignments = await db.query.agentTraits.findMany({
+      where: eq(agentTraits.agentId, agentId),
+      with: {
+        trait: {
+          columns: { name: true, context: true },
+        },
       },
-    },
-  });
-
-  const traitContext = assignments.length > 0
-    ? assignments
-        .map((a) => `## ${a.trait.name}\n\n${a.trait.context}`)
-        .join("\n\n---\n\n")
-    : undefined;
+    });
+    traitContext = assignments.length > 0
+      ? assignments
+          .map((a) => `## ${a.trait.name}\n\n${a.trait.context}`)
+          .join("\n\n---\n\n")
+      : undefined;
+  }
 
   // Use agent's model if set, otherwise user's default from API key
   const modelToUse = (agent.model ?? defaultApiKey?.modelPreference ??
