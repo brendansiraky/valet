@@ -144,40 +144,39 @@ Plans:
 - [x] 07-02-PLAN.md - Traits database schema and CRUD UI
 
 ### Phase 8: Agent Configuration
-**Goal**: Users can configure agents with capability, model, and trait settings
+**Goal**: Users can configure agents with model and trait settings
 **Depends on**: Phase 7 (traits must exist before assignment)
-**Requirements**: AGNT-07, AGNT-08, AGNT-09, AGNT-10
+**Requirements**: AGNT-08, AGNT-09, AGNT-10
 **Success Criteria** (what must be TRUE):
-  1. User can set capability on agent definition (none / web search / URL fetch)
-  2. User can set model per agent (defaults to global setting)
-  3. User can assign traits to agents
-  4. Agent execution includes assigned trait context in the prompt
+  1. User can set model per agent (defaults to global setting)
+  2. User can assign traits to agents
+  3. Agent execution includes assigned trait context in the prompt
+  4. All agents have access to web search and URL fetch (model infers from context)
 **Plans**: 3 plans
 
 Plans:
-- [ ] 08-01-PLAN.md - Schema extension (capability, model columns, agent-traits junction table)
-- [ ] 08-02-PLAN.md - Agent form UI (capability/model/traits configuration)
-- [ ] 08-03-PLAN.md - Data integration (loader/action, trait context in execution)
+- [x] 08-01-PLAN.md - Schema extension (model column, agent-traits junction table)
+- [x] 08-02-PLAN.md - Agent form UI (model/traits configuration)
+- [x] 08-03-PLAN.md - Data integration (loader/action, trait context in execution)
 
 ### Phase 9: Pipeline & Cost
-**Goal**: Pipeline execution supports all capabilities and shows cost information
-**Depends on**: Phase 5 (execution engine), Phase 8 (agent capabilities)
-**Requirements**: PCAP-01, PCAP-02, COST-01, COST-02
+**Goal**: Pipeline execution uses unified tools and shows cost information
+**Depends on**: Phase 5 (execution engine), Phase 8 (agent configuration)
+**Requirements**: COST-01, COST-02
 **Success Criteria** (what must be TRUE):
-  1. Pipeline execution respects agent's web search capability
-  2. Pipeline execution respects agent's URL fetch capability
-  3. User sees token count after pipeline completes
-  4. User sees estimated cost after pipeline completes
+  1. Pipeline execution uses the unified runWithTools (web search + URL fetch available)
+  2. User sees token count after pipeline completes
+  3. User sees estimated cost after pipeline completes
 **Plans**: TBD
 
-### Phase 10: Agent UX
-**Goal**: Test dialog is clearer and uses agent configuration
-**Depends on**: Phase 8 (agent capability is on definition)
-**Requirements**: AGUX-01, AGUX-02, AGUX-03
+### Phase 10: Polish & Cleanup
+**Goal**: Final UX polish and cleanup of unused code
+**Depends on**: Phase 9
+**Requirements**: None (polish phase)
 **Success Criteria** (what must be TRUE):
-  1. Test dialog input field is labeled "Test input" instead of "Your prompt"
-  2. Test dialog uses agent's configured capability (no dropdown selector)
-  3. Test dialog clearly indicates its purpose (testing before pipeline use)
+  1. Remove unused capability-related code paths
+  2. Clean up old separate capability service files if no longer needed
+  3. Final review of agent/pipeline UX
 **Plans**: TBD
 
 ## Progress
@@ -201,9 +200,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 7. Navigation & Traits | 2/2 | Complete | 2026-01-29 |
-| 8. Agent Configuration | 0/3 | Pending | - |
+| 8. Agent Configuration | 3/3 | Complete | 2026-01-29 |
 | 9. Pipeline & Cost | 0/? | Pending | - |
-| 10. Agent UX | 0/? | Pending | - |
+| 10. Polish & Cleanup | 0/? | Pending | - |
 
 ---
 *Roadmap created: 2026-01-28*

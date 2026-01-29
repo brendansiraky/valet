@@ -11,13 +11,6 @@ import {
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { Label } from "~/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Loader2, ExternalLink } from "lucide-react";
 
 interface AgentTestDialogProps {
@@ -26,15 +19,12 @@ interface AgentTestDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type Capability = "text" | "search" | "fetch";
-
 export function AgentTestDialog({
   agent,
   open,
   onOpenChange,
 }: AgentTestDialogProps) {
   const [input, setInput] = useState("");
-  const [capability, setCapability] = useState<Capability>("text");
   const fetcher = useFetcher<AgentRunResult>();
 
   const isLoading = fetcher.state === "submitting";
@@ -44,7 +34,7 @@ export function AgentTestDialog({
     if (!input.trim() || isLoading) return;
 
     fetcher.submit(
-      { input: input.trim(), capability },
+      { input: input.trim() },
       {
         method: "POST",
         action: `/api/agent/${agent.id}/run`,
@@ -70,10 +60,10 @@ export function AgentTestDialog({
         <div className="flex flex-col gap-4 flex-1 overflow-hidden">
           {/* Input Section */}
           <div className="space-y-2">
-            <Label htmlFor="input">Your prompt</Label>
+            <Label htmlFor="input">Test input</Label>
             <Textarea
               id="input"
-              placeholder="Enter your prompt..."
+              placeholder="Enter your test input..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -81,34 +71,7 @@ export function AgentTestDialog({
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              Press Cmd+Enter to run
-            </p>
-          </div>
-
-          {/* Capability Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="capability">Capability</Label>
-            <Select
-              value={capability}
-              onValueChange={(v) => setCapability(v as Capability)}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="capability" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text only</SelectItem>
-                <SelectItem value="search">Web search</SelectItem>
-                <SelectItem value="fetch">URL fetch</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {capability === "text" &&
-                "Generate a response using the model's training knowledge."}
-              {capability === "search" &&
-                "Search the web for current information."}
-              {capability === "fetch" &&
-                "Fetch and analyze content from specific URLs."}
+              Press Cmd+Enter to run. The agent can search the web or fetch URLs based on your input.
             </p>
           </div>
 

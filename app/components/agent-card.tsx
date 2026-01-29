@@ -12,7 +12,6 @@ import { AgentDeleteDialog } from "./agent-delete-dialog";
 
 interface AgentCardProps {
   agent: Pick<Agent, "id" | "name" | "instructions" | "updatedAt"> & {
-    capability?: string;
     model?: string | null;
     traitIds?: string[];
   };

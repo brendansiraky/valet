@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 8 - Agent Configuration
-Plan: 3 of 3
-Status: Phase complete
-Last activity: 2026-01-29 - Completed 08-03-PLAN.md
+Phase: 9 - Pipeline & Cost
+Plan: 0 of ?
+Status: Ready to plan
+Last activity: 2026-01-29 - Phase 8 verified complete
 
-Progress: [████░░░░░░] 40% (Milestone v1.1: 2/4 phases)
+Progress: [███████░░░] 75% (Milestone v1.1: 3/4 phases)
 
 ## Performance Metrics
 
@@ -104,6 +104,7 @@ Recent decisions affecting current work:
 - Trait context format: ## {name}\n\n{context} with --- separator
 - buildSystemPrompt helper centralizes trait context injection
 - Model cascade: agent.model -> apiKey.modelPreference -> default
+- Unified tools: all agents have web_search + web_fetch, model infers from context (no capability dropdown)
 
 ### Pending Todos
 
@@ -116,8 +117,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 08-03-PLAN.md (Phase 8 complete)
+Stopped at: Phase 8 verified, ready for Phase 9 planning
 Resume file: None
 
 ---
-*Phase 8 complete. Agent configuration with traits, capability, model all functional. 23 plans total.*
+*Phase 8 complete. Agent configuration with traits and model. Simplified to unified tools (no capability dropdown). 26 plans total.*

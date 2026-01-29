@@ -1,19 +1,13 @@
 import type { Agent } from "~/db/schema/agents";
 import type { ModelId } from "~/lib/models";
 import { createAnthropicClient } from "./anthropic.server";
-import { generateText } from "./capabilities/text-generation.server";
-import { runWithWebSearch } from "./capabilities/web-search.server";
-import { runWithUrlFetch } from "./capabilities/url-fetch.server";
+import { runWithTools } from "./capabilities/run-with-tools.server";
 
 export interface AgentRunParams {
   agent: Agent;
   userInput: string;
   encryptedApiKey: string;
   model: ModelId;
-  capabilities?: {
-    webSearch?: boolean;
-    urlFetch?: boolean;
-  };
   traitContext?: string; // Combined trait context to prepend to instructions
 }
 
@@ -41,59 +35,25 @@ function buildSystemPrompt(instructions: string, traitContext?: string): string 
 export async function runAgent(
   params: AgentRunParams
 ): Promise<AgentRunResult> {
-  const { agent, userInput, encryptedApiKey, model, capabilities, traitContext } = params;
+  const { agent, userInput, encryptedApiKey, model, traitContext } = params;
 
   try {
     const client = createAnthropicClient(encryptedApiKey);
     const systemPrompt = buildSystemPrompt(agent.instructions, traitContext);
 
-    // Route to appropriate capability based on flags
-    // For now, webSearch and urlFetch are mutually exclusive with text-only
-    // Combined capabilities will be added in Phase 5 execution engine
-
-    if (capabilities?.webSearch) {
-      const result = await runWithWebSearch({
-        client,
-        model,
-        systemPrompt,
-        userInput,
-      });
-
-      return {
-        success: true,
-        content: result.content,
-        citations: result.citations,
-        usage: result.usage,
-      };
-    }
-
-    if (capabilities?.urlFetch) {
-      const result = await runWithUrlFetch({
-        client,
-        model,
-        systemPrompt,
-        userInput,
-      });
-
-      return {
-        success: true,
-        content: result.content,
-        citations: result.citations,
-        usage: result.usage,
-      };
-    }
-
-    // Default: text generation only
-    const result = await generateText({
+    // All agents have access to web_search and web_fetch tools
+    // The model decides which to use based on instructions and input
+    const result = await runWithTools({
       client,
       model,
       systemPrompt,
-      messages: [{ role: "user", content: userInput }],
+      userInput,
     });
 
     return {
       success: true,
       content: result.content,
+      citations: result.citations,
       usage: result.usage,
     };
   } catch (error) {

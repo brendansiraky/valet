@@ -22,8 +22,7 @@ import { AgentTestDialog } from "~/components/agent-test-dialog";
 const AgentSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
   instructions: z.string().min(1, "Instructions are required").max(10000, "Instructions must be 10,000 characters or less"),
-  capability: z.enum(["none", "search", "fetch"]).default("none"),
-  model: z.string().optional().transform(val => val || null), // Empty string becomes null
+  model: z.string().optional().transform(val => (!val || val === "__default__") ? null : val),
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -90,7 +89,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const result = AgentSchema.safeParse({
       name: formData.get("name"),
       instructions: formData.get("instructions"),
-      capability: formData.get("capability"),
       model: formData.get("model"),
     });
 
@@ -108,7 +106,6 @@ export async function action({ request }: ActionFunctionArgs) {
         userId,
         name: result.data.name,
         instructions: result.data.instructions,
-        capability: result.data.capability,
         model: result.data.model,
       })
       .returning({ id: agents.id });
@@ -134,7 +131,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const result = AgentSchema.safeParse({
       name: formData.get("name"),
       instructions: formData.get("instructions"),
-      capability: formData.get("capability"),
       model: formData.get("model"),
     });
 
@@ -151,7 +147,6 @@ export async function action({ request }: ActionFunctionArgs) {
       .set({
         name: result.data.name,
         instructions: result.data.instructions,
-        capability: result.data.capability,
         model: result.data.model,
       })
       .where(and(eq(agents.id, agentId), eq(agents.userId, userId)));

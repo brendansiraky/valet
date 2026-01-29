@@ -96,23 +96,16 @@ export async function action({
         .join("\n\n---\n\n")
     : undefined;
 
-  // Map capability from agent setting
-  const capabilities = {
-    webSearch: agent.capability === "search",
-    urlFetch: agent.capability === "fetch",
-  };
-
   // Use agent's model if set, otherwise user's default from API key
   const modelToUse = (agent.model ?? apiKey.modelPreference ??
     "claude-sonnet-4-5-20250929") as ModelId;
 
-  // Run the agent
+  // Run the agent (all agents have access to web_search and web_fetch)
   const runResult = await runAgent({
     agent,
     userInput: input,
     encryptedApiKey: apiKey.encryptedKey,
     model: modelToUse,
-    capabilities,
     traitContext,
   });
 

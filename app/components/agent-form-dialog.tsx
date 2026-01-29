@@ -26,7 +26,6 @@ import { AVAILABLE_MODELS } from "~/lib/models";
 
 interface AgentFormDialogProps {
   agent?: Pick<Agent, "id" | "name" | "instructions"> & {
-    capability?: string;
     model?: string | null;
     traitIds?: string[];
   };
@@ -127,30 +126,13 @@ export function AgentFormDialog({ agent, traits, trigger }: AgentFormDialogProps
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="capability">Capability</Label>
-            <Select name="capability" defaultValue={agent?.capability ?? "none"}>
-              <SelectTrigger id="capability" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Text only</SelectItem>
-                <SelectItem value="search">Web search</SelectItem>
-                <SelectItem value="fetch">URL fetch</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Determines what tools the agent can use when executing.
-            </p>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="model">Model</Label>
-            <Select name="model" defaultValue={agent?.model ?? ""}>
+            <Select name="model" defaultValue={agent?.model ?? "__default__"}>
               <SelectTrigger id="model" className="w-full">
                 <SelectValue placeholder="Use default from settings" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Use default from settings</SelectItem>
+                <SelectItem value="__default__">Use default from settings</SelectItem>
                 {AVAILABLE_MODELS.map((model) => (
                   <SelectItem key={model.id} value={model.id}>
                     {model.name}
