@@ -18,7 +18,7 @@ import { OutputViewer } from "~/components/output-viewer/output-viewer";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { LayoutGrid, Save, Trash2, FileCode, Play, Loader2 } from "lucide-react";
+import { LayoutGrid, Save, Trash2, FileCode, Play, Loader2, AlertTriangle } from "lucide-react";
 import type { Node, Edge } from "@xyflow/react";
 import type { AgentNodeData } from "~/stores/pipeline-store";
 
@@ -108,12 +108,29 @@ export default function PipelineBuilderPage() {
         nodes: Node<AgentNodeData>[];
         edges: Edge[];
       };
-      setNodes(flowData.nodes || []);
+      // Enrich nodes with isOrphaned status
+      const validAgentIds = new Set(userAgents.map((a) => a.id));
+      const enrichedNodes = (flowData.nodes || []).map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          isOrphaned: !validAgentIds.has(node.data.agentId),
+        },
+      }));
+      setNodes(enrichedNodes);
       setEdges(flowData.edges || []);
     } else {
       reset();
     }
-  }, [pipeline, setPipelineMetadata, setNodes, setEdges, reset]);
+  }, [pipeline, userAgents, setPipelineMetadata, setNodes, setEdges, reset]);
+
+  // Detect if any agents in the pipeline are orphaned (deleted)
+  const hasOrphanedAgents = useMemo(() => {
+    const validAgentIds = new Set(userAgents.map((a) => a.id));
+    return nodes.some(
+      (n) => n.data.agentId && !validAgentIds.has(n.data.agentId)
+    );
+  }, [nodes, userAgents]);
 
   const handleDropAgent = (
     agentId: string,
@@ -329,7 +346,8 @@ export default function PipelineBuilderPage() {
             </Button>
             <Button
               onClick={handleRun}
-              disabled={isStartingRun || !!currentRunId}
+              disabled={isStartingRun || !!currentRunId || hasOrphanedAgents}
+              variant={hasOrphanedAgents ? "outline" : "default"}
             >
               {isStartingRun ? (
                 <>
@@ -340,6 +358,11 @@ export default function PipelineBuilderPage() {
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Running...
+                </>
+              ) : hasOrphanedAgents ? (
+                <>
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Remove Deleted Agents
                 </>
               ) : (
                 <>
