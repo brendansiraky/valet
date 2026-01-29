@@ -88,13 +88,13 @@ Plans:
 
 **Goal:** Enable drag-and-drop trait assignment per pipeline step
 **Depends on:** Phase 16
-**Status:** Planned
+**Status:** Complete
 **Plans:** 3 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Store extension and sidebar traits section
-- [ ] 17-02-PLAN.md — Node drop handling and trait chip display
-- [ ] 17-03-PLAN.md — Execution integration with pipeline-level traits
+- [x] 17-01-PLAN.md — Store extension and sidebar traits section
+- [x] 17-02-PLAN.md — Node drop handling and trait chip display
+- [x] 17-03-PLAN.md — Execution integration with pipeline-level traits
 
 **Scope:**
 - Add "Traits" section to pipeline builder sidebar (below Agents)
@@ -179,7 +179,7 @@ Plans:
 |-------|--------------|--------|
 | 15 - Agent DNA & Simplification | 10 | Complete |
 | 16 - Trait Colors | 4 | Complete |
-| 17 - Dynamic Pipeline Traits | 7 | Planned |
+| 17 - Dynamic Pipeline Traits | 7 | Complete |
 | 18 - Decision Agent Routing | 8 | Not started |
 
 ---
