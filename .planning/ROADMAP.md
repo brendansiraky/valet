@@ -45,12 +45,13 @@ Plans:
 
 **Goal**: Add OpenAI as second provider with feature parity where possible
 **Depends on**: Phase 11 (abstraction layer)
-**Status**: In Progress
+**Status**: Complete ✓
+**Completed**: 2026-01-29
 **Plans:** 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Install SDK, create OpenAI provider, update registry
-- [ ] 12-02-PLAN.md — Wire into pipeline executor, verify integration
+- [x] 12-01-PLAN.md — Install SDK, create OpenAI provider, update registry
+- [x] 12-02-PLAN.md — Wire into pipeline executor, verify integration
 
 **Scope:**
 - OpenAI provider implementing abstraction interface
@@ -68,14 +69,19 @@ Plans:
 **Goal**: Unified model selection across providers with clean UX
 **Depends on**: Phase 12 (both providers available)
 **Status**: Not started
+**Plans:** 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Create ModelSelector component, integrate into agent form
+- [ ] 13-02-PLAN.md — Update settings page model selector with provider grouping
 
 **Scope:**
-- Per-provider API key storage in settings
+- ~~Per-provider API key storage in settings~~ (done in Phase 12)
 - Flat model dropdown with provider grouping
 - Only show models for providers with configured keys
 - Allow mixing providers freely in pipelines
 - Update agent form with new model selector
-- Orphan indicator in pipeline builder (deferred from Phase 11)
+- ~~Orphan indicator in pipeline builder~~ (done in Quick 003)
 
 ### Phase 14: Artifact Storage
 
@@ -118,8 +124,8 @@ Plans:
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 11 - Provider Abstraction | 3 plans | Complete ✓ |
-| 12 - OpenAI Integration | 2 plans | In Progress |
-| 13 - Model Selection UX | TBD | Not started |
+| 12 - OpenAI Integration | 2 plans | Complete |
+| 13 - Model Selection UX | 2 plans | Not started |
 | 14 - Artifact Storage | TBD | Not started |
 
 ---
