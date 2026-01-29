@@ -324,11 +324,11 @@ export default function PipelineBuilderPage() {
         />
         <div className="flex-1" />
         <Button variant="outline" onClick={handleAutoLayout}>
-          <LayoutGrid className="w-4 h-4 mr-2" />
+          <LayoutGrid className="size-4 mr-2" />
           Auto Layout
         </Button>
         <Button onClick={handleSave} disabled={isSaving}>
-          <Save className="w-4 h-4 mr-2" />
+          <Save className="size-4 mr-2" />
           {isSaving ? "Saving..." : "Save"}
         </Button>
         {pipelineId && (
@@ -340,28 +340,28 @@ export default function PipelineBuilderPage() {
             >
               {isStartingRun ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="size-4 mr-2 animate-spin" />
                   Starting...
                 </>
               ) : currentRunId ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="size-4 mr-2 animate-spin" />
                   Running...
                 </>
               ) : hasOrphanedAgents ? (
                 <>
-                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  <AlertTriangle className="size-4 mr-2" />
                   Remove Deleted Agents
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 mr-2" />
+                  <Play className="size-4 mr-2" />
                   Run
                 </>
               )}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="size-4 mr-2" />
               Delete
             </Button>
           </>
@@ -431,7 +431,7 @@ export default function PipelineBuilderPage() {
               Cancel
             </Button>
             <Button onClick={handleRunSubmit}>
-              <Play className="w-4 h-4 mr-2" />
+              <Play className="size-4 mr-2" />
               Run Pipeline
             </Button>
           </DialogFooter>

@@ -34,7 +34,7 @@ export default function PipelinesPage() {
   const { pipelines: userPipelines } = useLoaderData<typeof loader>();
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold">Pipelines</h1>
