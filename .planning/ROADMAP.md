@@ -64,11 +64,11 @@ Plans:
 
 **Goal:** Add color customization to traits with warm preset palette
 **Depends on:** Phase 15
-**Status:** Not started
+**Status:** Complete
 **Plans:** 1 plan
 
 Plans:
-- [ ] 16-01-PLAN.md — Add color field, swatch picker, and card display
+- [x] 16-01-PLAN.md — Add color field, swatch picker, and card display
 
 **Scope:**
 - Add color field to traits database table
@@ -131,7 +131,7 @@ Plans:
 | Phase | Requirements | Status |
 |-------|--------------|--------|
 | 15 - Agent DNA & Simplification | 10 | Complete |
-| 16 - Trait Colors | 4 | Not started |
+| 16 - Trait Colors | 4 | Complete |
 | 17 - Dynamic Pipeline Traits | 7 | Not started |
 
 ---

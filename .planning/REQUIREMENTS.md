@@ -19,9 +19,9 @@ Requirements by milestone. Each maps to roadmap phases.
 
 ## Trait Colors (TCOL)
 
-- [ ] **TCOL-01**: Color field added to traits
-- [ ] **TCOL-02**: Preset warm color swatch picker (8-12 colors) in trait create/edit
-- [ ] **TCOL-03**: Trait cards in Traits screen display assigned color
+- [x] **TCOL-01**: Color field added to traits
+- [x] **TCOL-02**: Preset warm color swatch picker (8-12 colors) in trait create/edit
+- [x] **TCOL-03**: Trait cards in Traits screen display assigned color
 
 ## Pipeline Builder (PIPE)
 
@@ -35,7 +35,7 @@ Requirements by milestone. Each maps to roadmap phases.
 ## Data Model (DATA)
 
 - [ ] **DATA-01**: Pipeline steps store trait IDs (not agent-level traits)
-- [ ] **DATA-02**: Color field added to traits table
+- [x] **DATA-02**: Color field added to traits table
 - [x] **DATA-03**: Remove template variables from pipeline_templates table
 - [x] **DATA-04**: Remove variables from pipeline_runs table
 
@@ -59,10 +59,10 @@ Requirements by milestone. Each maps to roadmap phases.
 | CLEN-03 | Phase 15 | Complete |
 | DATA-03 | Phase 15 | Complete |
 | DATA-04 | Phase 15 | Complete |
-| TCOL-01 | Phase 16 | Pending |
-| TCOL-02 | Phase 16 | Pending |
-| TCOL-03 | Phase 16 | Pending |
-| DATA-02 | Phase 16 | Pending |
+| TCOL-01 | Phase 16 | Complete |
+| TCOL-02 | Phase 16 | Complete |
+| TCOL-03 | Phase 16 | Complete |
+| DATA-02 | Phase 16 | Complete |
 | PIPE-01 | Phase 17 | Pending |
 | PIPE-02 | Phase 17 | Pending |
 | PIPE-03 | Phase 17 | Pending |
