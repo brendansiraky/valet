@@ -1,7 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { db, pipelineRuns, pipelineRunSteps } from "~/db";
-// Import provider abstraction layer - registers Anthropic factory on import
+// Import provider abstraction layer - registers providers on import
 import "~/lib/providers/anthropic";
+import "~/lib/providers/openai";
 import { getProvider, getProviderForModel } from "~/lib/providers/registry";
 import type { ChatMessage, ToolConfig } from "~/lib/providers/types";
 import { decrypt } from "./encryption.server";
