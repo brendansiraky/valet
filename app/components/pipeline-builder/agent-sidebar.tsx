@@ -22,7 +22,7 @@ export function AgentSidebar({ agents, traits }: AgentSidebarProps) {
     event.dataTransfer.setData("application/trait-id", trait.id);
     event.dataTransfer.setData("application/trait-name", trait.name);
     event.dataTransfer.setData("application/trait-color", trait.color);
-    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.effectAllowed = "move";
   };
 
   return (

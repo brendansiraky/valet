@@ -5,6 +5,7 @@ import {
   Controls,
   MiniMap,
   ReactFlowProvider,
+  useReactFlow,
 } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { AgentNode } from "./agent-node";
@@ -34,28 +35,23 @@ interface PipelineCanvasProps {
 function PipelineCanvasInner({ onDropAgent, onDropTrait }: PipelineCanvasProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } =
     usePipelineStore();
+  const { screenToFlowPosition } = useReactFlow();
 
   const onDragOver = useCallback((event: React.DragEvent) => {
-    // Handle both agent and trait drops at the canvas level
-    if (
-      event.dataTransfer.types.includes("application/agent-id") ||
-      event.dataTransfer.types.includes("application/trait-id")
-    ) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-    }
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      // Get the ReactFlow container bounds to convert screen coordinates
-      const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-      const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      };
+      // Use React Flow's screenToFlowPosition to get correct coordinates
+      // accounting for zoom and pan
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
       // Handle agent drops
       const agentId = event.dataTransfer.getData("application/agent-id");
@@ -76,7 +72,7 @@ function PipelineCanvasInner({ onDropAgent, onDropTrait }: PipelineCanvasProps) 
         onDropTrait(traitId, traitName, traitColor, position);
       }
     },
-    [onDropAgent, onDropTrait]
+    [screenToFlowPosition, onDropAgent, onDropTrait]
   );
 
   return (
