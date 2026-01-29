@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { ThemeSwitcher } from "~/components/ui/theme-switcher";
+import { ThemeSwitcher, ColorModeToggle } from "~/components/ui/theme-switcher";
 import { CheckCircle2, Info } from "lucide-react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -395,9 +395,10 @@ export default function Settings() {
           <CardTitle className="text-lg">Appearance</CardTitle>
           <CardDescription>Customize how Valet looks</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          <ColorModeToggle />
           <div className="space-y-2">
-            <Label>Theme</Label>
+            <Label>Color Theme</Label>
             <ThemeSwitcher />
           </div>
         </CardContent>

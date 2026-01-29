@@ -7,6 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Label } from "~/components/ui/label";
+import { Switch } from "~/components/ui/switch";
+import { Moon, Sun } from "lucide-react";
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
@@ -24,5 +27,30 @@ export function ThemeSwitcher() {
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+export function ColorModeToggle() {
+  const { colorMode, setColorMode } = useTheme();
+  const isDark = colorMode === "dark";
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        {isDark ? (
+          <Moon className="size-4 text-muted-foreground" />
+        ) : (
+          <Sun className="size-4 text-muted-foreground" />
+        )}
+        <Label htmlFor="color-mode" className="cursor-pointer">
+          Dark mode
+        </Label>
+      </div>
+      <Switch
+        id="color-mode"
+        checked={isDark}
+        onCheckedChange={(checked) => setColorMode(checked ? "dark" : "light")}
+      />
+    </div>
   );
 }
