@@ -30,22 +30,6 @@ export interface ExecutePipelineParams {
   initialInput: string;
   encryptedApiKey: string;
   model: string;
-  variables?: Record<string, string>;
-}
-
-/**
- * Substitute template variables in text.
- * Replaces {{varName}} with the corresponding value from variables.
- */
-function substituteVariables(
-  text: string,
-  variables?: Record<string, string>
-): string {
-  if (!variables) return text;
-
-  return text.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
-    return variables[varName] ?? match;
-  });
 }
 
 /**
@@ -66,8 +50,7 @@ function buildSystemPrompt(instructions: string, traitContext?: string): string 
 export async function executePipeline(
   params: ExecutePipelineParams
 ): Promise<void> {
-  const { runId, steps, initialInput, encryptedApiKey, model, variables } =
-    params;
+  const { runId, steps, initialInput, encryptedApiKey, model } = params;
 
   // Get provider using abstraction layer
   const providerId = getProviderForModel(model);
@@ -116,31 +99,16 @@ export async function executePipeline(
         agentName: step.agentName,
       });
 
-      // Substitute variables in instructions
-      const substitutedInstructions = substituteVariables(
-        step.instructions,
-        variables
-      );
-
-      // Build user message: use previous output, or for first agent with variables,
-      // pass the variable values as context, otherwise use a generic prompt
+      // Build user message: use previous output, or generic prompt for first agent
       let userMessage: string;
       if (currentInput.trim()) {
-        // Pass previous agent's output
         userMessage = currentInput;
-      } else if (variables && Object.keys(variables).length > 0) {
-        // First agent with variables: provide them clearly and instruct to proceed
-        const variableContext = Object.entries(variables)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join("\n");
-        userMessage = `Here are your input values:\n\n${variableContext}\n\nProceed with your task using these values. Do not ask for clarification - use the values provided above.`;
       } else {
-        // No input and no variables
         userMessage = "Please proceed with your instructions.";
       }
 
       // Build messages for provider chat
-      const systemPrompt = buildSystemPrompt(substitutedInstructions, step.traitContext);
+      const systemPrompt = buildSystemPrompt(step.instructions, step.traitContext);
       const messages: ChatMessage[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
