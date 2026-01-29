@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** Milestone v1.1 - Enhanced Agents
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 10 - Agent UX (COMPLETE)
-Plan: 1 of 1
-Status: Phase complete, milestone complete
-Last activity: 2026-01-29 - Completed Phase 10 execution
+Phase: Milestone v1.1 complete
+Plan: N/A
+Status: Ready to plan next milestone
+Last activity: 2026-01-29 — v1.1 milestone shipped
 
-Progress: [██████████] 100% (Milestone v1.1: 4/4 phases)
+Progress: [██████████] 100% (v1.1: 4/4 phases)
 
 ## Performance Metrics
 
@@ -48,69 +48,7 @@ Progress: [██████████] 100% (Milestone v1.1: 4/4 phases)
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- React Router v7 instead of Remix v2 (Remix upstreamed to React Router)
-- Tailwind v4 with @tailwindcss/vite plugin (CSS-first configuration)
-- UUID text primary keys for all tables
-- Session secrets support rotation via comma-separated env var
-- Argon2id with 64MB memory, 3 iterations, 4 threads
-- Same error message for user-not-found and wrong-password (prevents enumeration)
-- AVAILABLE_MODELS in shared app/lib/models.ts for client/server access
-- API key validation uses claude-3-haiku-20240307 (cheapest for test calls)
-- Index on user_id for agents table query performance
-- Cascade delete for agents when user deleted
-- Intent-based form actions for multiple forms on same page
-- Capability service pattern: each capability in separate module under capabilities/
-- Default maxTokens 4096 for text generation
-- Type casting for beta API features not yet in SDK types (web_fetch_20250910)
-- Citations enabled by default on URL fetch
-- Capabilities mutually exclusive for now (combined in Phase 5)
-- Default max_uses 5 for both web_search and web_fetch
-- Default max_content_tokens 25000 for URL fetch
-- Select component for capability selection (cleaner UI than RadioGroup)
-- Cmd+Enter keyboard shortcut for running agents
-- Index signature on AgentNodeData for React Flow Node<T> compatibility
-- JSONB columns for flowData and variables (flexible structured storage)
-- Intent-based API actions for pipeline CRUD (consistent with agents pattern)
-- Dagre LR layout as default direction for pipeline flow
-- NodeProps generic takes Node type not data type in React Flow 12
-- nodeTypes object defined outside component to prevent re-render loops
-- Custom MIME types for drag data transfer (application/agent-*)
-- Import TemplateVariable type from schema for consistency across components
-- Template variables stored in separate pipelineTemplates table
-- useEffect for dialog state initialization on open (cleaner than manual reset)
-- Drizzle and() for compound WHERE clauses in updates
-- RunEmitter singleton pattern with max 100 listeners
-- Template variable pattern {{varName}} with regex replacement
-- pg-boss for reliable background job processing
-- Kahn's algorithm for topological sort of pipeline flow
-- remix-utils eventStream for SSE response handling
-- Explicit createQueue() for pg-boss v10+ compatibility
-- Default user message for first agent when no initial input
-- Typography via @plugin directive (Tailwind v4 CSS-first config)
-- Client-side Blob API for downloads (no server round-trip)
-- prose-sm for compact output display
-- Modal overlay for output display (dismissible with Close button)
-- stepOutputs Map passed from RunProgress to parent for output assembly
-- Final Output tab defaults as active when steps exist
-- shadcn sidebar with collapsible=icon for collapse behavior
-- Trait context max 50000 chars (larger than agent instructions for reusable blocks)
-- layout() wrapper in routes.ts for auth centralization
-- Cookie-based sidebar state persistence (shadcn default)
-- Capability default 'none' for backward compatibility (existing agents work)
-- Model nullable means use user's default from settings
-- Composite primary key for junction tables (prevents duplicates)
-- Optional capability/model props for gradual adoption (route updates in 08-03)
-- traitsUpdated hidden marker for detecting empty trait submissions
-- Trait context format: ## {name}\n\n{context} with --- separator
-- buildSystemPrompt helper centralizes trait context injection
-- Model cascade: agent.model -> apiKey.modelPreference -> default
-- Unified tools: all agents have web_search + web_fetch, model infers from context (no capability dropdown)
-- Pricing fallback to Sonnet if model unknown
-- Pipeline uses single model for all steps (first agent's preference or user default)
-- Usage accumulator pattern for multi-step token tracking
-- Usage summary shows only when both usage and model present (graceful degradation)
+v1.1 decisions archived in milestones/v1.1-ROADMAP.md.
 
 ### Pending Todos
 
@@ -130,8 +68,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Milestone v1.1 complete, ready for audit
+Stopped at: v1.1 milestone shipped and archived
 Resume file: None
 
 ---
-*Milestone v1.1 complete. All 4 phases executed and verified. Ready for milestone audit.*
+*v1.1 complete. Ready for `/gsd:new-milestone` to start next milestone.*
