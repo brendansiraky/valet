@@ -12,10 +12,17 @@ export const ANTHROPIC_MODELS = [
 ] as const;
 
 /**
- * All available models across all providers.
- * OpenAI models will be added in Phase 12.
+ * OpenAI GPT models.
  */
-export const ALL_MODELS = [...ANTHROPIC_MODELS] as const;
+export const OPENAI_MODELS = [
+  { id: "gpt-4o", name: "GPT-4o", provider: "openai" },
+  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "openai" },
+] as const;
+
+/**
+ * All available models across all providers.
+ */
+export const ALL_MODELS = [...ANTHROPIC_MODELS, ...OPENAI_MODELS] as const;
 
 /**
  * Legacy export for backward compatibility.
