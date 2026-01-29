@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** Planning next milestone
+**Current focus:** v1.2 Multi-Provider & Artifacts
 
 ## Current Position
 
-Phase: Milestone v1.1 complete
-Plan: N/A
-Status: Ready to plan next milestone
-Last activity: 2026-01-29 — v1.1 milestone shipped
+Phase: 11 of 14 - Provider Abstraction Layer
+Plan: 01 of 3 complete
+Status: In progress
+Last activity: 2026-01-29 — Completed 11-01-PLAN.md (provider abstraction core)
 
-Progress: [██████████] 100% (v1.1: 4/4 phases)
+Progress: [██░░░░░░░░] 10% (v1.2: 1/10 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26
+- Total plans completed: 27
 - Average duration: 8 min
-- Total execution time: 3.18 hours
+- Total execution time: 3.21 hours
 
 **By Phase:**
 
@@ -37,9 +37,10 @@ Progress: [██████████] 100% (v1.1: 4/4 phases)
 | 08-agent-configuration | 3 | 8 min | 3 min |
 | 09-pipeline-cost | 2 | 3 min | 2 min |
 | 10-agent-ux | 1 | 2 min | 2 min |
+| 11-provider-abstraction | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-03 (2 min), 09-01 (2 min), 09-02 (1 min), 10-01 (2 min)
+- Last 5 plans: 09-01 (2 min), 09-02 (1 min), 10-01 (2 min), 11-01 (2 min)
 
 *Updated after each plan completion*
 
@@ -49,6 +50,11 @@ Progress: [██████████] 100% (v1.1: 4/4 phases)
 
 Decisions are logged in PROJECT.md Key Decisions table.
 v1.1 decisions archived in milestones/v1.1-ROADMAP.md.
+
+**Phase 11 decisions:**
+- Factory pattern for providers (need API key at construction)
+- Self-registration at module import (avoids initialization races)
+- AVAILABLE_MODELS kept for backward compatibility
 
 ### Pending Todos
 
@@ -68,8 +74,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: v1.1 milestone shipped and archived
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None
 
 ---
-*v1.1 complete. Ready for `/gsd:new-milestone` to start next milestone.*
+*Next: Execute 11-02-PLAN.md (service layer migration)*
