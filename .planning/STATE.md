@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 8 - Agent Configuration
-Plan: 2 of 3
-Status: In progress
-Last activity: 2026-01-29 - Completed 08-02-PLAN.md
+Plan: 3 of 3
+Status: Phase complete
+Last activity: 2026-01-29 - Completed 08-03-PLAN.md
 
-Progress: [████░░░░░░] 35% (Milestone v1.1: 1/4 phases + 2 plans)
+Progress: [████░░░░░░] 40% (Milestone v1.1: 2/4 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 9 min
-- Total execution time: 3.07 hours
+- Total plans completed: 23
+- Average duration: 8 min
+- Total execution time: 3.10 hours
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: [████░░░░░░] 35% (Milestone v1.1: 1/4 phases + 2 p
 | 05-execution-engine | 3 | 24 min | 8 min |
 | 06-output-export | 2 | 13 min | 7 min |
 | 07-navigation-traits | 2 | 9 min | 5 min |
-| 08-agent-configuration | 2 | 6 min | 3 min |
+| 08-agent-configuration | 3 | 8 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (5 min), 07-02 (4 min), 08-01 (4 min), 08-02 (2 min)
+- Last 5 plans: 07-02 (4 min), 08-01 (4 min), 08-02 (2 min), 08-03 (2 min)
 
 *Updated after each plan completion*
 
@@ -101,6 +101,9 @@ Recent decisions affecting current work:
 - Composite primary key for junction tables (prevents duplicates)
 - Optional capability/model props for gradual adoption (route updates in 08-03)
 - traitsUpdated hidden marker for detecting empty trait submissions
+- Trait context format: ## {name}\n\n{context} with --- separator
+- buildSystemPrompt helper centralizes trait context injection
+- Model cascade: agent.model -> apiKey.modelPreference -> default
 
 ### Pending Todos
 
@@ -113,8 +116,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 08-02-PLAN.md
+Stopped at: Completed 08-03-PLAN.md (Phase 8 complete)
 Resume file: None
 
 ---
-*Phase 8 in progress. Agent form UI extended with config fields. 22 plans total.*
+*Phase 8 complete. Agent configuration with traits, capability, model all functional. 23 plans total.*
