@@ -16,10 +16,13 @@ import { Button } from "~/components/ui/button";
 import { TraitCard } from "~/components/trait-card";
 import { TraitFormDialog } from "~/components/trait-form-dialog";
 
+// Accept both hex (#RRGGBB) and OKLCH formats for backward compatibility
+const colorRegex = /^(#[0-9A-Fa-f]{6}|oklch\(\d+\.?\d*\s+\d+\.?\d*\s+\d+\.?\d*\))$/;
+
 const TraitSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
   context: z.string().min(1, "Context is required").max(50000, "Context must be 50,000 characters or less"),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format").optional(),
+  color: z.string().regex(colorRegex, "Invalid color format").optional(),
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
