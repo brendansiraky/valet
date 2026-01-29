@@ -20,19 +20,19 @@ Milestone v1.2 adds multi-provider support (Anthropic + OpenAI), improved model 
 Plans:
 - [ ] 11-01-PLAN.md — Provider types, registry, and Anthropic implementation
 - [ ] 11-02-PLAN.md — Refactor services to use provider abstraction
-- [ ] 11-03-PLAN.md — Orphan handling for deleted agents
+- [ ] 11-03-PLAN.md — Orphan detection for deleted agents (backend only)
 
 **Scope:**
 - Provider interface defining common operations (chat, tools, streaming)
 - Anthropic provider implementing the interface
 - Refactor existing code to use abstraction layer
-- Live link agent-pipeline relationship (agents update in pipelines)
-- Orphan handler for deleted agents
+- Orphan detection: fail-fast when pipelines reference deleted agents (backend)
+- Orphan UI indicator deferred to Phase 13
 
 **Key files to modify:**
 - New: `app/lib/providers/` directory structure
 - Modify: `app/services/pipeline-executor.server.ts`
-- Modify: Pipeline builder to use live agent references
+- Modify: `app/services/job-queue.server.ts`
 
 ### Phase 12: OpenAI Integration
 
@@ -63,6 +63,7 @@ Plans:
 - Only show models for providers with configured keys
 - Allow mixing providers freely in pipelines
 - Update agent form with new model selector
+- Orphan indicator in pipeline builder (deferred from Phase 11)
 
 ### Phase 14: Artifact Storage
 
@@ -89,7 +90,7 @@ Plans:
 |----------|-----------|
 | Abstraction layer first | Clean separation before adding providers |
 | Live agent-pipeline link | Users expect edits to agents to reflect in pipelines |
-| Orphan handler | Graceful degradation when agents deleted |
+| Orphan handler backend-first | Fail fast at execution; UI indicator with pipeline builder work |
 | One key per provider | Simple settings UX, no complex key management |
 | Flat dropdown with grouping | Easier to scan than nested menus |
 | Best effort feature parity | Don't block on edge cases, handle gracefully |
