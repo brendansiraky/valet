@@ -203,7 +203,7 @@ export default function Agents() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Agents</h1>
+            <h1 className="text-2xl font-semibold">My Agents</h1>
             <p className="text-muted-foreground">
               Create and manage your AI agents
             </p>

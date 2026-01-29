@@ -141,7 +141,7 @@ export default function Traits() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Traits</h1>
+            <h1 className="text-2xl font-semibold">My Traits</h1>
             <p className="text-muted-foreground">
               Create reusable context snippets for your agents
             </p>

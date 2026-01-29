@@ -37,7 +37,7 @@ export default function PipelinesPage() {
     <div className="container mx-auto py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Pipelines</h1>
+          <h1 className="text-2xl font-semibold">Pipelines</h1>
           <p className="text-muted-foreground">
             Create and manage your agent pipelines
           </p>

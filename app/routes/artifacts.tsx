@@ -84,7 +84,7 @@ export default function ArtifactsPage() {
     <div className="container mx-auto py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Artifacts</h1>
+          <h1 className="text-2xl font-semibold">Artifacts</h1>
           <p className="text-muted-foreground">
             View past pipeline outputs
           </p>
