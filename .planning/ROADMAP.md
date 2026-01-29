@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Navigation & Traits** - Sidebar navigation and reusable context snippets
 - [x] **Phase 8: Agent Configuration** - Capability, model, and trait settings per agent
 - [x] **Phase 9: Pipeline & Cost** - Capabilities in pipeline execution, cost visibility
-- [ ] **Phase 10: Agent UX** - Cleaner test dialog that uses agent configuration
+- [ ] **Phase 10: Agent UX** - Dead code cleanup and UX polish
 
 ## Phase Details
 
@@ -174,14 +174,17 @@ Plans:
 - [x] 09-02-PLAN.md - Cost display in pipeline completion UI
 
 ### Phase 10: Polish & Cleanup
-**Goal**: Final UX polish and cleanup of unused code
+**Goal**: Clean codebase with unused capability files removed and no debug artifacts
 **Depends on**: Phase 9
 **Requirements**: None (polish phase)
 **Success Criteria** (what must be TRUE):
   1. Remove unused capability-related code paths
   2. Clean up old separate capability service files if no longer needed
   3. Final review of agent/pipeline UX
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 10-01-PLAN.md - Delete unused capability files and remove dead code
 
 ## Progress
 
@@ -206,11 +209,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 7. Navigation & Traits | 2/2 | Complete | 2026-01-29 |
 | 8. Agent Configuration | 3/3 | Complete | 2026-01-29 |
 | 9. Pipeline & Cost | 2/2 | Complete | 2026-01-29 |
-| 10. Polish & Cleanup | 0/? | Pending | - |
+| 10. Polish & Cleanup | 0/1 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-28*
 *v1.1 phases added: 2026-01-29*
-*Phase 7 planned: 2026-01-29*
+*Phase 10 planned: 2026-01-29*
 *Depth: standard (5-8 phases per milestone)*
 *Coverage: v1.0 30/30, v1.1 17/17 requirements mapped*
