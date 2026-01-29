@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 17 of 18 - Dynamic Pipeline Traits
 Plan: 03 of 3 complete
 Status: Phase complete
-Last activity: 2026-01-29 - Completed quick task 005: Fix trait drag-drop to canvas for multi-agent
+Last activity: 2026-01-29 - Completed quick task 006: Add pipeline run input dialog with textarea
 
 Progress: [######    ] 60% (v1.3: 3/4 phases complete)
 
@@ -78,11 +78,12 @@ None.
 | 003 | Prevent running pipelines with deleted agents | 2026-01-29 | 19af045 | [003-prevent-running-pipelines-with-deleted-a](./quick/003-prevent-running-pipelines-with-deleted-a/) |
 | 004 | Fix trait drag-drop onto React Flow canvas | 2026-01-29 | 05dfdf4 | [004-fix-trait-drag-drop-onto-react-flow-canv](./quick/004-fix-trait-drag-drop-onto-react-flow-canv/) |
 | 005 | Fix trait drag-drop to canvas for multi-agent | 2026-01-29 | 6741565 | [005-fix-trait-drag-drop-to-canvas-for-multi-](./quick/005-fix-trait-drag-drop-to-canvas-for-multi-/) |
+| 006 | Add pipeline run input dialog with textarea | 2026-01-29 | dc5d52d | [006-add-pipeline-run-input-dialog-with-texta](./quick/006-add-pipeline-run-input-dialog-with-texta/) |
 
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed quick task 005
+Stopped at: Completed quick task 006
 Resume file: None
 
 ---
