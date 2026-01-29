@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useFetcher } from "react-router";
 import type { Agent } from "~/db/schema/agents";
 import type { AgentRunResult } from "~/services/agent-runner.server";
-import { AVAILABLE_MODELS } from "~/lib/models";
+import { ALL_MODELS } from "~/lib/models";
 import {
   Dialog,
   DialogContent,
@@ -12,20 +12,24 @@ import {
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { Label } from "~/components/ui/label";
+import { Checkbox } from "~/components/ui/checkbox";
 import { Loader2, ExternalLink } from "lucide-react";
 
 interface AgentTestDialogProps {
   agent: Pick<Agent, "id" | "name">;
+  traits: Array<{ id: string; name: string }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function AgentTestDialog({
   agent,
+  traits,
   open,
   onOpenChange,
 }: AgentTestDialogProps) {
   const [input, setInput] = useState("");
+  const [selectedTraitIds, setSelectedTraitIds] = useState<string[]>([]);
   const fetcher = useFetcher<AgentRunResult>();
 
   const isLoading = fetcher.state === "submitting";
@@ -35,7 +39,7 @@ export function AgentTestDialog({
     if (!input.trim() || isLoading) return;
 
     fetcher.submit(
-      { input: input.trim() },
+      { input: input.trim(), traitIds: selectedTraitIds },
       {
         method: "POST",
         action: `/api/agent/${agent.id}/run`,
@@ -75,6 +79,31 @@ export function AgentTestDialog({
               Press Cmd+Enter to run. The agent can search the web or fetch URLs based on your input.
             </p>
           </div>
+
+          {/* Trait Picker */}
+          {traits.length > 0 && (
+            <div className="space-y-2">
+              <Label>Test with traits (optional)</Label>
+              <div className="max-h-32 overflow-y-auto space-y-2 border rounded-md p-3">
+                {traits.map((trait) => (
+                  <div key={trait.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`test-trait-${trait.id}`}
+                      checked={selectedTraitIds.includes(trait.id)}
+                      onCheckedChange={(checked) => {
+                        setSelectedTraitIds((prev) =>
+                          checked ? [...prev, trait.id] : prev.filter((id) => id !== trait.id)
+                        );
+                      }}
+                    />
+                    <label htmlFor={`test-trait-${trait.id}`} className="text-sm cursor-pointer">
+                      {trait.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Submit Button */}
           <Button
@@ -129,7 +158,7 @@ export function AgentTestDialog({
                     <div className="border-t pt-3 space-y-1">
                       {result.model && (
                         <p className="text-xs text-muted-foreground">
-                          Model: {AVAILABLE_MODELS.find((m) => m.id === result.model)?.name ?? result.model}
+                          Model: {ALL_MODELS.find((m) => m.id === result.model)?.name ?? result.model}
                         </p>
                       )}
                       {result.usage && (

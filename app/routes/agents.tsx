@@ -257,6 +257,7 @@ export default function Agents() {
         {testingAgent && (
           <AgentTestDialog
             agent={testingAgent}
+            traits={userTraits}
             open={!!testingAgent}
             onOpenChange={(open) => !open && setTestingAgent(null)}
           />
