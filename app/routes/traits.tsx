@@ -19,6 +19,7 @@ import { TraitFormDialog } from "~/components/trait-form-dialog";
 const TraitSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
   context: z.string().min(1, "Context is required").max(50000, "Context must be 50,000 characters or less"),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format").optional(),
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -46,6 +47,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       id: true,
       name: true,
       context: true,
+      color: true,
       updatedAt: true,
     },
   });
@@ -68,6 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const result = TraitSchema.safeParse({
       name: formData.get("name"),
       context: formData.get("context"),
+      color: formData.get("color"),
     });
 
     if (!result.success) {
@@ -81,6 +84,7 @@ export async function action({ request }: ActionFunctionArgs) {
       userId,
       name: result.data.name,
       context: result.data.context,
+      color: result.data.color,
     });
 
     return { success: true };
@@ -91,6 +95,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const result = TraitSchema.safeParse({
       name: formData.get("name"),
       context: formData.get("context"),
+      color: formData.get("color"),
     });
 
     if (!result.success) {
@@ -106,6 +111,7 @@ export async function action({ request }: ActionFunctionArgs) {
       .set({
         name: result.data.name,
         context: result.data.context,
+        color: result.data.color,
       })
       .where(and(eq(traits.id, traitId), eq(traits.userId, userId)));
 

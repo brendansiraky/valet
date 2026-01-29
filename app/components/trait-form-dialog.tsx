@@ -14,9 +14,11 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
+import { ColorSwatchPicker } from "./color-swatch-picker";
+import { TRAIT_COLORS, DEFAULT_TRAIT_COLOR } from "~/lib/trait-colors";
 
 interface TraitFormDialogProps {
-  trait?: Pick<Trait, "id" | "name" | "context">;
+  trait?: Pick<Trait, "id" | "name" | "context" | "color">;
   trigger: ReactNode;
 }
 
@@ -25,11 +27,13 @@ interface ActionData {
   errors?: {
     name?: string[];
     context?: string[];
+    color?: string[];
   };
 }
 
 export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [color, setColor] = useState(trait?.color ?? DEFAULT_TRAIT_COLOR);
   const fetcher = useFetcher<ActionData>();
   const isEditing = !!trait;
   const isSubmitting = fetcher.state !== "idle";
@@ -43,6 +47,10 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
+    if (!newOpen) {
+      // Reset color to trait's color (or default) when dialog closes
+      setColor(trait?.color ?? DEFAULT_TRAIT_COLOR);
+    }
   };
 
   return (
@@ -60,6 +68,7 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
         <fetcher.Form method="post" className="space-y-4">
           <input type="hidden" name="intent" value={isEditing ? "update" : "create"} />
           {isEditing && <input type="hidden" name="traitId" value={trait.id} />}
+          <input type="hidden" name="color" value={color} />
 
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
@@ -101,6 +110,15 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
             <p className="text-xs text-muted-foreground">
               Define reusable context like expertise, tone, or constraints that can be applied to multiple agents.
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Color</Label>
+            <ColorSwatchPicker
+              value={color}
+              onChange={setColor}
+              colors={TRAIT_COLORS}
+            />
           </div>
 
           <DialogFooter>

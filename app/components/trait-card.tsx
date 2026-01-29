@@ -13,7 +13,7 @@ import { Button } from "~/components/ui/button";
 import { TraitFormDialog } from "./trait-form-dialog";
 
 interface TraitCardProps {
-  trait: Pick<Trait, "id" | "name" | "context" | "updatedAt">;
+  trait: Pick<Trait, "id" | "name" | "context" | "color" | "updatedAt">;
 }
 
 function formatRelativeTime(date: Date | string): string {
@@ -39,7 +39,10 @@ function formatRelativeTime(date: Date | string): string {
 
 export function TraitCard({ trait }: TraitCardProps) {
   return (
-    <Card className="flex flex-col">
+    <Card
+      className="flex flex-col border-l-4"
+      style={{ borderLeftColor: trait.color }}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">{trait.name}</CardTitle>
         <CardDescription>
