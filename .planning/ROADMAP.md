@@ -29,7 +29,14 @@ Milestone v1.3 improves UX for non-technical users through human-centric naming 
 
 **Goal:** Rename "Instructions" to "DNA", add test trait picker, remove template variable system
 **Depends on:** v1.2 complete
-**Status:** Not started
+**Status:** Planning complete
+**Plans:** 4 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — DNA rename + tooltip, trait picker in test dialog
+- [ ] 15-02-PLAN.md — Remove variables from database schema
+- [ ] 15-03-PLAN.md — Remove variable system from executor and pipeline routes
+- [ ] 15-04-PLAN.md — Delete variable dialog components and template API
 
 **Scope:**
 - Rename "Instructions" field to "DNA" in agent create/edit forms
@@ -119,7 +126,7 @@ Milestone v1.3 improves UX for non-technical users through human-centric naming 
 
 | Phase | Requirements | Status |
 |-------|--------------|--------|
-| 15 - Agent DNA & Simplification | 10 | Not started |
+| 15 - Agent DNA & Simplification | 10 | Planning complete |
 | 16 - Trait Colors | 4 | Not started |
 | 17 - Dynamic Pipeline Traits | 7 | Not started |
 
