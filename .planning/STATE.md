@@ -77,10 +77,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Phase 11 complete, post-verification bug fix applied
+Stopped at: Completed quick task 003 - Prevent running pipelines with deleted agents
 Resume file: None
-
-**Post-phase fix:** Added `runEmitter.emitRunEvent()` in job-queue.server.ts catch block so orphan detection errors reach the UI (commit f5c3733).
 
 ---
 *Phase 11 complete. Next: `/gsd:discuss-phase 12` to plan OpenAI Integration*
