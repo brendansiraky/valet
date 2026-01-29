@@ -8,7 +8,12 @@ export type StreamEvent =
   | { type: "step_start"; stepIndex: number; agentName: string }
   | { type: "text_delta"; stepIndex: number; text: string }
   | { type: "step_complete"; stepIndex: number; output: string }
-  | { type: "pipeline_complete"; finalOutput: string }
+  | {
+      type: "pipeline_complete";
+      finalOutput: string;
+      usage?: { inputTokens: number; outputTokens: number };
+      model?: string;
+    }
   | { type: "error"; stepIndex?: number; message: string }
   | { type: "status"; status: string };
 
@@ -20,6 +25,8 @@ export interface RunStreamState {
   stepOutputs: Map<number, string>;
   finalOutput: string | null;
   error: string | null;
+  usage: { inputTokens: number; outputTokens: number } | null;
+  model: string | null;
 }
 
 const initialState: RunStreamState = {
@@ -30,6 +37,8 @@ const initialState: RunStreamState = {
   stepOutputs: new Map(),
   finalOutput: null,
   error: null,
+  usage: null,
+  model: null,
 };
 
 /**
@@ -91,6 +100,8 @@ export function useRunStream(runId: string | null) {
               status: "completed",
               finalOutput: event.finalOutput,
               currentStep: -1,
+              usage: event.usage ?? null,
+              model: event.model ?? null,
             };
           case "error":
             return {
