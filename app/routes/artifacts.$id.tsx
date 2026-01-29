@@ -70,10 +70,15 @@ export default function ArtifactDetailPage() {
   const { artifact } = useLoaderData<typeof loader>();
 
   // Transform artifactData to OutputViewer format
-  const steps = artifact.artifactData?.steps.map((s) => ({
+  // Compute input for each step: step 0 input = run input, step N input = step N-1 output
+  const artifactSteps = artifact.artifactData?.steps ?? [];
+  const steps = artifactSteps.map((s, index) => ({
     agentName: s.agentName,
     output: s.output,
-  })) ?? [];
+    input: index === 0
+      ? (artifact.input ?? "")
+      : (artifactSteps[index - 1]?.output ?? ""),
+  }));
   const finalOutput = artifact.artifactData?.finalOutput ?? artifact.finalOutput ?? "";
 
   const usage =

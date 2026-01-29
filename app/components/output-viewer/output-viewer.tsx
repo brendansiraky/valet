@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { ScrollArea } from "~/components/ui/scroll-area";
@@ -9,6 +10,7 @@ import { calculateCost, formatCost, formatTokens } from "~/lib/pricing";
 interface StepOutput {
   agentName: string;
   output: string;
+  input?: string;
 }
 
 interface OutputViewerProps {
@@ -23,7 +25,7 @@ interface OutputViewerProps {
 /**
  * Tabbed output viewer for pipeline execution results.
  * Shows each agent's output in separate tabs with a final output tab.
- * Includes download buttons for the final output.
+ * Each step has Input/Output sub-tabs for visibility into data flow.
  */
 export function OutputViewer({
   steps,
@@ -35,12 +37,20 @@ export function OutputViewer({
 }: OutputViewerProps) {
   const defaultTab = steps.length > 0 ? "final" : "step-0";
 
+  // Track which sub-tab (input/output) is selected for each step
+  const [stepViews, setStepViews] = useState<Record<number, 'input' | 'output'>>({});
+
+  const getStepView = (index: number) => stepViews[index] || 'output';
+
+  const setStepView = (index: number, view: 'input' | 'output') => {
+    setStepViews(prev => ({ ...prev, [index]: view }));
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Pipeline Output</CardTitle>
-          <DownloadButtons content={finalOutput} pipelineName={pipelineName} />
         </div>
       </CardHeader>
       <CardContent>
@@ -56,13 +66,44 @@ export function OutputViewer({
 
           {steps.map((step, index) => (
             <TabsContent key={index} value={`step-${index}`}>
-              <ScrollArea className="h-[400px] rounded-md border p-4">
-                <MarkdownViewer content={step.output || "No output"} />
-              </ScrollArea>
+              <Tabs
+                value={getStepView(index)}
+                onValueChange={(v) => setStepView(index, v as 'input' | 'output')}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <TabsList>
+                    <TabsTrigger value="input">Input</TabsTrigger>
+                    <TabsTrigger value="output">Output</TabsTrigger>
+                  </TabsList>
+                  <DownloadButtons
+                    content={getStepView(index) === 'input' ? (step.input ?? '') : step.output}
+                    pipelineName={pipelineName}
+                    stepName={step.agentName}
+                    contentType={getStepView(index)}
+                  />
+                </div>
+                <TabsContent value="input">
+                  <ScrollArea className="h-[400px] rounded-md border p-4">
+                    <MarkdownViewer content={step.input || "No input"} />
+                  </ScrollArea>
+                </TabsContent>
+                <TabsContent value="output">
+                  <ScrollArea className="h-[400px] rounded-md border p-4">
+                    <MarkdownViewer content={step.output || "No output"} />
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           ))}
 
           <TabsContent value="final">
+            <div className="flex items-center justify-end mb-4">
+              <DownloadButtons
+                content={finalOutput}
+                pipelineName={pipelineName}
+                contentType="final"
+              />
+            </div>
             <ScrollArea className="h-[400px] rounded-md border p-4">
               <MarkdownViewer content={finalOutput || "No output"} />
             </ScrollArea>
