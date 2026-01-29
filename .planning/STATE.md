@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 11 of 14 - Provider Abstraction Layer
-Plan: 01 of 3 complete
+Plan: 02 of 3 complete
 Status: In progress
-Last activity: 2026-01-29 — Completed 11-01-PLAN.md (provider abstraction core)
+Last activity: 2026-01-29 — Completed 11-03-PLAN.md (orphan agent detection)
 
-Progress: [██░░░░░░░░] 10% (v1.2: 1/10 plans)
+Progress: [██░░░░░░░░] 20% (v1.2: 2/10 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27
+- Total plans completed: 28
 - Average duration: 8 min
-- Total execution time: 3.21 hours
+- Total execution time: 3.24 hours
 
 **By Phase:**
 
@@ -37,10 +37,10 @@ Progress: [██░░░░░░░░] 10% (v1.2: 1/10 plans)
 | 08-agent-configuration | 3 | 8 min | 3 min |
 | 09-pipeline-cost | 2 | 3 min | 2 min |
 | 10-agent-ux | 1 | 2 min | 2 min |
-| 11-provider-abstraction | 1 | 2 min | 2 min |
+| 11-provider-abstraction | 2 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-01 (2 min), 09-02 (1 min), 10-01 (2 min), 11-01 (2 min)
+- Last 5 plans: 09-02 (1 min), 10-01 (2 min), 11-01 (2 min), 11-03 (2 min)
 
 *Updated after each plan completion*
 
@@ -55,6 +55,8 @@ v1.1 decisions archived in milestones/v1.1-ROADMAP.md.
 - Factory pattern for providers (need API key at construction)
 - Self-registration at module import (avoids initialization races)
 - AVAILABLE_MODELS kept for backward compatibility
+- Fail-fast with all orphans (collect ALL missing agents before failing)
+- Use stored agentName from node.data for user-friendly error messages
 
 ### Pending Todos
 
@@ -74,8 +76,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 11-01-PLAN.md
+Stopped at: Completed 11-02-PLAN.md (service layer migration)
 Resume file: None
 
 ---
-*Next: Execute 11-02-PLAN.md (service layer migration)*
+*Next: Execute 11-03-PLAN.md (orphan agent detection)*
