@@ -1,17 +1,15 @@
-import type { LoaderFunctionArgs } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Link, redirect, useLoaderData } from "react-router";
 import { db, pipelines } from "~/db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { getSession } from "~/services/session.server";
 import { Button } from "~/components/ui/button";
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
   CardContent,
 } from "~/components/ui/card";
 import { Plus } from "lucide-react";
+import { PipelineCard } from "~/components/pipeline-card";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -28,6 +26,30 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .orderBy(asc(pipelines.name));
 
   return { pipelines: userPipelines };
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
+
+  if (!userId) {
+    return redirect("/login");
+  }
+
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "delete") {
+    const pipelineId = formData.get("pipelineId") as string;
+
+    await db
+      .delete(pipelines)
+      .where(and(eq(pipelines.id, pipelineId), eq(pipelines.userId, userId)));
+
+    return { success: true };
+  }
+
+  return { success: false };
 }
 
 export default function PipelinesPage() {
@@ -64,25 +86,7 @@ export default function PipelinesPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {userPipelines.map((pipeline) => (
-            <Link
-              key={pipeline.id}
-              to={`/pipelines/${pipeline.id}`}
-              className="block"
-            >
-              <Card className="hover:border-primary transition-colors h-full">
-                <CardHeader>
-                  <CardTitle>{pipeline.name}</CardTitle>
-                  {pipeline.description && (
-                    <CardDescription>{pipeline.description}</CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground">
-                    Updated {new Date(pipeline.updatedAt).toLocaleDateString()}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
+            <PipelineCard key={pipeline.id} pipeline={pipeline} />
           ))}
         </div>
       )}
