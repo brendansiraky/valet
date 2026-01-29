@@ -313,7 +313,7 @@ export default function PipelineBuilderPage() {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
+    <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
       {/* Header */}
       <div className="border-b p-4 flex items-center gap-4">
         <Input
@@ -369,7 +369,7 @@ export default function PipelineBuilderPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         <AgentSidebar agents={userAgents} traits={userTraits} />
         <TraitsContext.Provider value={traitsMap}>
           <div className="flex-1">
