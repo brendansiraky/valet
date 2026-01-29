@@ -313,7 +313,7 @@ export default function PipelineBuilderPage() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="h-dvh flex flex-col overflow-hidden">
       {/* Header */}
       <div className="border-b p-4 flex items-center gap-4">
         <Input
