@@ -59,7 +59,7 @@ export function ResourceCard({
 
   return (
     <Card
-      className="flex flex-col border-l-4 border-l-muted-foreground/30"
+      className={`flex flex-col${accentColor ? " border-l-4" : ""}`}
       style={accentColor ? { borderLeftColor: accentColor } : undefined}
     >
       <CardHeader className="pb-2">
