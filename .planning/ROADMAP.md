@@ -39,18 +39,23 @@ Plans:
 
 **Goal**: Add OpenAI as second provider with feature parity where possible
 **Depends on**: Phase 11 (abstraction layer)
-**Status**: Not started
+**Status**: In Progress
+**Plans:** 2 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Install SDK, create OpenAI provider, update registry
+- [ ] 12-02-PLAN.md — Wire into pipeline executor, verify integration
 
 **Scope:**
 - OpenAI provider implementing abstraction interface
-- Map OpenAI tool format to/from internal format
-- Handle capability differences gracefully (best effort)
-- Research OpenAI SDK patterns via docs
+- Map OpenAI message format to/from internal format
+- Handle capability differences gracefully (skip unsupported tools with warning)
+- Registry detection for gpt-*/o3-*/o4-* models
 
-**Research needed:**
-- OpenAI SDK streaming patterns
-- Tool use format differences
-- Model naming conventions
+**Key files:**
+- New: `app/lib/providers/openai.ts`
+- Modify: `app/lib/models.ts`, `app/lib/providers/registry.ts`
+- Modify: `app/services/pipeline-executor.server.ts`
 
 ### Phase 13: Model Selection UX
 
@@ -97,6 +102,8 @@ Plans:
 | Best effort feature parity | Don't block on edge cases, handle gracefully |
 | JSONB for artifacts | Structured storage, queryable, extensible |
 | View-only artifacts | Start simple, add editing later |
+| Chat Completions API (not Responses) | Simpler, matches message-based interface |
+| Skip unsupported tools with warning | Don't crash on web_fetch/web_search for OpenAI |
 
 ---
 
@@ -105,7 +112,7 @@ Plans:
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 11 - Provider Abstraction | 3 plans | Complete ✓ |
-| 12 - OpenAI Integration | TBD | Not started |
+| 12 - OpenAI Integration | 2 plans | In Progress |
 | 13 - Model Selection UX | TBD | Not started |
 | 14 - Artifact Storage | TBD | Not started |
 
