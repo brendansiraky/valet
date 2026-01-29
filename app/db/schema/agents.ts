@@ -1,8 +1,6 @@
 import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
-export type AgentCapability = "none" | "search" | "fetch";
-
 export const agents = pgTable(
   "agents",
   {

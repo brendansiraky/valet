@@ -282,8 +282,6 @@ export default function PipelineBuilderPage() {
     usage: { inputTokens: number; outputTokens: number } | null,
     model: string | null
   ) => {
-    console.log("Pipeline completed:", finalOutput);
-
     // Convert stepOutputs map to array with agent names
     const steps = pipelineSteps.map((step, index) => ({
       agentName: step.agentName,
