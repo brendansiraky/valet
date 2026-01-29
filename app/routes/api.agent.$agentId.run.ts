@@ -1,14 +1,13 @@
 import type { ActionFunctionArgs } from "react-router";
 import { z } from "zod";
 import { getSession } from "~/services/session.server";
-import { db, agents, apiKeys } from "~/db";
+import { db, agents, apiKeys, agentTraits } from "~/db";
 import { eq, and } from "drizzle-orm";
 import { runAgent, type AgentRunResult } from "~/services/agent-runner.server";
 import type { ModelId } from "~/lib/models";
 
 const RunAgentSchema = z.object({
   input: z.string().min(1, "Input is required"),
-  capability: z.enum(["text", "search", "fetch"]).default("text"),
 });
 
 function jsonResponse(data: AgentRunResult, status: number = 200): Response {
@@ -79,16 +78,32 @@ export async function action({
     );
   }
 
-  const { input, capability } = result.data;
+  const { input } = result.data;
 
-  // Map capability to flags
+  // Load trait context for this agent
+  const assignments = await db.query.agentTraits.findMany({
+    where: eq(agentTraits.agentId, agentId),
+    with: {
+      trait: {
+        columns: { name: true, context: true },
+      },
+    },
+  });
+
+  const traitContext = assignments.length > 0
+    ? assignments
+        .map((a) => `## ${a.trait.name}\n\n${a.trait.context}`)
+        .join("\n\n---\n\n")
+    : undefined;
+
+  // Map capability from agent setting
   const capabilities = {
-    webSearch: capability === "search",
-    urlFetch: capability === "fetch",
+    webSearch: agent.capability === "search",
+    urlFetch: agent.capability === "fetch",
   };
 
-  // Use model preference from API key or default
-  const model = (apiKey.modelPreference ||
+  // Use agent's model if set, otherwise user's default from API key
+  const modelToUse = (agent.model ?? apiKey.modelPreference ??
     "claude-sonnet-4-5-20250929") as ModelId;
 
   // Run the agent
@@ -96,8 +111,9 @@ export async function action({
     agent,
     userInput: input,
     encryptedApiKey: apiKey.encryptedKey,
-    model,
+    model: modelToUse,
     capabilities,
+    traitContext,
   });
 
   return jsonResponse(runResult, runResult.success ? 200 : 500);
