@@ -68,12 +68,16 @@ function SidebarProvider({
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  // Initialize from localStorage if available (with SSR safety)
-  const [_open, _setOpen] = React.useState(() => {
-    if (typeof window === "undefined") return defaultOpen
+  const [_open, _setOpen] = React.useState(defaultOpen)
+
+  // Sync from localStorage after hydration
+  React.useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
-    return stored !== null ? stored === "true" : defaultOpen
-  })
+    if (stored !== null) {
+      _setOpen(stored === "true")
+    }
+  }, [])
+
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
