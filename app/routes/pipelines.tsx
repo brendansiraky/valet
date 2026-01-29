@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { Link, redirect, useLoaderData } from "react-router";
 import { db, pipelines } from "~/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { getSession } from "~/services/session.server";
 import { Button } from "~/components/ui/button";
 import {
@@ -25,7 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .select()
     .from(pipelines)
     .where(eq(pipelines.userId, userId))
-    .orderBy(desc(pipelines.updatedAt));
+    .orderBy(asc(pipelines.name));
 
   return { pipelines: userPipelines };
 }
