@@ -315,7 +315,7 @@ export default function PipelineBuilderPage() {
   return (
     <div className="h-full overflow-hidden">
       {/* Header */}
-      <div className="fixed top-0 right-0 left-[var(--sidebar-width)] z-10 h-[76px] border-b bg-background p-4 flex items-center gap-4">
+      <div className="sticky top-0 z-10 h-[76px] border-b bg-background p-4 flex items-center gap-4">
         <Input
           value={pipelineName}
           onChange={handleNameChange}
