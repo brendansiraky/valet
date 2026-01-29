@@ -73,20 +73,23 @@ Requirements for milestone v1.1 (Enhanced Agents). Each maps to roadmap phases.
 
 ### Agent Configuration
 
-- [ ] **AGNT-07**: Agent has capability setting (none / web search / URL fetch)
-- [ ] **AGNT-08**: Agent has model setting (Claude models, defaults to user's global)
-- [ ] **AGNT-09**: Agent can have traits assigned
-- [ ] **AGNT-10**: Assigned trait context is included when agent executes
+- [x] **AGNT-08**: Agent has model setting (Claude models, defaults to user's global)
+- [x] **AGNT-09**: Agent can have traits assigned
+- [x] **AGNT-10**: Assigned trait context is included when agent executes
+
+Note: AGNT-07 (capability dropdown) was removed. All agents now have unified tools (web search + URL fetch) — model infers from context.
 
 ### Pipeline Capabilities
 
-- [ ] **PCAP-01**: Pipeline execution supports web search capability
-- [ ] **PCAP-02**: Pipeline execution supports URL fetch capability
+- [x] **PCAP-01**: Pipeline execution supports web search capability
+- [x] **PCAP-02**: Pipeline execution supports URL fetch capability
+
+Note: Implemented via unified runWithTools — all pipeline agents have web search + URL fetch available.
 
 ### Cost Visibility
 
-- [ ] **COST-01**: User sees token count after pipeline run
-- [ ] **COST-02**: User sees estimated cost after pipeline run
+- [x] **COST-01**: User sees token count after pipeline run
+- [x] **COST-02**: User sees estimated cost after pipeline run
 
 ### Agent UX
 
@@ -201,21 +204,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRAIT-02 | Phase 7 | Complete |
 | TRAIT-03 | Phase 7 | Complete |
 | TRAIT-04 | Phase 7 | Complete |
-| AGNT-07 | Phase 8 | Pending |
-| AGNT-08 | Phase 8 | Pending |
-| AGNT-09 | Phase 8 | Pending |
-| AGNT-10 | Phase 8 | Pending |
-| PCAP-01 | Phase 9 | Pending |
-| PCAP-02 | Phase 9 | Pending |
-| COST-01 | Phase 9 | Pending |
-| COST-02 | Phase 9 | Pending |
+| AGNT-08 | Phase 8 | Complete |
+| AGNT-09 | Phase 8 | Complete |
+| AGNT-10 | Phase 8 | Complete |
+| PCAP-01 | Phase 9 | Complete |
+| PCAP-02 | Phase 9 | Complete |
+| COST-01 | Phase 9 | Complete |
+| COST-02 | Phase 9 | Complete |
 | AGUX-01 | Phase 10 | Pending |
 | AGUX-02 | Phase 10 | Pending |
 | AGUX-03 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 30/30 complete
-- v1.1 requirements: 17/17 mapped (6 complete)
+- v1.1 requirements: 16/16 mapped (13 complete, AGNT-07 removed)
 
 ---
 *Requirements defined: 2025-01-28*

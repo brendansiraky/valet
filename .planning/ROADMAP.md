@@ -24,8 +24,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### v1.1 (Current)
 
 - [x] **Phase 7: Navigation & Traits** - Sidebar navigation and reusable context snippets
-- [ ] **Phase 8: Agent Configuration** - Capability, model, and trait settings per agent
-- [ ] **Phase 9: Pipeline & Cost** - Capabilities in pipeline execution, cost visibility
+- [x] **Phase 8: Agent Configuration** - Capability, model, and trait settings per agent
+- [x] **Phase 9: Pipeline & Cost** - Capabilities in pipeline execution, cost visibility
 - [ ] **Phase 10: Agent UX** - Cleaner test dialog that uses agent configuration
 
 ## Phase Details
@@ -170,8 +170,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md - Pricing module and unified tools executor
-- [ ] 09-02-PLAN.md - Cost display in pipeline completion UI
+- [x] 09-01-PLAN.md - Pricing module and unified tools executor
+- [x] 09-02-PLAN.md - Cost display in pipeline completion UI
 
 ### Phase 10: Polish & Cleanup
 **Goal**: Final UX polish and cleanup of unused code
@@ -205,7 +205,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 |-------|----------------|--------|-----------|
 | 7. Navigation & Traits | 2/2 | Complete | 2026-01-29 |
 | 8. Agent Configuration | 3/3 | Complete | 2026-01-29 |
-| 9. Pipeline & Cost | 0/2 | Pending | - |
+| 9. Pipeline & Cost | 2/2 | Complete | 2026-01-29 |
 | 10. Polish & Cleanup | 0/? | Pending | - |
 
 ---
