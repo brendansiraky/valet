@@ -1,12 +1,13 @@
 # Quick Task 010: Redesign Settings Page with Improved UX - Summary
 
 ## One-liner
-Redesigned settings page with organized sections, dark/light mode toggle, and hidden browser scrollbar for cleaner UI.
+Redesigned settings page with dark/light mode toggle, hidden scrollbars, removed 404 artifacts link, and simplified dashboard to minimal welcome text.
 
 ## Commits
 - `6bdba97` feat(quick-010): add dark/light mode toggle to settings
 - `d13a45f` style(quick-010): hide browser scrollbar while preserving scroll functionality
 - `4265419` fix(quick-010): remove Artifacts nav item causing 404
+- `bfca290` fix(quick-010): simplify dashboard to minimal welcome message
 
 ## Changes Made
 
@@ -38,6 +39,7 @@ Redesigned settings page with organized sections, dark/light mode toggle, and hi
 | `package.json` | Added @radix-ui/react-switch dependency |
 | `app/app.css` | Added scrollbar hiding CSS for cleaner UI |
 | `app/components/nav-main.tsx` | Removed Artifacts nav item (404 fix) |
+| `app/routes/dashboard.tsx` | Simplified to minimal welcome text |
 
 ## Dependencies Added
 - `@radix-ui/react-switch` - Radix UI primitive for the toggle switch
@@ -57,3 +59,9 @@ Redesigned settings page with organized sections, dark/light mode toggle, and hi
 - Chrome/Safari/Opera: `::-webkit-scrollbar { display: none; }`
 - Firefox: `scrollbar-width: none;`
 - IE/Edge: `-ms-overflow-style: none;`
+
+### Dashboard Simplification
+- Removed Card component with navigation buttons (Agents, Pipelines, Settings, Sign out)
+- Replaced with minimal welcome text in top left corner
+- Dashboard now shows only "Welcome back!" heading and "You are signed in as {email}" text
+- Navigation is handled exclusively via the sidebar
