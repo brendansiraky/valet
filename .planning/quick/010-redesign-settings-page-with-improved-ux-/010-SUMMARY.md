@@ -1,7 +1,7 @@
 # Quick Task 010: Redesign Settings Page with Improved UX - Summary
 
 ## One-liner
-Redesigned settings page with dark/light mode toggle, hidden scrollbars, removed 404 artifacts link, and simplified dashboard to minimal welcome text.
+Redesigned settings page with dark/light mode toggle, hidden scrollbars, removed 404 artifacts link, and simplified/centered dashboard welcome message.
 
 ## Commits
 - `6bdba97` feat(quick-010): add dark/light mode toggle to settings
@@ -9,6 +9,7 @@ Redesigned settings page with dark/light mode toggle, hidden scrollbars, removed
 - `4265419` fix(quick-010): remove Artifacts nav item causing 404
 - `bfca290` fix(quick-010): simplify dashboard to minimal welcome message
 - `6d9fef9` style(quick-010): make dashboard welcome message more prominent
+- `e72c536` style(quick-010): center welcome message on dashboard
 
 ## Changes Made
 
@@ -71,3 +72,9 @@ Redesigned settings page with dark/light mode toggle, hidden scrollbars, removed
 - Increased heading from `text-2xl` to `text-4xl` for better visual presence
 - Increased email text from `text-sm` to `text-lg` for improved readability
 - Welcome message now has appropriate prominence as a greeting
+
+### Welcome Message Centering
+- Changed layout from top-left padding (`p-6`) to centered flex container
+- Uses `flex h-full items-center justify-center` for full viewport centering
+- Added `text-center` wrapper for proper text alignment
+- Creates a cleaner, more welcoming landing experience
