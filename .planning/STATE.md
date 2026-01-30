@@ -108,11 +108,12 @@ None.
 | 026 | Migrate Pipeline screen to React Query | 2026-01-30 | f8dbeb9 | [026-migrate-pipeline-screen-to-react-query](./quick/026-migrate-pipeline-screen-to-react-query/) |
 | 027 | Add 5 themes from tweakcn | 2026-01-30 | d42e350 | [027-add-northern-lights-theme-from-tweakcn](./quick/027-add-northern-lights-theme-from-tweakcn/) |
 | 028 | Implement auto-save on pipeline screen | 2026-01-30 | 43b7bed | [028-implement-auto-save-on-pipeline-screen-r](./quick/028-implement-auto-save-on-pipeline-screen-r/) |
+| 029 | Persist theme across browser refreshes | 2026-01-30 | 280cc11 | [029-persist-theme-across-browser-refreshes](./quick/029-persist-theme-across-browser-refreshes/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 028: Implement auto-save on pipeline screen
+Stopped at: Completed quick task 029: Persist theme across browser refreshes
 Resume file: None
 
 ---
