@@ -114,7 +114,7 @@ None.
 | 032 | Audit screens for react-components skill compliance | 2026-01-30 | 63f4aa8 | [032-audit-screens-for-react-components-skill](./quick/032-audit-screens-for-react-components-skill/) |
 | 033 | Add test coverage for Agents, Traits, Settings screens | 2026-01-30 | 4b5efe0 | [033-add-test-coverage-for-agents-traits-settings](./quick/033-add-test-coverage-for-agents-traits-settings/) |
 | 034 | Add in-depth tests for pipelines screen | 2026-01-30 | f474316 | [034-add-in-depth-tests-for-pipelines-screen](./quick/034-add-in-depth-tests-for-pipelines-screen/) |
-| 035 | Add tests for pipeline API routes | 2026-01-30 | 4b9c8dc | [035-add-tests-for-pipeline-api-routes](./quick/035-add-tests-for-pipeline-api-routes/) |
+| 035 | Add tests for pipeline API routes | 2026-01-30 | c96ddb5 | [035-add-tests-for-pipeline-api-routes](./quick/035-add-tests-for-pipeline-api-routes/) |
 
 ## Session Continuity
 
