@@ -121,7 +121,13 @@ Plans:
 **Goal:** Enable multi-pipeline editing with browser-style tabs
 **Depends on:** Phase 17
 **Status:** Planned
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Tab store + multi-pipeline store refactor (foundation)
+- [ ] 18-02-PLAN.md — Tab bar component + tab panels with CSS hiding
+- [ ] 18-03-PLAN.md — Autosave hook + route refactor to tab container
+- [ ] 18-04-PLAN.md — Running pipeline warning + pipelines list integration
 
 **Scope:**
 - Add tab bar below app nav, spanning content area width
