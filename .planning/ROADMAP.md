@@ -10,7 +10,7 @@ Current milestone roadmaps. Phases continue across milestones.
 - ✅ **v1.1 Enhanced Agents** — Phases 7-10 (shipped 2026-01-29)
 - ✅ **v1.2 Multi-Provider & Artifacts** — Phases 11-14 (shipped 2026-01-29)
 - ✅ **v1.3 Agent DNA & Dynamic Traits** — Phases 15-18 (shipped 2026-01-30)
-- 🔄 **v1.4 State Architecture Cleanup** — Phase 19 (in progress)
+- ✅ **v1.4 State Architecture Cleanup** — Phase 19 (shipped 2026-01-30)
 
 ---
 
@@ -198,9 +198,10 @@ Plans:
 
 # v1.4 State Architecture Cleanup
 
-**Status:** In Progress
+**Status:** Complete
 **Phases:** 19
 **Depends on:** v1.3 (complete)
+**Shipped:** 2026-01-30
 
 ## Overview
 
@@ -212,14 +213,14 @@ The pipeline builder screen incorrectly uses Zustand to manage server state that
 
 **Goal:** Eliminate pipeline-store.ts and manage all pipeline data through React Query
 **Depends on:** v1.3 complete
-**Status:** Ready
+**Status:** Complete
 **Plans:** 4 plans
 
 Plans:
-- [ ] 19-01-PLAN.md — Create usePipelineFlow hook (foundation)
-- [ ] 19-02-PLAN.md — Migrate PipelineTabPanel and PipelineCanvas
-- [ ] 19-03-PLAN.md — Migrate AgentNode, route file, delete pipeline-store
-- [ ] 19-04-PLAN.md — Update tests for new mocking approach
+- [x] 19-01-PLAN.md — Create usePipelineFlow hook (foundation)
+- [x] 19-02-PLAN.md — Migrate PipelineTabPanel and PipelineCanvas
+- [x] 19-03-PLAN.md — Migrate AgentNode, route file, delete pipeline-store
+- [x] 19-04-PLAN.md — Update tests for new mocking approach
 
 **Scope:**
 - Delete `app/stores/pipeline-store.ts` entirely
@@ -267,7 +268,8 @@ Plans:
 
 | Phase | Requirements | Status |
 |-------|--------------|--------|
-| 19 - Remove Zustand from Pipeline Builder | 6 | Ready |
+| 19 - Remove Zustand from Pipeline Builder | 6 | Complete |
 
 ---
 *v1.4 created: 2026-01-30*
+*v1.4 shipped: 2026-01-30*
