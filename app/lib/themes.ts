@@ -47,6 +47,38 @@ export const themes = {
       serif: "Source Serif 4",
     },
   },
+  "neo-brutalism": {
+    name: "Neo Brutalism",
+    fonts: {
+      sans: "DM Sans",
+      mono: "Space Mono",
+      serif: "Georgia",
+    },
+  },
+  nature: {
+    name: "Nature",
+    fonts: {
+      sans: "Montserrat",
+      mono: "Source Code Pro",
+      serif: "Merriweather",
+    },
+  },
+  "modern-minimal": {
+    name: "Modern Minimal",
+    fonts: {
+      sans: "Inter",
+      mono: "JetBrains Mono",
+      serif: "Source Serif 4",
+    },
+  },
+  "mocha-mousse": {
+    name: "Mocha Mousse",
+    fonts: {
+      sans: "DM Sans",
+      mono: "Menlo",
+      serif: "Georgia",
+    },
+  },
 } as const;
 
 export type ThemeId = keyof typeof themes;
