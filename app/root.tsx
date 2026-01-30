@@ -48,12 +48,38 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+// Blocking script to prevent FOUC (Flash of Unstyled Content)
+// This runs synchronously before CSS paints, setting theme classes on <html>
+const themeInitScript = `
+(function() {
+  var themes = ['tangerine', 'bubblegum', 'sunset-horizon', 'soft-pop', 'notebook', 'northern-lights', 'neo-brutalism', 'nature', 'modern-minimal', 'mocha-mousse'];
+  var defaultTheme = 'notebook';
+  var theme = defaultTheme;
+  var colorMode = 'light';
+  try {
+    var stored = localStorage.getItem('valet-theme');
+    if (stored && themes.indexOf(stored) !== -1) theme = stored;
+  } catch (e) {}
+  try {
+    var cm = localStorage.getItem('valet-color-mode');
+    if (cm === 'dark' || cm === 'light') {
+      colorMode = cm;
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      colorMode = 'dark';
+    }
+  } catch (e) {}
+  document.documentElement.classList.add('theme-' + theme);
+  if (colorMode === 'dark') document.documentElement.classList.add('dark');
+})();
+`;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Meta />
         <Links />
       </head>
