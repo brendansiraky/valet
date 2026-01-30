@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 032: Audit screens for react-components skill compliance
+Last activity: 2026-01-30 - Completed quick task 033: Add test coverage for Agents, Traits, Settings screens
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -112,11 +112,12 @@ None.
 | 030 | Fix pipeline delete and dropdown backend | 2026-01-30 | 351c577 | [030-fix-pipeline-delete-and-dropdown-backend](./quick/030-fix-pipeline-delete-and-dropdown-backend/) |
 | 031 | Fix useEffect mutation anti-pattern | 2026-01-30 | d704585 | [031-fix-useeffect-mutation-antipattern](./quick/031-fix-useeffect-mutation-antipattern/) |
 | 032 | Audit screens for react-components skill compliance | 2026-01-30 | 63f4aa8 | [032-audit-screens-for-react-components-skill](./quick/032-audit-screens-for-react-components-skill/) |
+| 033 | Add test coverage for Agents, Traits, Settings screens | 2026-01-30 | 4b5efe0 | [033-add-test-coverage-for-agents-traits-settings](./quick/033-add-test-coverage-for-agents-traits-settings/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 032: Audit screens for react-components skill compliance
+Stopped at: Completed quick task 033: Add test coverage for Agents, Traits, Settings screens
 Resume file: None
 
 ---
