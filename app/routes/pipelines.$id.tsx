@@ -5,7 +5,7 @@ import { redirect } from "react-router";
 import { getSession } from "~/services/session.server";
 import { db, pipelines, agents, traits } from "~/db";
 import { eq, and } from "drizzle-orm";
-import { useTabStore } from "~/stores/tab-store";
+import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { PipelineTabs } from "~/components/pipeline-builder/pipeline-tabs";
 import { PipelineTabPanel } from "~/components/pipeline-builder/pipeline-tab-panel";
@@ -24,6 +24,12 @@ import {
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
 import { Play } from "lucide-react";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  ReactFlowProvider,
+} from "@xyflow/react";
 import type { Node, Edge } from "@xyflow/react";
 import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
 import type { Trait } from "~/db/schema/traits";
@@ -49,6 +55,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       .where(eq(traits.userId, userId))
       .orderBy(traits.name),
   ]);
+
+  // For home tab, return null pipeline
+  if (id === "home") {
+    return {
+      requestedPipeline: null,
+      requestedId: "home",
+      agents: userAgents,
+      traits: userTraits,
+    };
+  }
 
   // For new pipelines, return null pipeline
   if (id === "new") {
@@ -121,6 +137,12 @@ export default function PipelineEditorPage() {
   useEffect(() => {
     if (!urlId || urlId === "new") return;
 
+    // For home tab, use special handling
+    if (urlId === "home") {
+      focusOrOpenTab(HOME_TAB_ID, "Home");
+      return;
+    }
+
     // Open or focus the tab for this URL
     focusOrOpenTab(urlId, requestedPipeline?.name || "Untitled Pipeline");
   }, [urlId, requestedPipeline, focusOrOpenTab]);
@@ -141,12 +163,14 @@ export default function PipelineEditorPage() {
         return next;
       });
 
-      // Navigate to first remaining tab or pipelines list
-      const remaining = tabs.filter((t) => t.pipelineId !== pipelineId);
+      // Navigate to first remaining tab or home
+      const remaining = tabs.filter(
+        (t) => t.pipelineId !== pipelineId && t.pipelineId !== HOME_TAB_ID
+      );
       if (remaining.length > 0) {
         navigate(`/pipelines/${remaining[0].pipelineId}`);
       } else {
-        navigate("/pipelines");
+        navigate("/pipelines/home");
       }
     },
     [closeTab, removePipeline, tabs, navigate]
@@ -253,6 +277,39 @@ export default function PipelineEditorPage() {
             {tabs.map((tab) => {
               const isActive = tab.pipelineId === activeTabId;
               const runState = getRunState(tab.pipelineId);
+
+              // Home tab - render locked empty canvas
+              if (tab.pipelineId === HOME_TAB_ID) {
+                return (
+                  <div
+                    key={tab.pipelineId}
+                    style={{ display: isActive ? "flex" : "none" }}
+                    className="absolute inset-0 flex-col"
+                  >
+                    <ReactFlowProvider>
+                      <div className="flex-1 relative">
+                        <ReactFlow
+                          nodes={[]}
+                          edges={[]}
+                          nodesDraggable={false}
+                          nodesConnectable={false}
+                          elementsSelectable={false}
+                          deleteKeyCode={null}
+                          fitView={false}
+                        >
+                          <Background />
+                          <Controls showInteractive={false} />
+                        </ReactFlow>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <p className="text-muted-foreground text-lg">
+                            Select a pipeline or create new
+                          </p>
+                        </div>
+                      </div>
+                    </ReactFlowProvider>
+                  </div>
+                );
+              }
 
               // For the requested pipeline, use loader data
               // For other tabs, need to use data from store (will already be loaded)
