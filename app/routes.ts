@@ -18,6 +18,9 @@ export default [
   ]),
 
   // API routes (no layout)
+  route("api/agents", "routes/api.agents.ts"),
+  route("api/traits", "routes/api.traits.ts"),
+  route("api/settings", "routes/api.settings.ts"),
   route("api/agent/:agentId/run", "routes/api.agent.$agentId.run.ts"),
   route("api/pipelines", "routes/api.pipelines.ts"),
   route("api/pipeline/:pipelineId/run", "routes/api.pipeline.$pipelineId.run.ts"),
