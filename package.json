@@ -48,6 +48,7 @@
     "remix-auth": "^4.2.0",
     "remix-auth-form": "^3.0.0",
     "remix-utils": "^9.0.0",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.10"

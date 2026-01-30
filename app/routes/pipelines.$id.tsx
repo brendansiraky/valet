@@ -1,462 +1,420 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useLoaderData, useNavigate } from 'react-router'
-import type { LoaderFunctionArgs } from 'react-router'
-import { redirect } from 'react-router'
-import { getSession } from '~/services/session.server'
-import { db, pipelines, agents, traits } from '~/db'
-import { eq, and } from 'drizzle-orm'
-import { usePipelineStore } from '~/stores/pipeline-store'
-import { PipelineCanvas } from '~/components/pipeline-builder/pipeline-canvas'
-import { AgentSidebar } from '~/components/pipeline-builder/agent-sidebar'
-import { TraitsContext } from '~/components/pipeline-builder/traits-context'
-import { RunProgress } from '~/components/pipeline-runner/run-progress'
-import { OutputViewer } from '~/components/output-viewer/output-viewer'
-import { getLayoutedElements } from '~/lib/pipeline-layout'
-import { Input } from '~/components/ui/input'
-import { Button } from '~/components/ui/button'
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useLoaderData, useNavigate, useParams } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
+import { redirect } from "react-router";
+import { getSession } from "~/services/session.server";
+import { db, pipelines, agents, traits } from "~/db";
+import { eq, and } from "drizzle-orm";
+import { useTabStore } from "~/stores/tab-store";
+import { usePipelineStore } from "~/stores/pipeline-store";
+import { PipelineTabs } from "~/components/pipeline-builder/pipeline-tabs";
+import { PipelineTabPanel } from "~/components/pipeline-builder/pipeline-tab-panel";
+import { AgentSidebar } from "~/components/pipeline-builder/agent-sidebar";
+import { TraitsContext } from "~/components/pipeline-builder/traits-context";
+import { RunProgress } from "~/components/pipeline-runner/run-progress";
+import { OutputViewer } from "~/components/output-viewer/output-viewer";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-} from '~/components/ui/dialog'
-import { Textarea } from '~/components/ui/textarea'
-import {
-    LayoutGrid,
-    Save,
-    Trash2,
-    Play,
-    Loader2,
-    AlertTriangle,
-} from 'lucide-react'
-import type { Node, Edge } from '@xyflow/react'
-import type { AgentNodeData, PipelineNodeData } from '~/stores/pipeline-store'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import { Textarea } from "~/components/ui/textarea";
+import { Button } from "~/components/ui/button";
+import { Play } from "lucide-react";
+import type { Node, Edge } from "@xyflow/react";
+import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
+import type { Trait } from "~/db/schema/traits";
+import { useAutosave } from "~/hooks/use-autosave";
 
+// Loader returns data for the requested pipeline
 export async function loader({ request, params }: LoaderFunctionArgs) {
-    const session = await getSession(request.headers.get('Cookie'))
-    const userId = session.get('userId')
+  const session = await getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
 
-    if (!userId) {
-        return redirect('/login')
-    }
+  if (!userId) {
+    return redirect("/login");
+  }
 
-    const { id } = params
+  const { id } = params;
 
-    // Fetch user's agents for sidebar
-    const userAgents = await db
-        .select()
-        .from(agents)
-        .where(eq(agents.userId, userId))
+  // Fetch user's agents and traits for sidebar
+  const [userAgents, userTraits] = await Promise.all([
+    db.select().from(agents).where(eq(agents.userId, userId)),
+    db
+      .select()
+      .from(traits)
+      .where(eq(traits.userId, userId))
+      .orderBy(traits.name),
+  ]);
 
-    // Fetch user's traits for sidebar
-    const userTraits = await db
-        .select()
-        .from(traits)
-        .where(eq(traits.userId, userId))
-        .orderBy(traits.name)
+  // For new pipelines, return null pipeline
+  if (id === "new") {
+    return {
+      requestedPipeline: null,
+      requestedId: "new",
+      agents: userAgents,
+      traits: userTraits,
+    };
+  }
 
-    // For new pipelines, return null pipeline
-    if (id === 'new') {
-        return { pipeline: null, agents: userAgents, traits: userTraits }
-    }
+  // Load the requested pipeline
+  const [requestedPipeline] = await db
+    .select()
+    .from(pipelines)
+    .where(and(eq(pipelines.id, id!), eq(pipelines.userId, userId)));
 
-    // Load existing pipeline
-    const [pipeline] = await db
-        .select()
-        .from(pipelines)
-        .where(and(eq(pipelines.id, id!), eq(pipelines.userId, userId)))
+  if (!requestedPipeline) {
+    throw new Response("Pipeline not found", { status: 404 });
+  }
 
-    if (!pipeline) {
-        throw new Response('Pipeline not found', { status: 404 })
-    }
-
-    return { pipeline, agents: userAgents, traits: userTraits }
+  return {
+    requestedPipeline,
+    requestedId: id,
+    agents: userAgents,
+    traits: userTraits,
+  };
 }
 
-export default function PipelineBuilderPage() {
-    const {
-        pipeline,
-        agents: userAgents,
-        traits: userTraits,
-    } = useLoaderData<typeof loader>()
-    const navigate = useNavigate()
-    const [isSaving, setIsSaving] = useState(false)
-    const [currentRunId, setCurrentRunId] = useState<string | null>(null)
-    const [isStartingRun, setIsStartingRun] = useState(false)
-    const [completedOutput, setCompletedOutput] = useState<{
-        steps: Array<{ agentName: string; output: string; input: string }>
-        finalOutput: string
-        usage: { inputTokens: number; outputTokens: number } | null
-        model: string | null
-    } | null>(null)
-    const [isRunDialogOpen, setIsRunDialogOpen] = useState(false)
-    const [runInput, setRunInput] = useState('')
+export default function PipelineEditorPage() {
+  const {
+    requestedPipeline,
+    requestedId,
+    agents: userAgents,
+    traits: userTraits,
+  } = useLoaderData<typeof loader>();
+  const { id: urlId } = useParams();
+  const navigate = useNavigate();
 
-    const {
-        nodes,
-        edges,
-        pipelineId,
-        pipelineName,
-        setPipelineMetadata,
-        addAgentNode,
-        addTraitNode,
-        setNodes,
-        setEdges,
-        reset,
-    } = usePipelineStore()
+  const { tabs, activeTabId, closeTab, focusOrOpenTab } = useTabStore();
+  const { removePipeline, getPipeline } = usePipelineStore();
 
-    // Initialize store from loaded pipeline or reset for new
-    useEffect(() => {
-        if (pipeline) {
-            setPipelineMetadata(
-                pipeline.id,
-                pipeline.name,
-                pipeline.description || '',
-            )
-            const flowData = pipeline.flowData as {
-                nodes: Node<PipelineNodeData>[]
-                edges: Edge[]
-            }
-            // Enrich agent nodes with isOrphaned status
-            const validAgentIds = new Set(userAgents.map((a) => a.id))
-            const enrichedNodes = (flowData.nodes || []).map((node) => {
-                // Only agent nodes need orphan checking
-                if (node.type === 'agent') {
-                    const agentData = node.data as AgentNodeData
-                    return {
-                        ...node,
-                        data: {
-                            ...agentData,
-                            isOrphaned: !validAgentIds.has(agentData.agentId),
-                        },
-                    }
-                }
-                return node
-            })
-            setNodes(enrichedNodes)
-            setEdges(flowData.edges || [])
-        } else {
-            reset()
-        }
-    }, [pipeline, userAgents, setPipelineMetadata, setNodes, setEdges, reset])
+  // Per-tab run state (lifted to container to persist across tab switches)
+  const [runStates, setRunStates] = useState<
+    Map<string, { runId: string | null; isStarting: boolean }>
+  >(new Map());
+  const [completedOutputs, setCompletedOutputs] = useState<
+    Map<
+      string,
+      {
+        steps: Array<{ agentName: string; output: string; input: string }>;
+        finalOutput: string;
+        usage: { inputTokens: number; outputTokens: number } | null;
+        model: string | null;
+      }
+    >
+  >(new Map());
+  const [runDialogPipelineId, setRunDialogPipelineId] = useState<string | null>(
+    null
+  );
+  const [runInput, setRunInput] = useState("");
 
-    // Detect if any agents in the pipeline are orphaned (deleted)
-    const hasOrphanedAgents = useMemo(() => {
-        const validAgentIds = new Set(userAgents.map((a) => a.id))
-        return nodes.some((n) => {
-            if (n.type !== 'agent') return false
-            const agentData = n.data as AgentNodeData
-            return agentData.agentId && !validAgentIds.has(agentData.agentId)
-        })
-    }, [nodes, userAgents])
+  // Traits lookup map for context
+  const traitsMap = useMemo(
+    () => new Map(userTraits.map((t) => [t.id, t])),
+    [userTraits]
+  );
 
-    // Create traits lookup map for AgentNode to access trait details
-    const traitsMap = useMemo(
-        () => new Map(userTraits.map((t) => [t.id, t])),
-        [userTraits],
-    )
+  // Sync URL to tab store on load/navigation
+  useEffect(() => {
+    if (!urlId || urlId === "new") return;
 
-    const handleDropAgent = (
-        agentId: string,
-        agentName: string,
-        agentInstructions: string | undefined,
-        position: { x: number; y: number },
+    // Open or focus the tab for this URL
+    focusOrOpenTab(urlId, requestedPipeline?.name || "Untitled Pipeline");
+  }, [urlId, requestedPipeline, focusOrOpenTab]);
+
+  // Handle tab close - cleanup store and run states
+  const handleTabClose = useCallback(
+    (pipelineId: string) => {
+      closeTab(pipelineId);
+      removePipeline(pipelineId);
+      setRunStates((prev) => {
+        const next = new Map(prev);
+        next.delete(pipelineId);
+        return next;
+      });
+      setCompletedOutputs((prev) => {
+        const next = new Map(prev);
+        next.delete(pipelineId);
+        return next;
+      });
+
+      // Navigate to first remaining tab or pipelines list
+      const remaining = tabs.filter((t) => t.pipelineId !== pipelineId);
+      if (remaining.length > 0) {
+        navigate(`/pipelines/${remaining[0].pipelineId}`);
+      } else {
+        navigate("/pipelines");
+      }
+    },
+    [closeTab, removePipeline, tabs, navigate]
+  );
+
+  // Get or create run state for a pipeline
+  const getRunState = (pipelineId: string) =>
+    runStates.get(pipelineId) || { runId: null, isStarting: false };
+
+  const setRunState = (
+    pipelineId: string,
+    state: { runId: string | null; isStarting: boolean }
+  ) => {
+    setRunStates((prev) => new Map(prev).set(pipelineId, state));
+  };
+
+  // Run dialog handlers
+  const handleOpenRunDialog = (pipelineId: string) => {
+    setRunDialogPipelineId(pipelineId);
+  };
+
+  const handleRunSubmit = async () => {
+    if (!runDialogPipelineId) return;
+
+    const pipelineId = runDialogPipelineId;
+    setRunDialogPipelineId(null);
+    setRunState(pipelineId, { runId: null, isStarting: true });
+
+    try {
+      const formData = new FormData();
+      formData.set("input", runInput);
+
+      const response = await fetch(`/api/pipeline/${pipelineId}/run`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      setRunState(pipelineId, { runId: data.runId, isStarting: false });
+    } catch (error) {
+      console.error("Failed to start pipeline:", error);
+      setRunState(pipelineId, { runId: null, isStarting: false });
+    }
+
+    setRunInput("");
+  };
+
+  const handleRunComplete = useCallback(
+    (
+      pipelineId: string,
+      finalOutput: string,
+      stepOutputs: Map<number, string>,
+      stepInputs: Map<number, string>,
+      usage: { inputTokens: number; outputTokens: number } | null,
+      model: string | null
     ) => {
-        addAgentNode(
-            { id: agentId, name: agentName, instructions: agentInstructions },
-            position,
-        )
-    }
+      const pipeline = getPipeline(pipelineId);
+      if (!pipeline) return;
 
-    const handleDropTrait = (
-        traitId: string,
-        traitName: string,
-        traitColor: string,
-        position: { x: number; y: number },
-    ) => {
-        addTraitNode(
-            { id: traitId, name: traitName, color: traitColor },
-            position,
-        )
-    }
+      const steps = pipeline.nodes
+        .filter((n) => n.type === "agent")
+        .map((node, index) => ({
+          agentName: (node.data as AgentNodeData).agentName,
+          output: stepOutputs.get(index) || "",
+          input: stepInputs.get(index) || "",
+        }));
 
-    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPipelineMetadata(
-            pipeline?.id || null,
-            e.target.value,
-            pipeline?.description || '',
-        )
-    }
-
-    const handleSave = async () => {
-        setIsSaving(true)
-        try {
-            const formData = new FormData()
-            formData.set('intent', pipelineId ? 'update' : 'create')
-            if (pipelineId) {
-                formData.set('id', pipelineId)
-            }
-            formData.set('name', pipelineName)
-            formData.set('description', '')
-            formData.set('flowData', JSON.stringify({ nodes, edges }))
-
-            const response = await fetch('/api/pipelines', {
-                method: 'POST',
-                body: formData,
-            })
-
-            const data = await response.json()
-            if (data.error) {
-                throw new Error(data.error)
-            }
-
-            // If created new, navigate to the saved pipeline
-            if (!pipelineId && data.pipeline) {
-                navigate(`/pipelines/${data.pipeline.id}`, { replace: true })
-            }
-        } catch (error) {
-            console.error('Failed to save pipeline:', error)
-            // TODO: Show toast error
-        } finally {
-            setIsSaving(false)
-        }
-    }
-
-    const handleAutoLayout = () => {
-        const { nodes: layoutedNodes, edges: layoutedEdges } =
-            getLayoutedElements(nodes, edges)
-        setNodes(layoutedNodes)
-        setEdges(layoutedEdges)
-    }
-
-    const handleDelete = async () => {
-        if (!pipelineId || !confirm('Delete this pipeline?')) return
-
-        const formData = new FormData()
-        formData.set('intent', 'delete')
-        formData.set('id', pipelineId)
-
-        await fetch('/api/pipelines', {
-            method: 'POST',
-            body: formData,
+      setCompletedOutputs((prev) =>
+        new Map(prev).set(pipelineId, {
+          steps,
+          finalOutput,
+          usage,
+          model,
         })
+      );
+      setRunState(pipelineId, { runId: null, isStarting: false });
+    },
+    [getPipeline]
+  );
 
-        navigate('/pipelines')
-    }
+  const handleRunError = useCallback((pipelineId: string, error: string) => {
+    console.error("Pipeline failed:", error);
+    setTimeout(
+      () => setRunState(pipelineId, { runId: null, isStarting: false }),
+      3000
+    );
+  }, []);
 
-    // Get steps from store nodes for progress display (agent nodes only)
-    const pipelineSteps = useMemo(() => {
-        return nodes
-            .filter(
-                (node): node is Node<AgentNodeData> => node.type === 'agent',
-            )
-            .map((node) => ({
-                agentId: node.data.agentId,
-                agentName: node.data.agentName,
-            }))
-    }, [nodes])
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Tab bar */}
+      <PipelineTabs runStates={runStates} onCloseTab={handleTabClose} />
 
-    // Start pipeline execution by calling API and tracking run ID
-    const startPipelineRun = async (input: string) => {
-        if (!pipelineId) return
+      {/* Main content: sidebar + tab panels */}
+      <div className="flex flex-1 min-h-0">
+        {/* Shared sidebar */}
+        <AgentSidebar agents={userAgents} traits={userTraits} />
 
-        setIsStartingRun(true)
-        try {
-            const formData = new FormData()
-            formData.set('input', input)
+        {/* Tab panels (CSS hidden when not active) */}
+        <TraitsContext.Provider value={traitsMap}>
+          <div className="flex-1 relative">
+            {tabs.map((tab) => {
+              const isActive = tab.pipelineId === activeTabId;
+              const runState = getRunState(tab.pipelineId);
 
-            const response = await fetch(`/api/pipeline/${pipelineId}/run`, {
-                method: 'POST',
-                body: formData,
-            })
+              // For the requested pipeline, use loader data
+              // For other tabs, need to use data from store (will already be loaded)
+              const initialData =
+                tab.pipelineId === requestedId
+                  ? requestedPipeline
+                  : null; // PipelineTabPanel will use store data if pipeline already loaded
 
-            const data = await response.json()
-            if (data.error) {
-                throw new Error(data.error)
-            }
+              return (
+                <div
+                  key={tab.pipelineId}
+                  style={{ display: isActive ? "flex" : "none" }}
+                  className="absolute inset-0 flex-col"
+                >
+                  <PipelineTabPanelWithAutosave
+                    pipelineId={tab.pipelineId}
+                    initialData={initialData}
+                    agents={userAgents}
+                    traits={userTraits}
+                    traitsMap={traitsMap}
+                    runState={runState}
+                    onOpenRunDialog={() => handleOpenRunDialog(tab.pipelineId)}
+                  />
 
-            setCurrentRunId(data.runId)
-        } catch (error) {
-            console.error('Failed to start pipeline:', error)
-            // TODO: Show toast error
-        } finally {
-            setIsStartingRun(false)
-        }
-    }
-
-    const handleRun = () => {
-        setIsRunDialogOpen(true)
-    }
-
-    const handleRunSubmit = async () => {
-        setIsRunDialogOpen(false)
-        await startPipelineRun(runInput)
-        setRunInput('') // Reset for next run
-    }
-
-    const handleRunComplete = useCallback(
-        (
-            finalOutput: string,
-            stepOutputs: Map<number, string>,
-            stepInputs: Map<number, string>,
-            usage: { inputTokens: number; outputTokens: number } | null,
-            model: string | null,
-        ) => {
-            // Convert step maps to array with agent names
-            // stepInputs contains the full prompt (system + user) as sent to LLM
-            const steps = pipelineSteps.map((step, index) => ({
-                agentName: step.agentName,
-                output: stepOutputs.get(index) || '',
-                input: stepInputs.get(index) || '',
-            }))
-
-            setCompletedOutput({ steps, finalOutput, usage, model })
-            setCurrentRunId(null)
-        },
-        [pipelineSteps],
-    )
-
-    const handleRunError = useCallback((error: string) => {
-        console.error('Pipeline failed:', error)
-        // Reset run state after a brief delay to show error message
-        setTimeout(() => setCurrentRunId(null), 3000)
-        // TODO: Show toast error
-    }, [])
-
-    return (
-        <div className='flex h-full flex-col overflow-hidden'>
-            {/* Header */}
-            <div className='h-[78px] z-10 border-b bg-background p-4 flex items-center gap-4'>
-                <Input
-                    value={pipelineName}
-                    onChange={handleNameChange}
-                    placeholder='Pipeline name'
-                    className='max-w-xs font-semibold'
-                />
-                <div className='flex-1' />
-                <Button variant='outline' onClick={handleAutoLayout}>
-                    <LayoutGrid className='size-4 mr-2' />
-                    Auto Layout
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                    <Save className='size-4 mr-2' />
-                    {isSaving ? 'Saving...' : 'Save'}
-                </Button>
-                {pipelineId && (
-                    <>
-                        <Button
-                            onClick={handleRun}
-                            disabled={
-                                isStartingRun ||
-                                !!currentRunId ||
-                                hasOrphanedAgents
-                            }
-                            variant={hasOrphanedAgents ? 'outline' : 'default'}
-                        >
-                            {isStartingRun ? (
-                                <>
-                                    <Loader2 className='size-4 mr-2 animate-spin' />
-                                    Starting...
-                                </>
-                            ) : currentRunId ? (
-                                <>
-                                    <Loader2 className='size-4 mr-2 animate-spin' />
-                                    Running...
-                                </>
-                            ) : hasOrphanedAgents ? (
-                                <>
-                                    <AlertTriangle className='size-4 mr-2' />
-                                    Remove Deleted Agents
-                                </>
-                            ) : (
-                                <>
-                                    <Play className='size-4 mr-2' />
-                                    Run
-                                </>
-                            )}
-                        </Button>
-                        <Button variant='destructive' onClick={handleDelete}>
-                            <Trash2 className='size-4 mr-2' />
-                            Delete
-                        </Button>
-                    </>
-                )}
-            </div>
-
-            {/* Main content */}
-            <div className='flex flex-1 min-h-0'>
-                <AgentSidebar agents={userAgents} traits={userTraits} />
-                <TraitsContext.Provider value={traitsMap}>
-                    <div className='flex-1'>
-                        <PipelineCanvas
-                            onDropAgent={handleDropAgent}
-                            onDropTrait={handleDropTrait}
-                            isLocked={isStartingRun || !!currentRunId}
-                        />
+                  {/* Run progress for this tab */}
+                  {runState.runId && (
+                    <div className="fixed bottom-4 right-4 w-96 z-50">
+                      <RunProgress
+                        runId={runState.runId}
+                        steps={
+                          getPipeline(tab.pipelineId)
+                            ?.nodes.filter((n) => n.type === "agent")
+                            .map((n) => ({
+                              agentId: (n.data as AgentNodeData).agentId,
+                              agentName: (n.data as AgentNodeData).agentName,
+                            })) || []
+                        }
+                        onComplete={(final, outputs, inputs, usage, model) =>
+                          handleRunComplete(
+                            tab.pipelineId,
+                            final,
+                            outputs,
+                            inputs,
+                            usage,
+                            model
+                          )
+                        }
+                        onError={(err) => handleRunError(tab.pipelineId, err)}
+                      />
                     </div>
-                </TraitsContext.Provider>
-            </div>
-
-            {/* Run Progress */}
-            {currentRunId && (
-                <div className='fixed bottom-4 right-4 w-96 z-50'>
-                    <RunProgress
-                        runId={currentRunId}
-                        steps={pipelineSteps}
-                        onComplete={handleRunComplete}
-                        onError={handleRunError}
-                    />
+                  )}
                 </div>
-            )}
+              );
+            })}
 
-            {/* Output Viewer Modal */}
-            {completedOutput && (
-                <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-                    <div className='w-full max-w-4xl mx-4'>
-                        <OutputViewer
-                            steps={completedOutput.steps}
-                            finalOutput={completedOutput.finalOutput}
-                            pipelineName={pipelineName}
-                            usage={completedOutput.usage}
-                            model={completedOutput.model}
-                            onClose={() => setCompletedOutput(null)}
-                        />
-                    </div>
-                </div>
+            {/* Empty state when no tabs */}
+            {tabs.length === 0 && (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Open a pipeline from the list or create a new one
+              </div>
             )}
+          </div>
+        </TraitsContext.Provider>
+      </div>
 
-            {/* Run Input Dialog */}
-            <Dialog open={isRunDialogOpen} onOpenChange={setIsRunDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Run Pipeline</DialogTitle>
-                        <DialogDescription>
-                            Enter the input text for this pipeline run.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Textarea
-                        placeholder='Enter your input here...'
-                        value={runInput}
-                        onChange={(e) => setRunInput(e.target.value)}
-                        rows={6}
-                        className='resize-none'
-                    />
-                    <DialogFooter>
-                        <Button
-                            variant='outline'
-                            onClick={() => setIsRunDialogOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button onClick={handleRunSubmit}>
-                            <Play className='size-4 mr-2' />
-                            Run Pipeline
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+      {/* Output viewer modals */}
+      {Array.from(completedOutputs.entries()).map(([pipelineId, output]) => (
+        <div
+          key={pipelineId}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        >
+          <div className="w-full max-w-4xl mx-4">
+            <OutputViewer
+              steps={output.steps}
+              finalOutput={output.finalOutput}
+              pipelineName={getPipeline(pipelineId)?.pipelineName || "Pipeline"}
+              usage={output.usage}
+              model={output.model}
+              onClose={() =>
+                setCompletedOutputs((prev) => {
+                  const next = new Map(prev);
+                  next.delete(pipelineId);
+                  return next;
+                })
+              }
+            />
+          </div>
         </div>
-    )
+      ))}
+
+      {/* Run input dialog */}
+      <Dialog
+        open={!!runDialogPipelineId}
+        onOpenChange={(open) => !open && setRunDialogPipelineId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Run Pipeline</DialogTitle>
+            <DialogDescription>
+              Enter the input text for this pipeline run.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter your input here..."
+            value={runInput}
+            onChange={(e) => setRunInput(e.target.value)}
+            rows={6}
+            className="resize-none"
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRunDialogPipelineId(null)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleRunSubmit}>
+              <Play className="size-4 mr-2" />
+              Run Pipeline
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Wrapper that adds autosave to each tab panel
+function PipelineTabPanelWithAutosave({
+  pipelineId,
+  initialData,
+  agents,
+  traits,
+  traitsMap,
+  runState,
+  onOpenRunDialog,
+}: {
+  pipelineId: string;
+  initialData: {
+    id: string;
+    name: string;
+    description: string | null;
+    flowData: unknown;
+  } | null;
+  agents: Array<{ id: string; name: string; instructions: string | null }>;
+  traits: Array<{ id: string; name: string; color: string }>;
+  traitsMap: Map<string, Trait>;
+  runState: { runId: string | null; isStarting: boolean };
+  onOpenRunDialog: () => void;
+}) {
+  // Autosave for this pipeline
+  useAutosave(pipelineId);
+
+  return (
+    <PipelineTabPanel
+      pipelineId={pipelineId}
+      initialData={initialData}
+      agents={agents}
+      traits={traits}
+      traitsMap={traitsMap}
+      runState={runState}
+      onOpenRunDialog={onOpenRunDialog}
+    />
+  );
 }
