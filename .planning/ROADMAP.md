@@ -9,15 +9,16 @@ Current milestone roadmaps. Phases continue across milestones.
 - ✅ **v1.0 MVP** — Phases 1-6 (shipped 2026-01-28)
 - ✅ **v1.1 Enhanced Agents** — Phases 7-10 (shipped 2026-01-29)
 - ✅ **v1.2 Multi-Provider & Artifacts** — Phases 11-14 (shipped 2026-01-29)
-- 📋 **v1.3 Agent DNA & Dynamic Traits** — Phases 15-18 (planned)
+- ✅ **v1.3 Agent DNA & Dynamic Traits** — Phases 15-18 (shipped 2026-01-30)
 
 ---
 
 # v1.3 Agent DNA & Dynamic Traits
 
-**Status:** Planned
+**Status:** Complete
 **Phases:** 15-18
 **Depends on:** v1.2 (complete)
+**Shipped:** 2026-01-30
 
 ## Overview
 
@@ -120,14 +121,14 @@ Plans:
 
 **Goal:** Enable multi-pipeline editing with browser-style tabs
 **Depends on:** Phase 17
-**Status:** Planned
+**Status:** Complete
 **Plans:** 4 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — Tab store + multi-pipeline store refactor (foundation)
-- [ ] 18-02-PLAN.md — Tab bar component + tab panels with CSS hiding
-- [ ] 18-03-PLAN.md — Autosave hook + route refactor to tab container
-- [ ] 18-04-PLAN.md — Running pipeline warning + pipelines list integration
+- [x] 18-01-PLAN.md — Tab store + multi-pipeline store refactor (foundation)
+- [x] 18-02-PLAN.md — Tab bar component + tab panels with CSS hiding
+- [x] 18-03-PLAN.md — Autosave hook + route refactor to tab container
+- [x] 18-04-PLAN.md — Running pipeline warning + pipelines list integration
 
 **Scope:**
 - Add tab bar below app nav, spanning content area width
@@ -186,7 +187,8 @@ Plans:
 | 15 - Agent DNA & Simplification | 10 | Complete |
 | 16 - Trait Colors | 4 | Complete |
 | 17 - Dynamic Pipeline Traits | 7 | Complete |
-| 18 - Pipeline Tabs | 10 | Not started |
+| 18 - Pipeline Tabs | 10 | Complete |
 
 ---
 *v1.3 created: 2026-01-29*
+*v1.3 shipped: 2026-01-30*
