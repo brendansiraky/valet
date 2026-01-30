@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
+import { PageLayout } from "~/components/page-layout";
 import { TraitCard } from "~/components/trait-card";
 import { TraitCardSkeleton } from "~/components/trait-card-skeleton";
 import { TraitFormDialog } from "~/components/trait-form-dialog";
@@ -18,36 +19,26 @@ export default function Traits() {
   // Loading state - show skeleton cards
   if (traitsQuery.isPending) {
     return (
-      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">My Traits</h1>
-            <p className="text-muted-foreground">
-              Create reusable context snippets for your agents
-            </p>
-          </div>
-        </div>
+      <PageLayout
+        title="My Traits"
+        description="Create reusable context snippets for your agents"
+      >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <TraitCardSkeleton key={i} />
           ))}
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   // Error state
   if (traitsQuery.isError) {
     return (
-      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">My Traits</h1>
-            <p className="text-muted-foreground">
-              Create reusable context snippets for your agents
-            </p>
-          </div>
-        </div>
+      <PageLayout
+        title="My Traits"
+        description="Create reusable context snippets for your agents"
+      >
         <Card className="mx-auto max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-destructive">Error loading traits</CardTitle>
@@ -61,22 +52,17 @@ export default function Traits() {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </PageLayout>
     );
   }
 
   const userTraits = traitsQuery.data;
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My Traits</h1>
-          <p className="text-muted-foreground">
-            Create reusable context snippets for your agents
-          </p>
-        </div>
+    <PageLayout
+      title="My Traits"
+      description="Create reusable context snippets for your agents"
+      headerActions={
         <TraitFormDialog
           trigger={
             <Button>
@@ -85,9 +71,8 @@ export default function Traits() {
             </Button>
           }
         />
-      </div>
-
-      {/* Content */}
+      }
+    >
       {userTraits.length === 0 ? (
         <Card className="mx-auto max-w-md">
           <CardHeader className="text-center">
@@ -114,6 +99,6 @@ export default function Traits() {
           ))}
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }
