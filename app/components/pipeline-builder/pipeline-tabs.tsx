@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X, Plus, Home, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
+import { usePipelines } from "~/hooks/queries/use-pipelines";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
@@ -23,11 +24,6 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 
-interface Pipeline {
-  id: string;
-  name: string;
-}
-
 interface PipelineTabsProps {
   runStates: Map<string, { runId: string | null; isStarting: boolean }>;
   onCloseTab: (pipelineId: string) => void;
@@ -38,22 +34,7 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
   const { tabs, activeTabId, closeTab, canOpenNewTab, focusOrOpenTab } =
     useTabStore();
   const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
-  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
-
-  // Fetch pipelines list for dropdown
-  useEffect(() => {
-    const fetchPipelines = async () => {
-      try {
-        const response = await fetch("/api/pipelines");
-        if (!response.ok) throw new Error("Failed to fetch pipelines");
-        const data = await response.json();
-        setPipelines(data.pipelines ?? []);
-      } catch {
-        // Silently fail - dropdown will just be empty
-      }
-    };
-    fetchPipelines();
-  }, []);
+  const { data: pipelines = [] } = usePipelines();
 
   const handleTabClick = (pipelineId: string) => {
     navigate(`/pipelines/${pipelineId}`);
