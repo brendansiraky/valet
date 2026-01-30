@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 028: Implement auto-save on pipeline screen
+Last activity: 2026-01-30 - Completed quick task 030: Fix pipeline delete and dropdown backend
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -109,11 +109,12 @@ None.
 | 027 | Add 5 themes from tweakcn | 2026-01-30 | d42e350 | [027-add-northern-lights-theme-from-tweakcn](./quick/027-add-northern-lights-theme-from-tweakcn/) |
 | 028 | Implement auto-save on pipeline screen | 2026-01-30 | 43b7bed | [028-implement-auto-save-on-pipeline-screen-r](./quick/028-implement-auto-save-on-pipeline-screen-r/) |
 | 029 | Persist theme across browser refreshes | 2026-01-30 | 280cc11 | [029-persist-theme-across-browser-refreshes](./quick/029-persist-theme-across-browser-refreshes/) |
+| 030 | Fix pipeline delete and dropdown backend | 2026-01-30 | 351c577 | [030-fix-pipeline-delete-and-dropdown-backend](./quick/030-fix-pipeline-delete-and-dropdown-backend/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 029: Persist theme across browser refreshes
+Stopped at: Completed quick task 030: Fix pipeline delete and dropdown backend
 Resume file: None
 
 ---
