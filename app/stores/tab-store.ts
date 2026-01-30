@@ -1,9 +1,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+export const HOME_TAB_ID = "home";
+
 export interface Tab {
   pipelineId: string;
   name: string;
+  pinned?: boolean;
 }
 
 const MAX_TABS = 8;
@@ -48,6 +51,9 @@ export const useTabStore = create<TabState>()(
       },
 
       closeTab: (pipelineId) => {
+        // Pinned home tab cannot be closed
+        if (pipelineId === HOME_TAB_ID) return;
+
         const { tabs, activeTabId } = get();
         const tabIndex = tabs.findIndex((t) => t.pipelineId === pipelineId);
         if (tabIndex === -1) return;
@@ -99,7 +105,11 @@ export const useTabStore = create<TabState>()(
       },
 
       canOpenNewTab: () => {
-        return get().tabs.length < MAX_TABS;
+        // Exclude home tab from the limit count
+        const nonHomeTabs = get().tabs.filter(
+          (t) => t.pipelineId !== HOME_TAB_ID
+        );
+        return nonHomeTabs.length < MAX_TABS;
       },
     }),
     {
