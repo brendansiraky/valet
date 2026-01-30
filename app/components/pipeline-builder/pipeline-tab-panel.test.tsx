@@ -8,11 +8,11 @@ import { PipelineTabPanel } from "./pipeline-tab-panel";
  * PipelineTabPanel Tests
  *
  * These tests verify the pipeline tab panel behavior:
- * 1. Displays pipeline name from usePipelineFlow hook
- * 2. Name editing updates React Query cache via updateName
- * 3. Tab name is also updated via tab store
+ * 1. Displays pipeline name from tab data (useTabsQuery)
+ * 2. Name editing updates tab via useUpdateTabName (immediate)
+ * 3. Name editing updates pipeline via useUpdatePipelineName (debounced)
  *
- * NOTE: The component now uses usePipelineFlow hook which manages state via React Query.
+ * NOTE: Tab name is the source of truth for display. Pipeline name is synced on edit.
  */
 
 // ============================================================
@@ -23,14 +23,18 @@ import { PipelineTabPanel } from "./pipeline-tab-panel";
 let mockFlowState = {
   nodes: [] as unknown[],
   edges: [] as unknown[],
-  pipelineName: "Untitled Pipeline",
   isLoading: false,
+};
+
+// Tab data mock state
+let mockTabsData = {
+  tabs: [{ pipelineId: "test-pipeline-1", name: "Untitled Pipeline" }],
+  activeTabId: "test-pipeline-1",
 };
 
 const mockOnNodesChange = vi.fn();
 const mockOnEdgesChange = vi.fn();
 const mockOnConnect = vi.fn();
-const mockUpdateName = vi.fn();
 const mockAddAgentNode = vi.fn();
 const mockAddTraitNode = vi.fn();
 const mockRemoveNode = vi.fn();
@@ -41,19 +45,18 @@ const mockSetNodesAndEdges = vi.fn();
 // Tab mutation mocks
 const mockUpdateTabNameMutate = vi.fn();
 
-// Mutation mocks
+// Pipeline mutation mocks
 const mockDeletePipelineMutate = vi.fn();
+const mockUpdatePipelineNameMutate = vi.fn();
 
 vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
   usePipelineFlow: vi.fn(() => ({
     nodes: mockFlowState.nodes,
     edges: mockFlowState.edges,
-    pipelineName: mockFlowState.pipelineName,
     isLoading: mockFlowState.isLoading,
     onNodesChange: mockOnNodesChange,
     onEdgesChange: mockOnEdgesChange,
     onConnect: mockOnConnect,
-    updateName: mockUpdateName,
     addAgentNode: mockAddAgentNode,
     addTraitNode: mockAddTraitNode,
     removeNode: mockRemoveNode,
@@ -68,11 +71,19 @@ vi.mock("~/hooks/queries/use-tabs", () => ({
     mutate: mockUpdateTabNameMutate,
     isPending: false,
   })),
+  useTabsQuery: vi.fn(() => ({
+    data: mockTabsData,
+    isLoading: false,
+  })),
 }));
 
 vi.mock("~/hooks/queries/use-pipelines", () => ({
   useDeletePipeline: vi.fn(() => ({
     mutate: mockDeletePipelineMutate,
+  })),
+  useUpdatePipelineName: vi.fn(() => ({
+    mutate: mockUpdatePipelineNameMutate,
+    isPending: false,
   })),
 }));
 
@@ -123,13 +134,15 @@ function resetAllMocks() {
   mockFlowState = {
     nodes: [],
     edges: [],
-    pipelineName: "Untitled Pipeline",
     isLoading: false,
+  };
+  mockTabsData = {
+    tabs: [{ pipelineId: "test-pipeline-1", name: "Untitled Pipeline" }],
+    activeTabId: "test-pipeline-1",
   };
   mockOnNodesChange.mockClear();
   mockOnEdgesChange.mockClear();
   mockOnConnect.mockClear();
-  mockUpdateName.mockClear();
   mockAddAgentNode.mockClear();
   mockAddTraitNode.mockClear();
   mockRemoveNode.mockClear();
@@ -138,6 +151,7 @@ function resetAllMocks() {
   mockSetNodesAndEdges.mockClear();
   mockUpdateTabNameMutate.mockClear();
   mockDeletePipelineMutate.mockClear();
+  mockUpdatePipelineNameMutate.mockClear();
 }
 
 // ============================================================
@@ -150,8 +164,8 @@ describe("PipelineTabPanel - Name Initialization", () => {
   });
 
   describe("Initial Load with Data", () => {
-    test("displays pipeline name from usePipelineFlow hook", async () => {
-      mockFlowState.pipelineName = "My Custom Pipeline";
+    test("displays pipeline name from tab data", async () => {
+      mockTabsData.tabs = [{ pipelineId: "test-pipeline-1", name: "My Custom Pipeline" }];
 
       renderWithClient(
         <PipelineTabPanel
@@ -182,8 +196,8 @@ describe("PipelineTabPanel - Name Initialization", () => {
       });
     });
 
-    test("displays 'Untitled Pipeline' when pipeline is new", async () => {
-      mockFlowState.pipelineName = "Untitled Pipeline";
+    test("displays empty string when tab not found", async () => {
+      mockTabsData.tabs = []; // No tabs
 
       renderWithClient(<PipelineTabPanel {...defaultProps} initialData={null} />);
 
@@ -192,11 +206,11 @@ describe("PipelineTabPanel - Name Initialization", () => {
       });
 
       const nameInput = screen.getByPlaceholderText("Pipeline name");
-      expect(nameInput).toHaveValue("Untitled Pipeline");
+      expect(nameInput).toHaveValue("");
     });
 
-    test("displays the correct name when provided", async () => {
-      mockFlowState.pipelineName = "Server Pipeline Name";
+    test("displays the correct name from tab data", async () => {
+      mockTabsData.tabs = [{ pipelineId: "test-pipeline-1", name: "Server Pipeline Name" }];
 
       renderWithClient(
         <PipelineTabPanel
@@ -219,7 +233,7 @@ describe("PipelineTabPanel - Name Initialization", () => {
 
     test("renders pipeline canvas when not loading", async () => {
       mockFlowState.isLoading = false;
-      mockFlowState.pipelineName = "Test Pipeline";
+      mockTabsData.tabs = [{ pipelineId: "test-pipeline-1", name: "Test Pipeline" }];
 
       renderWithClient(
         <PipelineTabPanel
@@ -239,9 +253,9 @@ describe("PipelineTabPanel - Name Initialization", () => {
   });
 
   describe("Name Editing", () => {
-    test("editing name calls updateName and updateTabName", async () => {
+    test("editing name calls updateTabName mutation", async () => {
       const user = userEvent.setup();
-      mockFlowState.pipelineName = "Original Name";
+      mockTabsData.tabs = [{ pipelineId: "test-pipeline-1", name: "Original Name" }];
 
       renderWithClient(
         <PipelineTabPanel
@@ -264,17 +278,17 @@ describe("PipelineTabPanel - Name Initialization", () => {
       await user.clear(nameInput);
       await user.type(nameInput, "New Name");
 
-      // Should call updateName from usePipelineFlow
-      expect(mockUpdateName).toHaveBeenCalled();
-
-      // Should update tab name via mutation
+      // Should update tab name via mutation (immediate)
       expect(mockUpdateTabNameMutate).toHaveBeenCalled();
     });
   });
 
   describe("Pipeline ID Changes (Tab Switching)", () => {
     test("component re-renders when pipelineId changes", async () => {
-      mockFlowState.pipelineName = "Pipeline One";
+      mockTabsData.tabs = [
+        { pipelineId: "pipeline-1", name: "Pipeline One" },
+        { pipelineId: "pipeline-2", name: "Pipeline Two" },
+      ];
 
       const { rerender } = renderWithClient(
         <PipelineTabPanel
@@ -291,9 +305,6 @@ describe("PipelineTabPanel - Name Initialization", () => {
       await waitFor(() => {
         expect(screen.getByPlaceholderText("Pipeline name")).toHaveValue("Pipeline One");
       });
-
-      // Update the mock state for the new pipeline
-      mockFlowState.pipelineName = "Pipeline Two";
 
       // Switch to second pipeline
       rerender(

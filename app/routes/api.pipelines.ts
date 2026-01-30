@@ -90,6 +90,30 @@ export async function action({ request }: ActionFunctionArgs) {
       return jsonResponse({ pipeline: updated });
     }
 
+    case "updateName": {
+      const id = formData.get("id") as string;
+      const name = formData.get("name") as string;
+
+      if (!id || !name) {
+        return jsonResponse({ error: "ID and name are required" }, 400);
+      }
+
+      const [updated] = await db
+        .update(pipelines)
+        .set({
+          name,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(pipelines.id, id), eq(pipelines.userId, userId)))
+        .returning();
+
+      if (!updated) {
+        return jsonResponse({ error: "Pipeline not found" }, 404);
+      }
+
+      return jsonResponse({ pipeline: updated });
+    }
+
     case "delete": {
       const id = formData.get("id") as string;
 

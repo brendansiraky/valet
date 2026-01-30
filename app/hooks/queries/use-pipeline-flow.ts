@@ -99,10 +99,9 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
   const debouncedSave = useMemo(
     () =>
       debounce(() => {
-        const pipeline = queryClient.getQueryData<Pipeline>([
-          "pipelines",
-          pipelineId,
-        ]);
+        const pipeline = queryClient.getQueryData<Pipeline>(
+          queries.pipelines.detail(pipelineId).queryKey
+        );
         if (!pipeline) return;
 
         const fd = pipeline.flowData as FlowData;

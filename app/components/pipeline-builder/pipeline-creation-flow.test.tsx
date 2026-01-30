@@ -95,6 +95,10 @@ vi.mock("~/hooks/queries/use-tabs", () => ({
     mutate: mockSetActiveTabMutate,
     isPending: false,
   })),
+  useOpenTab: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
   canOpenNewTab: vi.fn((tabs: Array<{ pipelineId: string }>) => {
     const nonHomeTabs = tabs.filter((t) => t.pipelineId !== "home");
     return nonHomeTabs.length < 8;
@@ -132,6 +136,40 @@ vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
       setNodesAndEdges: vi.fn(),
     };
   }),
+}));
+
+// Pipeline mutation mocks
+const mockDeletePipelineMutate = vi.fn();
+const mockUpdatePipelineNameMutate = vi.fn();
+const mockRunPipelineMutate = vi.fn();
+const mockCreatePipelineMutate = vi.fn();
+
+vi.mock("~/hooks/queries/use-pipelines", () => ({
+  usePipeline: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+  })),
+  usePipelines: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+  })),
+  useDeletePipeline: vi.fn(() => ({
+    mutate: mockDeletePipelineMutate,
+  })),
+  useUpdatePipelineName: vi.fn(() => ({
+    mutate: mockUpdatePipelineNameMutate,
+    isPending: false,
+  })),
+  useRunPipeline: vi.fn(() => ({
+    mutate: mockRunPipelineMutate,
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useCreatePipeline: vi.fn(() => ({
+    mutate: mockCreatePipelineMutate,
+    mutateAsync: vi.fn().mockResolvedValue({ id: "new-pipeline-id", name: "Untitled Pipeline" }),
+    isPending: false,
+  })),
 }));
 
 vi.mock("@xyflow/react", () => ({
@@ -184,6 +222,10 @@ function resetAllState() {
   mockPipelineData = new Map();
   mockGetPipeline.mockClear();
   mockUpdatePipeline.mockClear();
+  mockDeletePipelineMutate.mockClear();
+  mockUpdatePipelineNameMutate.mockClear();
+  mockRunPipelineMutate.mockClear();
+  mockCreatePipelineMutate.mockClear();
 
   // Update mock implementations
   vi.mocked(useTabsQuery).mockReturnValue({
@@ -383,8 +425,7 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       expect(dbPipelines[0].name).toBe("Untitled Pipeline");
       expect(dbPipelines[0].id).toBe("pipeline-1");
 
-      // Verify navigation was called
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/pipeline-1");
+      // Tab state is source of truth - no navigation, openTab mutation handles it
 
       // Verify CREATE API was called
       expect(apiCalls.some((c) => c.type === "CREATE_PIPELINE")).toBe(true);
@@ -522,11 +563,6 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       await waitFor(() => {
         expect(mockUpdateTabNameMutate).toHaveBeenCalled();
       });
-
-      // Verify updatePipeline was called with the new name
-      await waitFor(() => {
-        expect(mockUpdatePipeline).toHaveBeenCalled();
-      });
     });
 
     test("typing in name field calls updateName for each keystroke", async () => {
@@ -571,21 +607,19 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       const nameInput = screen.getByPlaceholderText("Pipeline name");
 
       // Clear mocks before typing
-      mockUpdatePipeline.mockClear();
+      mockUpdateTabNameMutate.mockClear();
 
       // Type additional characters
       await user.type(nameInput, "XYZ");
 
-      // Verify updatePipeline was called multiple times (once per keystroke)
-      // Note: With controlled inputs and external mocks, exact call count may vary
-      expect(mockUpdatePipeline).toHaveBeenCalled();
-      expect(mockUpdatePipeline.mock.calls.length).toBeGreaterThanOrEqual(1);
+      // Verify tab name mutation was called multiple times (once per keystroke)
+      expect(mockUpdateTabNameMutate).toHaveBeenCalled();
+      expect(mockUpdateTabNameMutate.mock.calls.length).toBeGreaterThanOrEqual(1);
 
-      // Verify the last call includes at least one of the typed characters
-      const lastCall = mockUpdatePipeline.mock.calls.at(-1);
-      expect(lastCall?.[0]).toBe("pipeline-1");
-      // The value will be whatever the input had + the last typed char
-      expect(typeof lastCall?.[1]?.pipelineName).toBe("string");
+      // Verify the last call includes the typed characters
+      const lastCall = mockUpdateTabNameMutate.mock.calls.at(-1);
+      expect(lastCall?.[0]?.pipelineId).toBe("pipeline-1");
+      expect(typeof lastCall?.[0]?.name).toBe("string");
     });
 
     test("closing tab after rename, pipeline appears with new name in dropdown", async () => {
@@ -630,9 +664,8 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       // Click to reopen the pipeline
       await user.click(screen.getByText("My Renamed Pipeline"));
 
-      // Should call focusOrOpenTab with the correct name
+      // Tab state is source of truth - focusOrOpenTab mutation handles it, no navigation
       expect(mockFocusOrOpenTabMutate).toHaveBeenCalledWith({ pipelineId: "pipeline-1", name: "My Renamed Pipeline" });
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/pipeline-1");
     });
   });
 
@@ -680,8 +713,8 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       // Click to reopen
       await user.click(screen.getByText("Workflow Alpha"));
 
+      // Tab state is source of truth - focusOrOpenTab mutation handles it, no navigation
       expect(mockFocusOrOpenTabMutate).toHaveBeenCalledWith({ pipelineId: createdPipelineId, name: "Workflow Alpha" });
-      expect(mockNavigate).toHaveBeenCalledWith(`/pipelines/${createdPipelineId}`);
     });
 
     test("reopening pipeline loads the saved name in input field", async () => {
@@ -1016,18 +1049,18 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       });
 
       const nameInput = screen.getByPlaceholderText("Pipeline name");
-      mockUpdatePipeline.mockClear();
+      mockUpdateTabNameMutate.mockClear();
 
       // Type additional characters
       await user.type(nameInput, "ABC");
 
-      // Verify updatePipeline was called for the existing pipeline ID
-      expect(mockUpdatePipeline).toHaveBeenCalled();
-      const calls = mockUpdatePipeline.mock.calls;
+      // Verify tab name mutation was called for the existing pipeline ID
+      expect(mockUpdateTabNameMutate).toHaveBeenCalled();
+      const calls = mockUpdateTabNameMutate.mock.calls;
 
       // All calls should be for pipeline-1 (existing), not a new ID
       calls.forEach(call => {
-        expect(call[0]).toBe("pipeline-1");
+        expect(call[0]?.pipelineId).toBe("pipeline-1");
       });
 
       // Only one pipeline should exist in cache
@@ -1206,12 +1239,7 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       await user.clear(nameInput);
       await user.type(nameInput, "ABCDEFGH");
 
-      // Each keystroke should trigger updatePipeline (and thus save)
-      await waitFor(() => {
-        expect(mockUpdatePipeline.mock.calls.length).toBeGreaterThan(0);
-      });
-
-      // All keystrokes trigger tab name update
+      // Each keystroke should trigger tab name mutation (immediate update)
       await waitFor(() => {
         expect(mockUpdateTabNameMutate.mock.calls.length).toBeGreaterThan(0);
       });
@@ -1307,19 +1335,17 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       });
 
       const nameInput = screen.getByPlaceholderText("Pipeline name");
-      mockUpdatePipeline.mockClear();
       mockUpdateTabNameMutate.mockClear();
 
       // Type special characters (appends to existing)
       const specialChars = "&<>";
       await user.type(nameInput, specialChars);
 
-      // Verify updateName and updateTabName were called
-      expect(mockUpdatePipeline).toHaveBeenCalled();
+      // Verify tab name mutation was called
       expect(mockUpdateTabNameMutate).toHaveBeenCalled();
 
       // At least one call should have special characters in the value
-      const allCalls = mockUpdatePipeline.mock.calls.map(c => c[1]?.pipelineName);
+      const allCalls = mockUpdateTabNameMutate.mock.calls.map(c => c[0]?.name);
       const hasSpecialChars = allCalls.some(
         name => name && (name.includes("&") || name.includes("<") || name.includes(">"))
       );
@@ -1365,17 +1391,14 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       });
 
       const nameInput = screen.getByPlaceholderText("Pipeline name");
-      mockUpdatePipeline.mockClear();
+      mockUpdateTabNameMutate.mockClear();
 
       // Type several characters
       await user.type(nameInput, "AAAAA");
 
-      // Verify updateName was called multiple times
-      expect(mockUpdatePipeline).toHaveBeenCalled();
-      expect(mockUpdatePipeline.mock.calls.length).toBeGreaterThanOrEqual(1);
-
-      // updateTabName should also be called
+      // Verify tab name mutation was called multiple times (once per keystroke)
       expect(mockUpdateTabNameMutate).toHaveBeenCalled();
+      expect(mockUpdateTabNameMutate.mock.calls.length).toBeGreaterThanOrEqual(1);
     });
   });
 });

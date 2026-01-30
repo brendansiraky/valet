@@ -142,6 +142,83 @@ export function useSavePipeline() {
   });
 }
 
+// Update just the pipeline name with optimistic update
+interface UpdatePipelineNameInput {
+  id: string;
+  name: string;
+}
+
+async function updatePipelineName(data: UpdatePipelineNameInput): Promise<Pipeline> {
+  const formData = new FormData();
+  formData.set("intent", "updateName");
+  formData.set("id", data.id);
+  formData.set("name", data.name);
+
+  const response = await fetch("/api/pipelines", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.error) {
+    throw new Error(result.error || "Failed to update pipeline name");
+  }
+
+  return result.pipeline;
+}
+
+export function useUpdatePipelineName() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updatePipelineName,
+
+    onMutate: async ({ id, name }) => {
+      // Cancel in-flight queries
+      await queryClient.cancelQueries({ queryKey: queries.pipelines.detail(id).queryKey });
+      await queryClient.cancelQueries({ queryKey: queries.pipelines.all.queryKey });
+
+      // Snapshot for rollback
+      const previousPipeline = queryClient.getQueryData<Pipeline>(
+        queries.pipelines.detail(id).queryKey
+      );
+      const previousList = queryClient.getQueryData<PipelineListItem[]>(
+        queries.pipelines.all.queryKey
+      );
+
+      // Optimistically update detail cache
+      if (previousPipeline) {
+        queryClient.setQueryData<Pipeline>(
+          queries.pipelines.detail(id).queryKey,
+          { ...previousPipeline, name }
+        );
+      }
+
+      // Optimistically update list cache
+      queryClient.setQueryData<PipelineListItem[]>(
+        queries.pipelines.all.queryKey,
+        (old) => old?.map((p) => (p.id === id ? { ...p, name } : p))
+      );
+
+      return { previousPipeline, previousList };
+    },
+
+    onError: (_err, { id }, context) => {
+      // Rollback on error
+      if (context?.previousPipeline) {
+        queryClient.setQueryData(
+          queries.pipelines.detail(id).queryKey,
+          context.previousPipeline
+        );
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData(queries.pipelines.all.queryKey, context.previousList);
+      }
+    },
+  });
+}
+
 // Delete pipeline mutation with cache invalidation
 interface DeletePipelineInput {
   id: string;
