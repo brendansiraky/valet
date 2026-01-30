@@ -32,24 +32,66 @@ export type TraitNodeData = {
 // Union type for all node data types
 export type PipelineNodeData = AgentNodeData | TraitNodeData;
 
-interface PipelineState {
-  // Current pipeline metadata
-  pipelineId: string | null;
+// Data for a single pipeline
+export interface PipelineData {
+  pipelineId: string;
   pipelineName: string;
   pipelineDescription: string;
-
-  // React Flow state
   nodes: Node<PipelineNodeData>[];
   edges: Edge[];
+  isDirty: boolean; // Track unsaved changes for autosave
+}
 
-  // React Flow callbacks
-  onNodesChange: OnNodesChange<Node<PipelineNodeData>>;
-  onEdgesChange: OnEdgesChange;
-  onConnect: OnConnect;
+// Special key for backward-compatible single-pipeline mode
+// Will be removed in Plan 02 when all consumers use multi-pipeline API
+const COMPAT_PIPELINE_ID = "__compat_default__";
 
-  // Actions
-  setNodes: (nodes: Node<PipelineNodeData>[]) => void;
-  setEdges: (edges: Edge[]) => void;
+interface PipelineState {
+  pipelines: Map<string, PipelineData>;
+
+  // ============================================================
+  // MULTI-PIPELINE API (new - for Plan 02+)
+  // ============================================================
+
+  // Per-pipeline actions
+  loadPipeline: (data: PipelineData) => void;
+  updatePipeline: (
+    id: string,
+    updates: Partial<Omit<PipelineData, "pipelineId">>
+  ) => void;
+  removePipeline: (id: string) => void;
+  getPipeline: (id: string) => PipelineData | undefined;
+  markDirty: (id: string) => void;
+  markClean: (id: string) => void;
+
+  // React Flow callbacks factory (returns callbacks scoped to pipeline ID)
+  createOnNodesChange: (
+    pipelineId: string
+  ) => OnNodesChange<Node<PipelineNodeData>>;
+  createOnEdgesChange: (pipelineId: string) => OnEdgesChange;
+  createOnConnect: (pipelineId: string) => OnConnect;
+
+  // Node manipulation (scoped by pipeline ID)
+  // New multi-pipeline API - Plan 02 will use these
+  addAgentNodeTo: (
+    pipelineId: string,
+    agent: { id: string; name: string; instructions?: string },
+    position: { x: number; y: number }
+  ) => void;
+  addTraitNodeTo: (
+    pipelineId: string,
+    trait: { id: string; name: string; color: string },
+    position: { x: number; y: number }
+  ) => void;
+  removeNodeFrom: (pipelineId: string, nodeId: string) => void;
+  addTraitToNodeIn: (pipelineId: string, nodeId: string, traitId: string) => void;
+  removeTraitFromNodeIn: (
+    pipelineId: string,
+    nodeId: string,
+    traitId: string
+  ) => void;
+
+  // Legacy API (uses compat pipeline) - will be removed in Plan 02
   addAgentNode: (
     agent: { id: string; name: string; instructions?: string },
     position: { x: number; y: number }
@@ -59,43 +101,158 @@ interface PipelineState {
     position: { x: number; y: number }
   ) => void;
   removeNode: (nodeId: string) => void;
+  addTraitToNode: (nodeId: string, traitId: string) => void;
+  removeTraitFromNode: (nodeId: string, traitId: string) => void;
+
+  // ============================================================
+  // BACKWARD-COMPATIBLE API (legacy - will be removed in Plan 02)
+  // These operate on a special "compat" pipeline for existing consumers
+  // ============================================================
+
+  // Current pipeline metadata (reads from compat pipeline)
+  pipelineId: string | null;
+  pipelineName: string;
+  pipelineDescription: string;
+
+  // React Flow state (reads from compat pipeline)
+  nodes: Node<PipelineNodeData>[];
+  edges: Edge[];
+
+  // React Flow callbacks (operate on compat pipeline)
+  onNodesChange: OnNodesChange<Node<PipelineNodeData>>;
+  onEdgesChange: OnEdgesChange;
+  onConnect: OnConnect;
+
+  // Legacy actions (operate on compat pipeline)
+  setNodes: (nodes: Node<PipelineNodeData>[]) => void;
+  setEdges: (edges: Edge[]) => void;
   setPipelineMetadata: (
     id: string | null,
     name: string,
     description: string
   ) => void;
-  addTraitToNode: (nodeId: string, traitId: string) => void;
-  removeTraitFromNode: (nodeId: string, traitId: string) => void;
   reset: () => void;
 }
 
-const initialState = {
-  pipelineId: null,
-  pipelineName: "Untitled Pipeline",
-  pipelineDescription: "",
-  nodes: [] as Node<PipelineNodeData>[],
-  edges: [] as Edge[],
-};
+// Helper to update a pipeline in the map
+function updatePipelineInMap(
+  pipelines: Map<string, PipelineData>,
+  id: string,
+  updater: (pipeline: PipelineData) => Partial<PipelineData>
+): Map<string, PipelineData> {
+  const pipeline = pipelines.get(id);
+  if (!pipeline) return pipelines;
+
+  const newMap = new Map(pipelines);
+  newMap.set(id, { ...pipeline, ...updater(pipeline) });
+  return newMap;
+}
+
+// Default state for compat pipeline
+function createCompatPipeline(): PipelineData {
+  return {
+    pipelineId: COMPAT_PIPELINE_ID,
+    pipelineName: "Untitled Pipeline",
+    pipelineDescription: "",
+    nodes: [],
+    edges: [],
+    isDirty: false,
+  };
+}
+
+// Helper to get compat pipeline, creating if needed
+function getOrCreateCompatPipeline(
+  pipelines: Map<string, PipelineData>
+): PipelineData {
+  return pipelines.get(COMPAT_PIPELINE_ID) || createCompatPipeline();
+}
 
 export const usePipelineStore = create<PipelineState>((set, get) => ({
-  ...initialState,
+  pipelines: new Map([[COMPAT_PIPELINE_ID, createCompatPipeline()]]),
 
-  onNodesChange: (changes) => {
-    set({ nodes: applyNodeChanges(changes, get().nodes) });
+  // ============================================================
+  // MULTI-PIPELINE API IMPLEMENTATION
+  // ============================================================
+
+  loadPipeline: (data) => {
+    set({
+      pipelines: new Map(get().pipelines).set(data.pipelineId, data),
+    });
   },
 
-  onEdgesChange: (changes) => {
-    set({ edges: applyEdgeChanges(changes, get().edges) });
+  updatePipeline: (id, updates) => {
+    set({
+      pipelines: updatePipelineInMap(get().pipelines, id, () => updates),
+    });
   },
 
-  onConnect: (connection) => {
-    set({ edges: addEdge(connection, get().edges) });
+  removePipeline: (id) => {
+    const newMap = new Map(get().pipelines);
+    newMap.delete(id);
+    set({ pipelines: newMap });
   },
 
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
+  getPipeline: (id) => {
+    return get().pipelines.get(id);
+  },
 
-  addAgentNode: (agent, position) => {
+  markDirty: (id) => {
+    set({
+      pipelines: updatePipelineInMap(get().pipelines, id, () => ({
+        isDirty: true,
+      })),
+    });
+  },
+
+  markClean: (id) => {
+    set({
+      pipelines: updatePipelineInMap(get().pipelines, id, () => ({
+        isDirty: false,
+      })),
+    });
+  },
+
+  createOnNodesChange: (pipelineId) => (changes) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          nodes: applyNodeChanges(changes, pipeline.nodes),
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  createOnEdgesChange: (pipelineId) => (changes) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          edges: applyEdgeChanges(changes, pipeline.edges),
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  createOnConnect: (pipelineId) => (connection) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          edges: addEdge(connection, pipeline.edges),
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  // New multi-pipeline API with "To/From/In" suffix
+  addAgentNodeTo: (pipelineId, agent, position) => {
     const newNode: Node<AgentNodeData> = {
       id: crypto.randomUUID(),
       type: "agent",
@@ -107,7 +264,129 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         traitIds: [], // Initialize empty trait array
       },
     };
-    set({ nodes: [...get().nodes, newNode] });
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          nodes: [...pipeline.nodes, newNode],
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  addTraitNodeTo: (pipelineId, trait, position) => {
+    const newNode: Node<TraitNodeData> = {
+      id: crypto.randomUUID(),
+      type: "trait",
+      position,
+      data: {
+        traitId: trait.id,
+        traitName: trait.name,
+        traitColor: trait.color,
+      },
+    };
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          nodes: [...pipeline.nodes, newNode],
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  removeNodeFrom: (pipelineId, nodeId) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          nodes: pipeline.nodes.filter((n) => n.id !== nodeId),
+          edges: pipeline.edges.filter(
+            (e) => e.source !== nodeId && e.target !== nodeId
+          ),
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  addTraitToNodeIn: (pipelineId, nodeId, traitId) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          nodes: pipeline.nodes.map((node) => {
+            // Only agent nodes have traitIds
+            if (node.id !== nodeId || node.type !== "agent") return node;
+            const agentData = node.data as AgentNodeData;
+            return {
+              ...node,
+              data: {
+                ...agentData,
+                traitIds: [...new Set([...(agentData.traitIds || []), traitId])],
+              },
+            };
+          }),
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  removeTraitFromNodeIn: (pipelineId, nodeId, traitId) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        pipelineId,
+        (pipeline) => ({
+          nodes: pipeline.nodes.map((node) => {
+            // Only agent nodes have traitIds
+            if (node.id !== nodeId || node.type !== "agent") return node;
+            const agentData = node.data as AgentNodeData;
+            return {
+              ...node,
+              data: {
+                ...agentData,
+                traitIds: (agentData.traitIds || []).filter(
+                  (id) => id !== traitId
+                ),
+              },
+            };
+          }),
+          isDirty: true,
+        })
+      ),
+    });
+  },
+
+  // Legacy API - operates on compat pipeline
+  addAgentNode: (agent, position) => {
+    const newNode: Node<AgentNodeData> = {
+      id: crypto.randomUUID(),
+      type: "agent",
+      position,
+      data: {
+        agentId: agent.id,
+        agentName: agent.name,
+        agentInstructions: agent.instructions,
+        traitIds: [],
+      },
+    };
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          nodes: [...pipeline.nodes, newNode],
+        })
+      ),
+    });
   },
 
   addTraitNode: (trait, position) => {
@@ -121,55 +400,185 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         traitColor: trait.color,
       },
     };
-    set({ nodes: [...get().nodes, newNode] });
-  },
-
-  removeNode: (nodeId) => {
     set({
-      nodes: get().nodes.filter((n) => n.id !== nodeId),
-      edges: get().edges.filter(
-        (e) => e.source !== nodeId && e.target !== nodeId
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          nodes: [...pipeline.nodes, newNode],
+        })
       ),
     });
   },
 
-  setPipelineMetadata: (id, name, description) => {
-    set({ pipelineId: id, pipelineName: name, pipelineDescription: description });
+  removeNode: (nodeId) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          nodes: pipeline.nodes.filter((n) => n.id !== nodeId),
+          edges: pipeline.edges.filter(
+            (e) => e.source !== nodeId && e.target !== nodeId
+          ),
+        })
+      ),
+    });
   },
 
   addTraitToNode: (nodeId, traitId) => {
     set({
-      nodes: get().nodes.map((node) => {
-        // Only agent nodes have traitIds
-        if (node.id !== nodeId || node.type !== "agent") return node;
-        const agentData = node.data as AgentNodeData;
-        return {
-          ...node,
-          data: {
-            ...agentData,
-            traitIds: [...new Set([...(agentData.traitIds || []), traitId])],
-          },
-        };
-      }),
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          nodes: pipeline.nodes.map((node) => {
+            if (node.id !== nodeId || node.type !== "agent") return node;
+            const agentData = node.data as AgentNodeData;
+            return {
+              ...node,
+              data: {
+                ...agentData,
+                traitIds: [...new Set([...(agentData.traitIds || []), traitId])],
+              },
+            };
+          }),
+        })
+      ),
     });
   },
 
   removeTraitFromNode: (nodeId, traitId) => {
     set({
-      nodes: get().nodes.map((node) => {
-        // Only agent nodes have traitIds
-        if (node.id !== nodeId || node.type !== "agent") return node;
-        const agentData = node.data as AgentNodeData;
-        return {
-          ...node,
-          data: {
-            ...agentData,
-            traitIds: (agentData.traitIds || []).filter((id) => id !== traitId),
-          },
-        };
-      }),
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          nodes: pipeline.nodes.map((node) => {
+            if (node.id !== nodeId || node.type !== "agent") return node;
+            const agentData = node.data as AgentNodeData;
+            return {
+              ...node,
+              data: {
+                ...agentData,
+                traitIds: (agentData.traitIds || []).filter(
+                  (id) => id !== traitId
+                ),
+              },
+            };
+          }),
+        })
+      ),
     });
   },
 
-  reset: () => set(initialState),
+  // ============================================================
+  // BACKWARD-COMPATIBLE API IMPLEMENTATION
+  // These read/write the compat pipeline for existing consumers
+  // ============================================================
+
+  // Computed getters that read from compat pipeline
+  get pipelineId() {
+    const compat = getOrCreateCompatPipeline(get().pipelines);
+    // Return the "real" pipelineId if set, otherwise null
+    return compat.pipelineId === COMPAT_PIPELINE_ID ? null : compat.pipelineId;
+  },
+
+  get pipelineName() {
+    return getOrCreateCompatPipeline(get().pipelines).pipelineName;
+  },
+
+  get pipelineDescription() {
+    return getOrCreateCompatPipeline(get().pipelines).pipelineDescription;
+  },
+
+  get nodes() {
+    return getOrCreateCompatPipeline(get().pipelines).nodes;
+  },
+
+  get edges() {
+    return getOrCreateCompatPipeline(get().pipelines).edges;
+  },
+
+  // React Flow callbacks for compat pipeline
+  onNodesChange: (changes) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          nodes: applyNodeChanges(changes, pipeline.nodes),
+        })
+      ),
+    });
+  },
+
+  onEdgesChange: (changes) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          edges: applyEdgeChanges(changes, pipeline.edges),
+        })
+      ),
+    });
+  },
+
+  onConnect: (connection) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        (pipeline) => ({
+          edges: addEdge(connection, pipeline.edges),
+        })
+      ),
+    });
+  },
+
+  // Legacy setters
+  setNodes: (nodes) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        () => ({ nodes })
+      ),
+    });
+  },
+
+  setEdges: (edges) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        () => ({ edges })
+      ),
+    });
+  },
+
+  setPipelineMetadata: (id, name, description) => {
+    set({
+      pipelines: updatePipelineInMap(
+        get().pipelines,
+        COMPAT_PIPELINE_ID,
+        () => ({
+          // Store the real pipeline ID but keep using compat key
+          pipelineId: id || COMPAT_PIPELINE_ID,
+          pipelineName: name,
+          pipelineDescription: description,
+        })
+      ),
+    });
+  },
+
+  reset: () => {
+    set({
+      pipelines: new Map(get().pipelines).set(
+        COMPAT_PIPELINE_ID,
+        createCompatPipeline()
+      ),
+    });
+  },
 }));
