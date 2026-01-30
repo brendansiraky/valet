@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 022: Implement skeleton cards loading on Agents screen
+Last activity: 2026-01-30 - Completed quick tasks 023-024: Skeleton loading on Traits and Settings screens
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -102,11 +102,13 @@ None.
 | 020 | Migrate Traits screen to React Query | 2026-01-30 | d491e74 | [020-migrate-traits-screen-to-react-query](./quick/020-migrate-traits-screen-to-react-query/) |
 | 021 | Migrate Settings screen to React Query | 2026-01-30 | eab5e29 | [021-migrate-settings-screen-to-react-query](./quick/021-migrate-settings-screen-to-react-query/) |
 | 022 | Implement skeleton cards loading on Agents screen | 2026-01-30 | 89416f4 | [022-implement-skeleton-cards-loading-on-agen](./quick/022-implement-skeleton-cards-loading-on-agen/) |
+| 023 | Implement skeleton loading on Traits screen | 2026-01-30 | 0dd1f60 | [023-implement-skeleton-loading-on-traits-sc](./quick/023-implement-skeleton-loading-on-traits-sc/) |
+| 024 | Implement skeleton loading on Settings screen | 2026-01-30 | 0dd1f60 | [024-implement-skeleton-loading-on-settings-](./quick/024-implement-skeleton-loading-on-settings-/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 022: Implement skeleton cards loading on Agents screen
+Stopped at: Completed quick tasks 023-024: Skeleton loading on Traits and Settings screens
 Resume file: None
 
 ---
