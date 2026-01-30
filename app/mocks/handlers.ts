@@ -91,14 +91,53 @@ export const handlers = [
   }),
 
   // Pipeline run mutation
-  http.post("/api/pipeline/:id/run", () => {
+  http.post("/api/pipeline/:pipelineId/run", async ({ request }) => {
+    const formData = await request.formData();
+    const input = formData.get("input");
+    if (!input) {
+      return HttpResponse.json({ error: "Input is required" }, { status: 400 });
+    }
     return HttpResponse.json({ runId: "run-123" });
   }),
 
-  // Pipeline mutations
-  http.post("/api/pipelines", () => {
-    return HttpResponse.json({
-      pipeline: mockPipelineData.pipeline,
-    });
+  // Pipeline mutations (create, update, delete)
+  http.post("/api/pipelines", async ({ request }) => {
+    const formData = await request.formData();
+    const intent = formData.get("intent");
+
+    if (intent === "create") {
+      const name = formData.get("name") as string;
+      const description = formData.get("description") as string;
+      const flowData = formData.get("flowData") as string;
+      return HttpResponse.json({
+        pipeline: {
+          id: "new-pipeline-id",
+          name,
+          description,
+          flowData: flowData ? JSON.parse(flowData) : null,
+        },
+      });
+    }
+
+    if (intent === "update") {
+      const id = formData.get("id") as string;
+      const name = formData.get("name") as string;
+      const description = formData.get("description") as string;
+      const flowData = formData.get("flowData") as string;
+      return HttpResponse.json({
+        pipeline: {
+          id,
+          name,
+          description,
+          flowData: flowData ? JSON.parse(flowData) : null,
+        },
+      });
+    }
+
+    if (intent === "delete") {
+      return HttpResponse.json({ success: true });
+    }
+
+    return HttpResponse.json({ error: "Invalid intent" }, { status: 400 });
   }),
 ];
