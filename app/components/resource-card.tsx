@@ -15,7 +15,7 @@ interface ResourceCardProps {
   /** Optional description - CardContent only renders if provided */
   description?: string;
   actions: ReactNode;
-  /** Optional left border color (e.g., for traits) */
+  /** Optional border color (e.g., for traits) */
   accentColor?: string;
   /** Optional link for the title */
   titleHref?: string;
@@ -60,8 +60,8 @@ export function ResourceCard({
 
   return (
     <Card
-      className={`flex flex-col${accentColor ? " border-l-4" : ""}`}
-      style={accentColor ? { borderLeftColor: accentColor } : undefined}
+      className={`flex flex-col${accentColor ? " border-4" : ""}`}
+      style={accentColor ? { borderColor: accentColor } : undefined}
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">{titleElement}</CardTitle>
