@@ -139,11 +139,11 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
   return (
     <>
       <div className="flex items-center border-b bg-muted/30 px-2 h-10">
-        {/* Pinned home tab */}
+        {/* Pinned home tab - fixed width */}
         <button
           onClick={() => handleTabClick(HOME_TAB_ID)}
           className={cn(
-            "flex items-center justify-center size-8 rounded-t-md border-b-2 transition-colors",
+            "flex-shrink-0 flex items-center justify-center size-8 rounded-t-md border-b-2 transition-colors",
             "hover:bg-background/50",
             activeTabId === HOME_TAB_ID
               ? "border-primary bg-background"
@@ -154,33 +154,35 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
           <Home className="size-4" />
         </button>
 
-        {/* Regular tabs */}
-        {regularTabs.map((tab) => (
-          <button
-            key={tab.pipelineId}
-            onClick={() => handleTabClick(tab.pipelineId)}
-            className={cn(
-              "group flex items-center gap-2 px-3 py-1.5 text-sm rounded-t-md border-b-2 transition-colors",
-              "hover:bg-background/50",
-              activeTabId === tab.pipelineId
-                ? "border-primary bg-background"
-                : "border-transparent"
-            )}
-          >
-            <span className="max-w-32 truncate">{tab.name}</span>
+        {/* Regular tabs - flex container that allows shrinking */}
+        <div className="flex flex-1 min-w-0 items-center">
+          {regularTabs.map((tab) => (
             <button
-              onClick={(e) => handleClose(e, tab.pipelineId)}
-              className="opacity-0 group-hover:opacity-100 hover:bg-muted rounded p-0.5 -mr-1"
+              key={tab.pipelineId}
+              onClick={() => handleTabClick(tab.pipelineId)}
+              className={cn(
+                "group flex items-center gap-2 px-3 py-1.5 text-sm rounded-t-md border-b-2 transition-colors",
+                "hover:bg-background/50 min-w-0 max-w-44 flex-shrink",
+                activeTabId === tab.pipelineId
+                  ? "border-primary bg-background"
+                  : "border-transparent"
+              )}
             >
-              <X className="size-3" />
+              <span className="truncate">{tab.name}</span>
+              <button
+                onClick={(e) => handleClose(e, tab.pipelineId)}
+                className="flex-shrink-0 opacity-0 group-hover:opacity-100 hover:bg-muted rounded p-0.5 -mr-1"
+              >
+                <X className="size-3" />
+              </button>
             </button>
-          </button>
-        ))}
+          ))}
+        </div>
 
-        {/* Dropdown for adding tabs */}
+        {/* Dropdown for adding tabs - fixed width */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8 ml-1">
+            <Button variant="ghost" size="icon" className="flex-shrink-0 size-8 ml-1">
               <Plus className="size-4" />
               <ChevronDown className="size-3 -ml-1" />
             </Button>
