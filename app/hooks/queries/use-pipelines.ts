@@ -74,3 +74,44 @@ export function useRunPipeline() {
     // No cache invalidation needed - runs don't affect pipeline list
   });
 }
+
+// Save pipeline (auto-save) - no invalidation to avoid refetch flicker
+interface SavePipelineInput {
+  id: string;
+  name: string;
+  description: string;
+  nodes: unknown[];
+  edges: unknown[];
+  isNew: boolean;
+}
+
+async function savePipeline(data: SavePipelineInput): Promise<Pipeline> {
+  const formData = new FormData();
+  formData.set("intent", data.isNew ? "create" : "update");
+  if (!data.isNew) {
+    formData.set("id", data.id);
+  }
+  formData.set("name", data.name);
+  formData.set("description", data.description);
+  formData.set("flowData", JSON.stringify({ nodes: data.nodes, edges: data.edges }));
+
+  const response = await fetch("/api/pipelines", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.error) {
+    throw new Error(result.error || "Failed to save pipeline");
+  }
+
+  return result.pipeline;
+}
+
+export function useSavePipeline() {
+  return useMutation({
+    mutationFn: savePipeline,
+    // No invalidation - avoid refetch flicker during auto-save
+  });
+}
