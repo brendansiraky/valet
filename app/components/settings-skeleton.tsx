@@ -22,7 +22,7 @@ export function SettingsSkeleton() {
       </div>
 
       {/* Profile Section Skeleton */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-5 w-16" />
           <Skeleton className="h-4 w-40" />
@@ -37,7 +37,7 @@ export function SettingsSkeleton() {
       </Card>
 
       {/* Anthropic API Section Skeleton */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-5 w-24" />
           <Skeleton className="h-4 w-64" />
@@ -52,7 +52,7 @@ export function SettingsSkeleton() {
       </Card>
 
       {/* OpenAI API Section Skeleton */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-5 w-20" />
           <Skeleton className="h-4 w-56" />
@@ -67,7 +67,7 @@ export function SettingsSkeleton() {
       </Card>
 
       {/* Appearance Section Skeleton */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-5 w-24" />
           <Skeleton className="h-4 w-44" />
@@ -90,7 +90,7 @@ export function SettingsSkeleton() {
       </Card>
 
       {/* Account Section Skeleton */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-5 w-20" />
           <Skeleton className="h-4 w-36" />
