@@ -39,6 +39,14 @@ export const themes = {
       serif: "Georgia",
     },
   },
+  "northern-lights": {
+    name: "Northern Lights",
+    fonts: {
+      sans: "Plus Jakarta Sans",
+      mono: "JetBrains Mono",
+      serif: "Source Serif 4",
+    },
+  },
 } as const;
 
 export type ThemeId = keyof typeof themes;
