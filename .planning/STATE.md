@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 015: Replace pipelines page with pinned home
+Last activity: 2026-01-30 - Completed quick task 017: Fix pipeline dropdown fetch
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -96,6 +96,7 @@ None.
 | 014 | Fix pipeline canvas to fill screen | 2026-01-29 | e32fdb8 | [014-fix-pipeline-canvas-to-fill-screen](./quick/014-fix-pipeline-canvas-to-fill-screen/) |
 | 015 | Replace pipelines page with pinned home | 2026-01-30 | 1c978e6 | [015-replace-pipelines-page-with-pinned-home-](./quick/015-replace-pipelines-page-with-pinned-home-/) |
 | 016 | Extend trait tile border color to full | 2026-01-30 | 22b729d | [016-extend-trait-tile-border-color-to-full](./quick/016-extend-trait-tile-border-color-to-full/) |
+| 017 | Fix pipeline dropdown fetch | 2026-01-30 | a134e71 | [017-fix-pipeline-dropdown-fetch](./quick/017-fix-pipeline-dropdown-fetch/) |
 
 ## Session Continuity
 
