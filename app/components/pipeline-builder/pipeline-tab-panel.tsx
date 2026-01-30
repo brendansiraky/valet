@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback, useRef } from "react";
+import { useMemo, useCallback } from "react";
 import type { Node, Edge } from "@xyflow/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
@@ -46,8 +46,6 @@ export function PipelineTabPanel({
 }: PipelineTabPanelProps) {
   const savePipelineMutation = useSavePipeline();
   const deletePipelineMutation = useDeletePipeline();
-  // Track if this pipeline has been saved to backend (starts false for new pipelines)
-  const hasBeenSavedRef = useRef(!!initialData);
 
   const {
     getPipeline,
@@ -59,38 +57,40 @@ export function PipelineTabPanel({
 
   const { updateTabName } = useTabStore();
 
-  const pipeline = getPipeline(pipelineId);
+  // Lazy initialization: load pipeline into store on first access if not present
+  // This replaces the useEffect-based initialization pattern
+  let pipeline = getPipeline(pipelineId);
+  if (!pipeline) {
+    const validAgentIds = new Set(agents.map((a) => a.id));
+    const flowData = (initialData?.flowData || { nodes: [], edges: [] }) as {
+      nodes: Node<PipelineNodeData>[];
+      edges: Edge[];
+    };
 
-  // Load initial data into store on mount
-  useEffect(() => {
-    if (!pipeline) {
-      const validAgentIds = new Set(agents.map((a) => a.id));
-      const flowData = (initialData?.flowData || { nodes: [], edges: [] }) as {
-        nodes: Node<PipelineNodeData>[];
-        edges: Edge[];
-      };
+    // Enrich nodes with orphan status
+    const enrichedNodes = flowData.nodes.map((node) => {
+      if (node.type === "agent") {
+        const agentData = node.data as AgentNodeData;
+        return {
+          ...node,
+          data: { ...agentData, isOrphaned: !validAgentIds.has(agentData.agentId) },
+        };
+      }
+      return node;
+    });
 
-      // Enrich nodes with orphan status
-      const enrichedNodes = flowData.nodes.map((node) => {
-        if (node.type === "agent") {
-          const agentData = node.data as AgentNodeData;
-          return {
-            ...node,
-            data: { ...agentData, isOrphaned: !validAgentIds.has(agentData.agentId) },
-          };
-        }
-        return node;
-      });
+    // Load immediately - this is synchronous and deterministic
+    loadPipeline({
+      pipelineId,
+      pipelineName: initialData?.name || "Untitled Pipeline",
+      pipelineDescription: initialData?.description || "",
+      nodes: enrichedNodes,
+      edges: flowData.edges,
+    });
 
-      loadPipeline({
-        pipelineId,
-        pipelineName: initialData?.name || "Untitled Pipeline",
-        pipelineDescription: initialData?.description || "",
-        nodes: enrichedNodes,
-        edges: flowData.edges,
-      });
-    }
-  }, [pipelineId, initialData, agents, pipeline, loadPipeline]);
+    // Re-fetch after loading
+    pipeline = getPipeline(pipelineId);
+  }
 
   // Detect orphaned agents
   const hasOrphanedAgents = useMemo(() => {
@@ -104,11 +104,12 @@ export function PipelineTabPanel({
   }, [pipeline, agents]);
 
   // Event-driven save callback - called directly from handlers, not from useEffect
+  // Note: Pipeline is always created by handleNewTab() before this component mounts,
+  // so we always use isNew: false (update intent) for saves.
   const savePipeline = useCallback(() => {
     const currentPipeline = getPipeline(pipelineId);
     if (!currentPipeline) return;
 
-    const isNew = !hasBeenSavedRef.current;
     savePipelineMutation.mutate(
       {
         id: pipelineId,
@@ -116,12 +117,9 @@ export function PipelineTabPanel({
         description: currentPipeline.pipelineDescription,
         nodes: currentPipeline.nodes,
         edges: currentPipeline.edges,
-        isNew,
+        isNew: false,
       },
       {
-        onSuccess: () => {
-          hasBeenSavedRef.current = true;
-        },
         onError: (error) => {
           console.error("Failed to auto-save pipeline:", error);
         },

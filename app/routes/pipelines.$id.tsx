@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
 import { usePipelineStore } from "~/stores/pipeline-store";
@@ -75,19 +75,22 @@ export default function PipelineEditorPage() {
     [userTraits]
   );
 
-  // Sync URL to tab store on load/navigation
-  useEffect(() => {
-    if (!urlId || urlId === "new") return;
+  // Track which URL we've already synced to tabs to avoid re-running on every render
+  const lastSyncedUrlRef = useRef<string | null>(null);
 
-    // For home tab, use special handling
+  // Sync URL to tab store - runs during render, not in useEffect
+  // This is deterministic: same URL always produces same tab state
+  if (urlId && urlId !== "new" && urlId !== lastSyncedUrlRef.current) {
+    lastSyncedUrlRef.current = urlId;
+
     if (urlId === "home") {
       focusOrOpenTab(HOME_TAB_ID, "Home");
-      return;
+    } else {
+      // Use pipeline name if available, otherwise placeholder
+      // The tab name gets updated by PipelineTabPanel when it loads the data
+      focusOrOpenTab(urlId, requestedPipeline?.name || "Untitled Pipeline");
     }
-
-    // Open or focus the tab for this URL
-    focusOrOpenTab(urlId, requestedPipeline?.name || "Untitled Pipeline");
-  }, [urlId, requestedPipeline, focusOrOpenTab]);
+  }
 
   // Handle tab close - cleanup store and run states
   const handleTabClose = useCallback(

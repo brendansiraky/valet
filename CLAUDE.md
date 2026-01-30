@@ -84,6 +84,40 @@ const { result } = renderHook(() => useMyQuery(), { wrapper: createWrapper() });
 
 ---
 
+## ⛔ CRITICAL: Avoid useEffect
+
+**useEffect is almost never the right solution in this codebase.**
+
+Since we use TanStack Query for all async data fetching, there is virtually no legitimate use case for useEffect. The most common anti-pattern is using useEffect to trigger side effects when dependencies change—this causes race conditions and leads to unpredictable behavior.
+
+### Rules for Agents
+
+- **NEVER** use useEffect to synchronize state with other state
+- **NEVER** use useEffect to trigger mutations or API calls when data changes
+- **NEVER** use useEffect to "react" to prop or state changes by updating other state
+- If you think you need useEffect, you're probably wrong—reconsider the approach
+
+### What to Do Instead
+
+| Instead of useEffect for... | Use this approach |
+|----------------------------|-------------------|
+| Fetching data | TanStack Query (`useQuery`) |
+| Responding to user actions | Event handlers |
+| Derived state from props/state | Compute during render or `useMemo` |
+| Triggering mutations on data changes | React Query's `onSuccess`/`onSettled` callbacks |
+| Subscribing to external stores | `useSyncExternalStore` |
+
+### Legitimate useEffect Uses (Rare)
+
+The only acceptable uses are:
+- Subscribing to browser APIs (resize observers, intersection observers)
+- Third-party library integration that requires imperative setup/teardown
+- Focus management that can't be handled declaratively
+
+If you add a useEffect, you must justify why none of the alternatives work.
+
+---
+
 ## Tech Stack
 
 - **Framework**: Remix
