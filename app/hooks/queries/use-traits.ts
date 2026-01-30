@@ -4,7 +4,7 @@ export interface Trait {
   id: string;
   name: string;
   context: string;
-  color: string | null;
+  color: string;
   updatedAt: Date;
 }
 

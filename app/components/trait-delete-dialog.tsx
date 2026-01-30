@@ -1,5 +1,4 @@
-import { type ReactNode } from "react";
-import { Form } from "react-router";
+import { useState, type ReactNode } from "react";
 import type { Trait } from "~/db";
 import {
   AlertDialog,
@@ -12,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
+import { useDeleteTrait } from "~/hooks/queries/use-traits";
 
 interface TraitDeleteDialogProps {
   trait: Pick<Trait, "id" | "name">;
@@ -19,8 +19,22 @@ interface TraitDeleteDialogProps {
 }
 
 export function TraitDeleteDialog({ trait, trigger }: TraitDeleteDialogProps) {
+  const [open, setOpen] = useState(false);
+  const deleteMutation = useDeleteTrait();
+
+  const handleDelete = () => {
+    deleteMutation.mutate(
+      { traitId: trait.id },
+      {
+        onSuccess: () => {
+          setOpen(false);
+        },
+      }
+    );
+  };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -31,13 +45,13 @@ export function TraitDeleteDialog({ trait, trigger }: TraitDeleteDialogProps) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Form method="post">
-            <input type="hidden" name="intent" value="delete" />
-            <input type="hidden" name="traitId" value={trait.id} />
-            <AlertDialogAction type="submit" variant="destructive">
-              Delete
-            </AlertDialogAction>
-          </Form>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+            variant="destructive"
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

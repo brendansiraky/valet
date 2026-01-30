@@ -1,10 +1,4 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { redirect, useLoaderData, data } from "react-router";
-import { z } from "zod";
-import { getSession } from "~/services/session.server";
-import { db, users, traits } from "~/db";
-import { eq, and, asc } from "drizzle-orm";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,128 +9,60 @@ import {
 import { Button } from "~/components/ui/button";
 import { TraitCard } from "~/components/trait-card";
 import { TraitFormDialog } from "~/components/trait-form-dialog";
-
-// Accept both hex (#RRGGBB) and OKLCH formats for backward compatibility
-const colorRegex = /^(#[0-9A-Fa-f]{6}|oklch\(\d+\.?\d*\s+\d+\.?\d*\s+\d+\.?\d*\))$/;
-
-const TraitSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
-  context: z.string().min(1, "Context is required").max(50000, "Context must be 50,000 characters or less"),
-  color: z.string().regex(colorRegex, "Invalid color format").optional(),
-});
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (!userId) {
-    return redirect("/login");
-  }
-
-  // Verify user exists
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-  });
-
-  if (!user) {
-    return redirect("/login");
-  }
-
-  // Query traits for this user, ordered by updatedAt desc
-  const userTraits = await db.query.traits.findMany({
-    where: eq(traits.userId, userId),
-    orderBy: [asc(traits.name)],
-    columns: {
-      id: true,
-      name: true,
-      context: true,
-      color: true,
-      updatedAt: true,
-    },
-  });
-
-  return { traits: userTraits };
-}
-
-export async function action({ request }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (!userId) {
-    return redirect("/login");
-  }
-
-  const formData = await request.formData();
-  const intent = formData.get("intent") as string;
-
-  if (intent === "create") {
-    const result = TraitSchema.safeParse({
-      name: formData.get("name"),
-      context: formData.get("context"),
-      color: formData.get("color"),
-    });
-
-    if (!result.success) {
-      return data(
-        { errors: result.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    await db.insert(traits).values({
-      userId,
-      name: result.data.name,
-      context: result.data.context,
-      color: result.data.color,
-    });
-
-    return { success: true };
-  }
-
-  if (intent === "update") {
-    const traitId = formData.get("traitId") as string;
-    const result = TraitSchema.safeParse({
-      name: formData.get("name"),
-      context: formData.get("context"),
-      color: formData.get("color"),
-    });
-
-    if (!result.success) {
-      return data(
-        { errors: result.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    // Update trait with ownership check
-    await db
-      .update(traits)
-      .set({
-        name: result.data.name,
-        context: result.data.context,
-        color: result.data.color,
-      })
-      .where(and(eq(traits.id, traitId), eq(traits.userId, userId)));
-
-    return { success: true };
-  }
-
-  if (intent === "delete") {
-    const traitId = formData.get("traitId") as string;
-
-    // Delete trait with ownership check
-    await db
-      .delete(traits)
-      .where(and(eq(traits.id, traitId), eq(traits.userId, userId)));
-
-    return { success: true };
-  }
-
-  return null;
-}
+import { useTraits } from "~/hooks/queries/use-traits";
 
 export default function Traits() {
-  const { traits: userTraits } = useLoaderData<typeof loader>();
+  const traitsQuery = useTraits();
+
+  // Loading state
+  if (traitsQuery.isPending) {
+    return (
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">My Traits</h1>
+            <p className="text-muted-foreground">
+              Create reusable context snippets for your agents
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (traitsQuery.isError) {
+    return (
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">My Traits</h1>
+            <p className="text-muted-foreground">
+              Create reusable context snippets for your agents
+            </p>
+          </div>
+        </div>
+        <Card className="mx-auto max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-destructive">Error loading traits</CardTitle>
+            <CardDescription>
+              {traitsQuery.error.message}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Button onClick={() => traitsQuery.refetch()}>
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const userTraits = traitsQuery.data;
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">

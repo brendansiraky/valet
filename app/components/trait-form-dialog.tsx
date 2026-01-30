@@ -1,5 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { useFetcher } from "react-router";
+import { useState, type ReactNode, type FormEvent } from "react";
 import type { Trait } from "~/db";
 import {
   Dialog,
@@ -16,40 +15,67 @@ import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { ColorSwatchPicker } from "./color-swatch-picker";
 import { TRAIT_COLORS, DEFAULT_TRAIT_COLOR } from "~/lib/trait-colors";
+import { useCreateTrait, useUpdateTrait } from "~/hooks/queries/use-traits";
 
 interface TraitFormDialogProps {
   trait?: Pick<Trait, "id" | "name" | "context" | "color">;
   trigger: ReactNode;
 }
 
-interface ActionData {
-  success?: boolean;
-  errors?: {
-    name?: string[];
-    context?: string[];
-    color?: string[];
-  };
-}
-
 export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
   const [open, setOpen] = useState(false);
   const [color, setColor] = useState(trait?.color ?? DEFAULT_TRAIT_COLOR);
-  const fetcher = useFetcher<ActionData>();
-  const isEditing = !!trait;
-  const isSubmitting = fetcher.state !== "idle";
+  const [error, setError] = useState<string | null>(null);
 
-  // Close dialog on successful submission
-  useEffect(() => {
-    if (fetcher.state === "idle" && fetcher.data?.success) {
-      setOpen(false);
-    }
-  }, [fetcher.state, fetcher.data]);
+  const createMutation = useCreateTrait();
+  const updateMutation = useUpdateTrait();
+
+  const isEditing = !!trait;
+  const mutation = isEditing ? updateMutation : createMutation;
+  const isSubmitting = mutation.isPending;
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (!newOpen) {
       // Reset color to trait's color (or default) when dialog closes
       setColor(trait?.color ?? DEFAULT_TRAIT_COLOR);
+      setError(null);
+      mutation.reset();
+    }
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const context = formData.get("context") as string;
+
+    if (isEditing) {
+      updateMutation.mutate(
+        { traitId: trait.id, name, context, color },
+        {
+          onSuccess: () => {
+            setOpen(false);
+          },
+          onError: (err) => {
+            setError(err.message);
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(
+        { name, context, color },
+        {
+          onSuccess: () => {
+            setOpen(false);
+          },
+          onError: (err) => {
+            setError(err.message);
+          },
+        }
+      );
     }
   };
 
@@ -65,11 +91,7 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
               : "Create a reusable context snippet that can be attached to agents."}
           </DialogDescription>
         </DialogHeader>
-        <fetcher.Form method="post" className="space-y-4">
-          <input type="hidden" name="intent" value={isEditing ? "update" : "create"} />
-          {isEditing && <input type="hidden" name="traitId" value={trait.id} />}
-          <input type="hidden" name="color" value={color} />
-
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
@@ -79,14 +101,7 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
               placeholder="Expert Writer"
               maxLength={100}
               required
-              aria-invalid={!!fetcher.data?.errors?.name}
-              aria-describedby={fetcher.data?.errors?.name ? "name-error" : undefined}
             />
-            {fetcher.data?.errors?.name && (
-              <p id="name-error" className="text-sm text-destructive">
-                {fetcher.data.errors.name[0]}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -99,14 +114,7 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
               maxLength={50000}
               required
               rows={6}
-              aria-invalid={!!fetcher.data?.errors?.context}
-              aria-describedby={fetcher.data?.errors?.context ? "context-error" : undefined}
             />
-            {fetcher.data?.errors?.context && (
-              <p id="context-error" className="text-sm text-destructive">
-                {fetcher.data.errors.context[0]}
-              </p>
-            )}
             <p className="text-xs text-muted-foreground">
               Define reusable context like expertise, tone, or constraints that can be applied to multiple agents.
             </p>
@@ -121,6 +129,10 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
             />
           </div>
 
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting
@@ -130,7 +142,7 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
                   : "Create Trait"}
             </Button>
           </DialogFooter>
-        </fetcher.Form>
+        </form>
       </DialogContent>
     </Dialog>
   );
