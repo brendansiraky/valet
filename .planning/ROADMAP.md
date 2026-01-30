@@ -116,42 +116,41 @@ Plans:
 5. Dropping duplicate trait on same agent is silently ignored
 6. Pipeline execution uses traits attached to each step
 
-### Phase 18: Decision Agent Routing
+### Phase 18: Pipeline Tabs
 
-**Goal:** Enable conditional TRUE/FALSE routing in pipelines using decision agents
+**Goal:** Enable multi-pipeline editing with browser-style tabs
 **Depends on:** Phase 17
 **Status:** Planned
-**Plans:** 4 plans
-
-Plans:
-- [ ] 18-01-PLAN.md — Database schema (maxIterations) and pipeline store extension
-- [ ] 18-02-PLAN.md — DecisionNode component and canvas integration
-- [ ] 18-03-PLAN.md — Decision prompt injection and response parsing
-- [ ] 18-04-PLAN.md — Graph-based executor with decision routing
+**Plans:** TBD
 
 **Scope:**
-- Add "Decision Mode" toggle to agent nodes in pipeline builder (pipeline-level, not agent-level)
-- Decision mode nodes render as diamond shape with two output handles (TRUE=left, FALSE=right)
-- Update edge data model to include `sourceHandle` for routing
-- At execution time, inject decision instructions into decision agent's prompt
-- Parse `DECISION: TRUE/FALSE` from agent response, strip marker before passing output
-- Route agent's output to appropriate downstream node based on decision
-- Update executor to handle branching paths (not just linear topological sort)
-- Execution preview shows only executed nodes (future path unknown until decided)
-- Support cycles in pipeline (agent A → agent B → decision agent → back to A on FALSE)
-- Account-level max iterations field (default 10) for loop protection (enforcement only, no UI)
+- Add tab bar below app nav, spanning content area width
+- Browser-style tabs with rounded top corners, active tab connected to content
+- Each tab shows pipeline name (truncated) with close button on hover
+- Tabs keep PipelineEditor mounted but CSS-hidden when inactive (preserves state)
+- Maximum 8 open tabs (prevents memory issues)
+- Prevent duplicate tabs — opening already-open pipeline focuses existing tab
+- Autosave: immediate save on every canvas change (node add/move/delete, edge changes)
+- AgentSidebar shared across all tabs (outside tab content area)
+- Pipeline header and canvas are per-tab
+- Route: /pipelines/{id} with localStorage for tab set
+- New tab (+) creates "Untitled Pipeline" in DB immediately
+- Browser refresh restores all tabs from localStorage, active from URL
+- Warn before closing tab with active run
 
-**Requirements:** DECI-01, DECI-02, DECI-03, DECI-04, DECI-05, DECI-06, DECI-07, DECI-08
+**Requirements:** TABS-01, TABS-02, TABS-03, TABS-04, TABS-05, TABS-06, TABS-07, TABS-08, TABS-09, TABS-10
 
 **Success Criteria:**
-1. User can toggle any agent node into "Decision Mode" in pipeline builder
-2. Decision mode node displays as diamond with TRUE (left) and FALSE (right) outputs
-3. User connects TRUE output to one path, FALSE output to another path
-4. Execution automatically injects decision parsing instructions (user DNA unchanged)
-5. Agent response is parsed for DECISION marker, marker stripped from output
-6. Output flows to correct downstream agent based on TRUE/FALSE decision
-7. Cycles work correctly (FALSE can route back to earlier agent)
-8. Execution stops if iteration limit reached (default 10)
+1. User can open multiple pipelines as tabs from /pipelines list
+2. Switching tabs preserves all state (nodes, edges, run state)
+3. Running pipelines continue when switching to another tab
+4. Canvas changes trigger immediate autosave
+5. Tab bar shows pipeline names with close buttons
+6. Opening same pipeline focuses existing tab instead of creating duplicate
+7. Maximum 8 tabs enforced with user-friendly message
+8. Browser refresh restores previously open tabs
+9. Closing tab with active run shows confirmation warning
+10. New tab button creates and opens "Untitled Pipeline" immediately
 
 ---
 
@@ -166,10 +165,11 @@ Plans:
 | Set deduplication | Simplest approach — drop succeeds, duplicates naturally ignored |
 | Traits attach to node edges | Clear visual association without cluttering the flow diagram |
 | Remove template variables | Over-engineered; DNA + traits + flow is sufficient, simplifies UX |
-| Decision mode at pipeline-level | Same agent can be normal in one pipeline, decision agent in another |
-| System-injected decision parsing | User writes natural DNA, system handles TRUE/FALSE extraction automatically |
-| Decision agent outputs content + routes | Agent's full response flows to chosen path, not just a passthrough |
-| Account-level max iterations | Future-proofs for paid tiers with higher limits |
+| CSS-hidden inactive tabs | Keep editors mounted for state preservation, simpler than state refactoring |
+| Immediate autosave | Maximum durability, no unsaved changes to track |
+| Shared AgentSidebar | Agents/traits are global resources, no need for per-tab sidebar |
+| localStorage for tab set | Decouples tab memory from URL, enables future server-side run reconnection |
+| 8 tab limit | Balances flexibility with memory constraints from multiple React Flow canvases |
 
 ---
 
@@ -180,7 +180,7 @@ Plans:
 | 15 - Agent DNA & Simplification | 10 | Complete |
 | 16 - Trait Colors | 4 | Complete |
 | 17 - Dynamic Pipeline Traits | 7 | Complete |
-| 18 - Decision Agent Routing | 8 | Not started |
+| 18 - Pipeline Tabs | 10 | Not started |
 
 ---
 *v1.3 created: 2026-01-29*

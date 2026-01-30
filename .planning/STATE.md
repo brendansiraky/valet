@@ -67,7 +67,7 @@ None.
 
 ### Roadmap Evolution
 
-- Phase 18 added: Decision Agent Routing (conditional TRUE/FALSE pipeline branching)
+- Phase 18 changed: Pipeline Tabs (replaced Decision Agent Routing — deferred to future milestone)
 
 ### Quick Tasks Completed
 
@@ -94,4 +94,4 @@ Stopped at: Completed quick task 014
 Resume file: None
 
 ---
-*Phase 17 complete. Ready for Phase 18: Decision Agent Routing.*
+*Phase 17 complete. Ready for Phase 18: Pipeline Tabs.*
