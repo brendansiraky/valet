@@ -1,10 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
-  ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
@@ -18,6 +17,7 @@ const nodeTypes = {
 };
 
 interface PipelineCanvasProps {
+  pipelineId: string;
   onDropAgent: (
     agentId: string,
     agentName: string,
@@ -34,10 +34,34 @@ interface PipelineCanvasProps {
   isLocked?: boolean;
 }
 
-function PipelineCanvasInner({ onDropAgent, onDropTrait, isLocked }: PipelineCanvasProps) {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } =
-    usePipelineStore();
+export function PipelineCanvas({
+  pipelineId,
+  onDropAgent,
+  onDropTrait,
+  isLocked,
+}: PipelineCanvasProps) {
+  const {
+    getPipeline,
+    createOnNodesChange,
+    createOnEdgesChange,
+    createOnConnect,
+  } = usePipelineStore();
+
+  const pipeline = getPipeline(pipelineId);
   const { screenToFlowPosition } = useReactFlow();
+
+  const onNodesChange = useMemo(
+    () => createOnNodesChange(pipelineId),
+    [pipelineId, createOnNodesChange]
+  );
+  const onEdgesChange = useMemo(
+    () => createOnEdgesChange(pipelineId),
+    [pipelineId, createOnEdgesChange]
+  );
+  const onConnect = useMemo(
+    () => createOnConnect(pipelineId),
+    [pipelineId, createOnConnect]
+  );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     if (isLocked) return;
@@ -79,11 +103,20 @@ function PipelineCanvasInner({ onDropAgent, onDropTrait, isLocked }: PipelineCan
     [isLocked, screenToFlowPosition, onDropAgent, onDropTrait]
   );
 
+  // Handle case where pipeline is not yet loaded
+  if (!pipeline) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full">
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={pipeline.nodes}
+        edges={pipeline.edges}
         nodeTypes={nodeTypes}
         onNodesChange={isLocked ? undefined : onNodesChange}
         onEdgesChange={isLocked ? undefined : onEdgesChange}
@@ -103,14 +136,5 @@ function PipelineCanvasInner({ onDropAgent, onDropTrait, isLocked }: PipelineCan
         <MiniMap />
       </ReactFlow>
     </div>
-  );
-}
-
-// Wrap with provider for hooks to work
-export function PipelineCanvas(props: PipelineCanvasProps) {
-  return (
-    <ReactFlowProvider>
-      <PipelineCanvasInner {...props} />
-    </ReactFlowProvider>
   );
 }
