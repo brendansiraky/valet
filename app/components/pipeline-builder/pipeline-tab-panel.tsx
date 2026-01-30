@@ -2,7 +2,7 @@ import { useEffect, useMemo, useCallback, useRef } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { useTabStore } from "~/stores/tab-store";
-import { useSavePipeline } from "~/hooks/queries/use-pipelines";
+import { useSavePipeline, useDeletePipeline } from "~/hooks/queries/use-pipelines";
 import { PipelineCanvas } from "./pipeline-canvas";
 import { TraitsContext, type TraitContextValue } from "./traits-context";
 import { Input } from "~/components/ui/input";
@@ -45,6 +45,7 @@ export function PipelineTabPanel({
   onDelete,
 }: PipelineTabPanelProps) {
   const savePipelineMutation = useSavePipeline();
+  const deletePipelineMutation = useDeletePipeline();
   const isSavingRef = useRef(false);
 
   const {
@@ -170,15 +171,20 @@ export function PipelineTabPanel({
     );
   }, [pipeline?.isDirty, pipelineId, pipeline?.pipelineName, pipeline?.pipelineDescription, pipeline?.nodes, pipeline?.edges, initialData, savePipelineMutation, updatePipeline]);
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!confirm("Delete this pipeline?")) return;
 
-    const formData = new FormData();
-    formData.set("intent", "delete");
-    formData.set("id", pipelineId);
-
-    await fetch("/api/pipelines", { method: "POST", body: formData });
-    onDelete();
+    deletePipelineMutation.mutate(
+      { id: pipelineId },
+      {
+        onSuccess: () => {
+          onDelete();
+        },
+        onError: (error) => {
+          console.error("Failed to delete pipeline:", error);
+        },
+      }
+    );
   };
 
   if (!pipeline) {
