@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 19 - Remove Zustand from Pipeline Builder
-Plan: 03 of 4
-Status: In progress
-Last activity: 2026-01-30 - Completed 19-03-PLAN.md (Complete migration and delete store)
+Phase: 19 - Remove Zustand from Pipeline Builder (COMPLETE)
+Plan: 04 of 4 (COMPLETE)
+Status: Phase complete
+Last activity: 2026-01-30 - Completed 19-04-PLAN.md (Test updates for React Query)
 
-Progress: [███████░░░] 75% (v1.4: Plan 3/4 complete)
+Progress: [##########] 100% (v1.4: Plan 4/4 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 49
+- Total plans completed: 50
 - Average duration: 6 min
-- Total execution time: 4.88 hours
+- Total execution time: 5.05 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [███████░░░] 75% (v1.4: Plan 3/4 complete)
 | 16-trait-colors | 1 | 3 min | 3 min |
 | 17-dynamic-pipeline-traits | 3 | 8 min | 3 min |
 | 18-pipeline-tabs | 4 | 15 min | 4 min |
-| 19-remove-zustand | 3 | 11 min | 4 min |
+| 19-remove-zustand | 4 | 21 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 18-04 (3 min), 19-01 (2 min), 19-02 (5 min), 19-03 (4 min)
+- Last 5 plans: 19-01 (2 min), 19-02 (5 min), 19-03 (4 min), 19-04 (10 min)
 
 *Updated after each plan completion*
 
@@ -70,18 +70,20 @@ v1.2 decisions archived in milestones/v1.2-ROADMAP.md.
 | 2026-01-30 | PipelineContext for pipelineId propagation | Nested components access pipelineId without prop drilling |
 | 2026-01-30 | PipelineCanvas as pure presentational | Receives all state via props, no internal state management |
 | 2026-01-30 | Delete pipeline-store.ts after migration | Clean removal prevents regression to old patterns |
+| 2026-01-30 | Simplify controlled input tests to verify mock calls | With external hook mocks, React doesn't re-render |
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-- Some integration tests failing in pipeline-creation-flow.test.tsx - need updates in Plan 04
+None - Phase 19 complete.
 
 ### Roadmap Evolution
 
 - Phase 18 changed: Pipeline Tabs (replaced Decision Agent Routing — deferred to future milestone)
+- Phase 19 complete: Pipeline Builder now uses React Query exclusively
 
 ### Quick Tasks Completed
 
@@ -129,8 +131,8 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed 19-03-PLAN.md (Complete migration and delete store)
+Stopped at: Completed 19-04-PLAN.md (Test updates for React Query)
 Resume file: None
 
 ---
-*Milestone v1.3 Agent DNA & Dynamic Traits complete. All 4 phases shipped.*
+*Milestone v1.4 State Architecture Cleanup COMPLETE. Phase 19 (4 plans) shipped.*
