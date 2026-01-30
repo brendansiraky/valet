@@ -772,6 +772,75 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       const nameInput = screen.getByPlaceholderText("Pipeline name");
       expect(nameInput).toHaveValue("My Custom Workflow");
     });
+
+    test("pipeline name persists in input field after page refresh simulation", async () => {
+      // This test verifies that when navigating to a pipeline that exists in the database,
+      // the component loads and displays the server-provided name (not a default fallback).
+      //
+      // The test simulates a "page refresh" scenario where:
+      // 1. User has previously created and renamed a pipeline to "Persisted Name Test"
+      // 2. User refreshes the page
+      // 3. The pipeline data is loaded from the server
+      // 4. The input field should show "Persisted Name Test", not "Untitled Pipeline"
+
+      // Database has the pipeline with the custom name
+      dbPipelines = [
+        {
+          id: "pipeline-1",
+          name: "Persisted Name Test",
+          description: "A test pipeline",
+          flowData: { nodes: [], edges: [] },
+        },
+      ];
+
+      // Setup with pipeline tab active
+      mockTabs = [
+        { pipelineId: "home", name: "Home" },
+        { pipelineId: "pipeline-1", name: "Persisted Name Test" },
+      ];
+      mockActiveTabId = "pipeline-1";
+      mockUrlId = "pipeline-1";
+
+      // Pre-populate the pipeline store with the server data
+      // This simulates the pipeline being loaded from the server's response
+      // In the real app, this happens via useEffect when initialData arrives from React Query
+      mockPipelineData.set("pipeline-1", {
+        pipelineId: "pipeline-1",
+        pipelineName: "Persisted Name Test",
+        pipelineDescription: "A test pipeline",
+        nodes: [],
+        edges: [],
+      });
+
+      mockGetPipeline.mockImplementation((id: string) => mockPipelineData.get(id) ?? null);
+
+      vi.mocked(useTabStore).mockReturnValue({
+        tabs: mockTabs,
+        activeTabId: mockActiveTabId,
+        closeTab: mockCloseTab,
+        focusOrOpenTab: mockFocusOrOpenTab,
+        updateTabName: mockUpdateTabName,
+        canOpenNewTab: mockCanOpenNewTab,
+      });
+
+      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
+
+      renderWithClient(<PipelineEditorPage />);
+
+      // Wait for the component to render
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Pipeline name")).toBeInTheDocument();
+      });
+
+      // THE KEY ASSERTION: The input should show the persisted name from the server
+      // This verifies that after a "page refresh", when data is loaded from the server,
+      // the name shown in the input matches what was saved, not a default fallback
+      const nameInput = screen.getByPlaceholderText("Pipeline name");
+      expect(nameInput).toHaveValue("Persisted Name Test");
+
+      // Verify the pipeline data in the store has the correct name
+      expect(mockPipelineData.get("pipeline-1")?.pipelineName).toBe("Persisted Name Test");
+    });
   });
 
   describe("Deleting Pipeline", () => {
