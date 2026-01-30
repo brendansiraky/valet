@@ -8,28 +8,28 @@ A GUI application that wraps the Anthropic and OpenAI APIs, enabling non-technic
 
 Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
 
-## Current State (v1.2 shipped)
+## Current State (v1.3 shipped)
 
-**v1.2 shipped:** 2026-01-29
+**v1.3 shipped:** 2026-01-30
 
 **What's working:**
 - User authentication with encrypted API key storage (Anthropic + OpenAI)
-- Agent management with natural language instructions
-- Traits system — reusable context snippets assignable to agents
+- Agent management with natural language "DNA" instructions
+- Traits system — reusable context snippets with colors, assignable per pipeline step
 - Per-agent model selection with multi-provider support
 - Unified tools — all agents have web search + URL fetch available
-- Visual pipeline builder — drag-drop agents, connect in sequence, save templates
+- Visual pipeline builder — drag-drop agents and traits, connect in sequence
+- Pipeline tabs — multi-pipeline editing with browser-style tabs
+- Autosave — immediate save on canvas changes
 - Pipeline execution with streaming progress and cost visibility
 - Orphan detection — fail-fast when pipelines reference deleted agents
 - Artifact storage — pipeline outputs stored with metadata, viewable at /artifacts
 - Output viewing and download (text/markdown)
 
-**v1.3 focus:** Agent DNA (human-centric naming), dynamic pipeline traits, trait colors
-
 **Codebase:**
-- ~8,500 lines of TypeScript
+- ~9,000 lines of TypeScript
 - Tech stack: Remix (React Router v7), PostgreSQL, Drizzle, Tailwind, shadcn/ui
-- 14 phases complete (6 in v1.0, 4 in v1.1, 4 in v1.2)
+- 18 phases complete (6 in v1.0, 4 in v1.1, 4 in v1.2, 4 in v1.3)
 
 ## Requirements
 
@@ -60,20 +60,18 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 - ✓ Agents can use models from different providers in same pipeline — v1.2
 - ✓ Pipeline outputs are stored and viewable later — v1.2
 - ✓ Deleted agents are handled gracefully in existing pipelines — v1.2
+- ✓ Agent instructions renamed to "DNA" with explanatory tooltip — v1.3
+- ✓ Traits assigned per-pipeline-step via drag-drop — v1.3
+- ✓ Traits have assignable colors (24-color OKLCH palette) — v1.3
+- ✓ Agent testing includes temporary trait picker — v1.3
+- ✓ Pipeline tabs enable multi-pipeline editing — v1.3
+- ✓ Autosave on canvas changes — v1.3
 
 ### Active
 
-<!-- v1.3 scope -->
+<!-- Next milestone scope -->
 
-**v1.3 Agent DNA & Dynamic Traits:**
-- [ ] Agent instructions renamed to "DNA" with explanatory tooltip
-- [ ] Traits assigned per-pipeline-step (not per-agent)
-- [ ] Traits draggable in pipeline builder, attach to agent nodes
-- [ ] Traits have assignable colors (warm preset palette)
-- [ ] Agent testing includes temporary trait picker
-- [ ] Trait context formatted with named headers ("Your assigned traits: **Trait Name**: content")
-- [ ] Pipeline runs require initial prompt input (kickoff command to first agent)
-- [ ] Remove redundant "Save Template" modal (existing Save button sufficient)
+No active requirements. Ready for v1.4 planning.
 
 ### Out of Scope
 
@@ -116,4 +114,4 @@ Non-technical users can automate repetitive multi-stage document workflows by bu
 | View-only artifacts | Start simple, add editing later | — Pending |
 
 ---
-*Last updated: 2026-01-29 after v1.2 milestone*
+*Last updated: 2026-01-30 after v1.3 milestone*
