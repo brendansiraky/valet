@@ -36,6 +36,22 @@ export const mockSettingsData = {
   modelPreference: "claude-sonnet-4-20250514",
 };
 
+export const mockPipelinesData = {
+  pipelines: [
+    { id: "pipeline-1", name: "Test Pipeline" },
+    { id: "pipeline-2", name: "Another Pipeline" },
+  ],
+};
+
+export const mockPipelineData = {
+  pipeline: {
+    id: "pipeline-1",
+    name: "Test Pipeline",
+    description: "A test pipeline for unit testing",
+    flowData: { nodes: [], edges: [] },
+  },
+};
+
 export const handlers = [
   // Agents API
   http.get("/api/agents", () => {
@@ -50,6 +66,15 @@ export const handlers = [
   // Settings API
   http.get("/api/settings", () => {
     return HttpResponse.json(mockSettingsData);
+  }),
+
+  // Pipelines API
+  http.get("/api/pipelines", () => {
+    return HttpResponse.json(mockPipelinesData);
+  }),
+
+  http.get("/api/pipelines/:id", () => {
+    return HttpResponse.json(mockPipelineData);
   }),
 
   // Mutations (POST handlers)
