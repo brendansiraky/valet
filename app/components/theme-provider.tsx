@@ -21,42 +21,33 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const THEME_STORAGE_KEY = "valet-theme";
 const COLOR_MODE_STORAGE_KEY = "valet-color-mode";
 
-function getStoredTheme(): ThemeId {
+// Read initial theme from DOM (set by blocking script in root.tsx)
+// This ensures React state matches what's already rendered, avoiding hydration mismatch
+function getInitialTheme(): ThemeId {
   if (typeof window === "undefined") return defaultTheme;
-  const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored && stored in themes) {
-    return stored as ThemeId;
+  // Check what the blocking script set on the DOM
+  const root = document.documentElement;
+  for (const themeId of Object.keys(themes)) {
+    if (root.classList.contains(`theme-${themeId}`)) {
+      return themeId as ThemeId;
+    }
   }
   return defaultTheme;
 }
 
-function getStoredColorMode(): ColorMode {
+function getInitialColorMode(): ColorMode {
   if (typeof window === "undefined") return "light";
-  const stored = localStorage.getItem(COLOR_MODE_STORAGE_KEY);
-  if (stored === "dark" || stored === "light") {
-    return stored;
-  }
-  // Default to system preference
-  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    return "dark";
-  }
-  return "light";
+  // Check what the blocking script set on the DOM
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeId>(defaultTheme);
-  const [colorMode, setColorModeState] = useState<ColorMode>("light");
-  const [mounted, setMounted] = useState(false);
+  // Initialize from DOM (blocking script already set the classes)
+  const [theme, setThemeState] = useState<ThemeId>(getInitialTheme);
+  const [colorMode, setColorModeState] = useState<ColorMode>(getInitialColorMode);
 
+  // Sync theme changes to DOM and localStorage
   useEffect(() => {
-    setThemeState(getStoredTheme());
-    setColorModeState(getStoredColorMode());
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
     const root = document.documentElement;
 
     // Remove all theme classes
@@ -67,11 +58,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Store preference
     localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme, mounted]);
+  }, [theme]);
 
+  // Sync color mode changes to DOM and localStorage
   useEffect(() => {
-    if (!mounted) return;
-
     const root = document.documentElement;
 
     // Toggle dark class
@@ -83,7 +73,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Store preference
     localStorage.setItem(COLOR_MODE_STORAGE_KEY, colorMode);
-  }, [colorMode, mounted]);
+  }, [colorMode]);
 
   const setTheme = useCallback((newTheme: ThemeId) => {
     setThemeState(newTheme);

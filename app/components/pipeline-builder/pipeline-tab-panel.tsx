@@ -202,41 +202,37 @@ export function PipelineTabPanel({
           <LayoutGrid className="size-4 mr-2" />
           Auto Layout
         </Button>
-        {initialData && (
-          <>
-            <Button
-              onClick={onOpenRunDialog}
-              disabled={isLocked || hasOrphanedAgents}
-              variant={hasOrphanedAgents ? "outline" : "default"}
-            >
-              {runState.isStarting ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  Starting...
-                </>
-              ) : runState.runId ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  Running...
-                </>
-              ) : hasOrphanedAgents ? (
-                <>
-                  <AlertTriangle className="size-4 mr-2" />
-                  Remove Deleted Agents
-                </>
-              ) : (
-                <>
-                  <Play className="size-4 mr-2" />
-                  Run
-                </>
-              )}
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="size-4 mr-2" />
-              Delete
-            </Button>
-          </>
-        )}
+        <Button
+          onClick={onOpenRunDialog}
+          disabled={isLocked || hasOrphanedAgents}
+          variant={hasOrphanedAgents ? "outline" : "default"}
+        >
+          {runState.isStarting ? (
+            <>
+              <Loader2 className="size-4 mr-2 animate-spin" />
+              Starting...
+            </>
+          ) : runState.runId ? (
+            <>
+              <Loader2 className="size-4 mr-2 animate-spin" />
+              Running...
+            </>
+          ) : hasOrphanedAgents ? (
+            <>
+              <AlertTriangle className="size-4 mr-2" />
+              Remove Deleted Agents
+            </>
+          ) : (
+            <>
+              <Play className="size-4 mr-2" />
+              Run
+            </>
+          )}
+        </Button>
+        <Button variant="destructive" onClick={handleDelete}>
+          <Trash2 className="size-4 mr-2" />
+          Delete
+        </Button>
       </div>
 
       {/* Canvas with isolated ReactFlowProvider */}
