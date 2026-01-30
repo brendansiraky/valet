@@ -155,7 +155,7 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
         </button>
 
         {/* Regular tabs - flex container that allows shrinking */}
-        <div className="flex flex-1 min-w-0 items-center">
+        <div className="flex min-w-0 items-center">
           {regularTabs.map((tab) => (
             <button
               key={tab.pipelineId}
