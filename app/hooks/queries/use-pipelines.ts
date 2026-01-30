@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface Pipeline {
   id: string;
@@ -113,5 +113,39 @@ export function useSavePipeline() {
   return useMutation({
     mutationFn: savePipeline,
     // No invalidation - avoid refetch flicker during auto-save
+  });
+}
+
+// Delete pipeline mutation with cache invalidation
+interface DeletePipelineInput {
+  id: string;
+}
+
+async function deletePipeline(data: DeletePipelineInput): Promise<void> {
+  const formData = new FormData();
+  formData.set("intent", "delete");
+  formData.set("id", data.id);
+
+  const response = await fetch("/api/pipelines", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.error) {
+    throw new Error(result.error || "Failed to delete pipeline");
+  }
+}
+
+export function useDeletePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deletePipeline,
+    onSuccess: () => {
+      // Invalidate pipelines list to refresh dropdown
+      queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+    },
   });
 }
