@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 017: Fix pipeline dropdown fetch
+Last activity: 2026-01-30 - Completed quick task 018: Install TanStack Query and enforce pattern
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -97,11 +97,12 @@ None.
 | 015 | Replace pipelines page with pinned home | 2026-01-30 | 1c978e6 | [015-replace-pipelines-page-with-pinned-home-](./quick/015-replace-pipelines-page-with-pinned-home-/) |
 | 016 | Extend trait tile border color to full | 2026-01-30 | 22b729d | [016-extend-trait-tile-border-color-to-full](./quick/016-extend-trait-tile-border-color-to-full/) |
 | 017 | Fix pipeline dropdown fetch | 2026-01-30 | a134e71 | [017-fix-pipeline-dropdown-fetch](./quick/017-fix-pipeline-dropdown-fetch/) |
+| 018 | Install TanStack Query and enforce pattern | 2026-01-30 | f753ae9 | [018-install-tanstack-query-enforce-pattern](./quick/018-install-tanstack-query-enforce-pattern/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed Phase 18 and milestone v1.3
+Stopped at: Completed quick task 018: Install TanStack Query and enforce pattern
 Resume file: None
 
 ---
