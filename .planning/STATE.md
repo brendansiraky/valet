@@ -114,7 +114,7 @@ None.
 | 032 | Audit screens for react-components skill compliance | 2026-01-30 | 63f4aa8 | [032-audit-screens-for-react-components-skill](./quick/032-audit-screens-for-react-components-skill/) |
 | 033 | Add test coverage for Agents, Traits, Settings screens | 2026-01-30 | 4b5efe0 | [033-add-test-coverage-for-agents-traits-settings](./quick/033-add-test-coverage-for-agents-traits-settings/) |
 | 034-01 | Add in-depth tests for pipeline query hooks | 2026-01-30 | 4ee9b04 | [034-add-in-depth-tests-for-pipelines-screen](./quick/034-add-in-depth-tests-for-pipelines-screen/) |
-| 034-02 | Add mutation endpoint handlers to mocks | 2026-01-30 | cf31ffb | [034-add-in-depth-tests-for-pipelines-screen](./quick/034-add-in-depth-tests-for-pipelines-screen/) |
+| 034-02 | Add pipeline mutation hook tests | 2026-01-30 | 4c5c4d5 | [034-add-in-depth-tests-for-pipelines-screen](./quick/034-add-in-depth-tests-for-pipelines-screen/) |
 | 034-03 | Pipeline screen component tests | 2026-01-30 | cb78d5c | [034-add-in-depth-tests-for-pipelines-screen](./quick/034-add-in-depth-tests-for-pipelines-screen/) |
 
 ## Session Continuity
