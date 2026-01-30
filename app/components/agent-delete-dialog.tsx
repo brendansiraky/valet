@@ -1,9 +1,7 @@
-import { type ReactNode } from "react";
-import { Form } from "react-router";
+import { useState, type ReactNode } from "react";
 import type { Agent } from "~/db";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -12,6 +10,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
+import { Button } from "~/components/ui/button";
+import { useDeleteAgent } from "~/hooks/queries/useAgents";
 
 interface AgentDeleteDialogProps {
   agent: Pick<Agent, "id" | "name">;
@@ -19,8 +19,22 @@ interface AgentDeleteDialogProps {
 }
 
 export function AgentDeleteDialog({ agent, trigger }: AgentDeleteDialogProps) {
+  const [open, setOpen] = useState(false);
+  const deleteMutation = useDeleteAgent();
+
+  const handleDelete = () => {
+    deleteMutation.mutate(
+      { agentId: agent.id },
+      {
+        onSuccess: () => {
+          setOpen(false);
+        },
+      }
+    );
+  };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -31,13 +45,13 @@ export function AgentDeleteDialog({ agent, trigger }: AgentDeleteDialogProps) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Form method="post">
-            <input type="hidden" name="intent" value="delete" />
-            <input type="hidden" name="agentId" value={agent.id} />
-            <AlertDialogAction type="submit" variant="destructive">
-              Delete
-            </AlertDialogAction>
-          </Form>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

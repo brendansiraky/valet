@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { useFetcher } from "react-router";
+import { useState, type ReactNode, type FormEvent } from "react";
 import type { Agent } from "~/db";
 import { Info } from "lucide-react";
 import {
@@ -21,6 +20,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { ModelSelector } from "~/components/model-selector";
+import { useCreateAgent, useUpdateAgent } from "~/hooks/queries/useAgents";
 
 interface AgentFormDialogProps {
   agent?: Pick<Agent, "id" | "name" | "instructions"> & {
@@ -30,22 +30,77 @@ interface AgentFormDialogProps {
   trigger: ReactNode;
 }
 
-interface ActionData {
-  success?: boolean;
-  errors?: {
-    name?: string[];
-    instructions?: string[];
+interface MutationError extends Error {
+  data?: {
+    errors?: {
+      name?: string[];
+      instructions?: string[];
+    };
   };
 }
 
 export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFormDialogProps) {
-  const fetcher = useFetcher<ActionData>();
+  const [open, setOpen] = useState(false);
+  const createMutation = useCreateAgent();
+  const updateMutation = useUpdateAgent();
+
   const isEditing = !!agent;
-  const isSubmitting = fetcher.state !== "idle";
-  const isSuccess = fetcher.state === "idle" && fetcher.data?.success;
+  const mutation = isEditing ? updateMutation : createMutation;
+  const isSubmitting = mutation.isPending;
+
+  // Extract validation errors from mutation error
+  const mutationError = mutation.error as MutationError | null;
+  const errors = mutationError?.data?.errors;
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const name = formData.get("name") as string;
+    const instructions = formData.get("instructions") as string;
+    const model = formData.get("model") as string | undefined;
+
+    if (isEditing) {
+      updateMutation.mutate(
+        {
+          agentId: agent.id,
+          name,
+          instructions,
+          model,
+        },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            mutation.reset();
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(
+        {
+          name,
+          instructions,
+          model,
+        },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            mutation.reset();
+          },
+        }
+      );
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      mutation.reset();
+    }
+  };
 
   return (
-    <Dialog key={isSuccess ? "closed" : "open"}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -56,10 +111,7 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
               : "Create a new agent with a name and DNA that define its behavior."}
           </DialogDescription>
         </DialogHeader>
-        <fetcher.Form method="post" className="space-y-4">
-          <input type="hidden" name="intent" value={isEditing ? "update" : "create"} />
-          {isEditing && <input type="hidden" name="agentId" value={agent.id} />}
-
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
@@ -69,12 +121,12 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
               placeholder="My Assistant"
               maxLength={100}
               required
-              aria-invalid={!!fetcher.data?.errors?.name}
-              aria-describedby={fetcher.data?.errors?.name ? "name-error" : undefined}
+              aria-invalid={!!errors?.name}
+              aria-describedby={errors?.name ? "name-error" : undefined}
             />
-            {fetcher.data?.errors?.name && (
+            {errors?.name && (
               <p id="name-error" className="text-sm text-destructive">
-                {fetcher.data.errors.name[0]}
+                {errors.name[0]}
               </p>
             )}
           </div>
@@ -103,12 +155,12 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
               maxLength={10000}
               required
               rows={6}
-              aria-invalid={!!fetcher.data?.errors?.instructions}
-              aria-describedby={fetcher.data?.errors?.instructions ? "instructions-error" : undefined}
+              aria-invalid={!!errors?.instructions}
+              aria-describedby={errors?.instructions ? "instructions-error" : undefined}
             />
-            {fetcher.data?.errors?.instructions && (
+            {errors?.instructions && (
               <p id="instructions-error" className="text-sm text-destructive">
-                {fetcher.data.errors.instructions[0]}
+                {errors.instructions[0]}
               </p>
             )}
             <p className="text-xs text-muted-foreground">
@@ -137,7 +189,7 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
                   : "Create Agent"}
             </Button>
           </DialogFooter>
-        </fetcher.Form>
+        </form>
       </DialogContent>
     </Dialog>
   );
