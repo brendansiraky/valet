@@ -5,7 +5,7 @@ import { getSession } from "~/services/session.server";
 import { db, users } from "~/db";
 import type { Agent } from "~/db/schema/agents";
 import { eq } from "drizzle-orm";
-import { Plus, Loader2, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import {
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { AgentCard } from "~/components/agent-card";
+import { AgentCardSkeleton } from "~/components/agent-card-skeleton";
 import { AgentFormDialog } from "~/components/agent-form-dialog";
 import { AgentTestDialog } from "~/components/agent-test-dialog";
 import { useAgents } from "~/hooks/queries/useAgents";
@@ -58,8 +59,10 @@ export default function Agents() {
             </p>
           </div>
         </div>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <AgentCardSkeleton key={i} />
+          ))}
         </div>
       </div>
     );
