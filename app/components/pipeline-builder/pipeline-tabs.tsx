@@ -179,40 +179,38 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
           ))}
         </div>
 
-        {/* Dropdown for adding tabs - fixed width */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="flex-shrink-0 size-8 ml-1">
-              <Plus className="size-4" />
-              <ChevronDown className="size-3 -ml-1" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuItem
-              onClick={handleNewTab}
-              disabled={!canOpenNewTab()}
-              className="font-medium"
-            >
-              <Plus className="size-4 mr-2" />
-              New Pipeline
-            </DropdownMenuItem>
-            {availablePipelines.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                {availablePipelines.map((pipeline) => (
-                  <DropdownMenuItem
-                    key={pipeline.id}
-                    onClick={() =>
-                      handleSelectPipeline(pipeline.id, pipeline.name)
-                    }
-                  >
-                    <span className="truncate">{pipeline.name}</span>
-                  </DropdownMenuItem>
-                ))}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Dropdown for adding tabs - hidden when at limit */}
+        {canOpenNewTab() && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="flex-shrink-0 size-8 ml-1">
+                <Plus className="size-4" />
+                <ChevronDown className="size-3 -ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem onClick={handleNewTab} className="font-medium">
+                <Plus className="size-4 mr-2" />
+                New Pipeline
+              </DropdownMenuItem>
+              {availablePipelines.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  {availablePipelines.map((pipeline) => (
+                    <DropdownMenuItem
+                      key={pipeline.id}
+                      onClick={() =>
+                        handleSelectPipeline(pipeline.id, pipeline.name)
+                      }
+                    >
+                      <span className="truncate">{pipeline.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <AlertDialog
