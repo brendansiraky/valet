@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 035: Add tests for pipeline API routes
+Last activity: 2026-01-30 - Completed quick task 036: Write extensive tests for pipelines screen user flow
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -115,11 +115,12 @@ None.
 | 033 | Add test coverage for Agents, Traits, Settings screens | 2026-01-30 | 4b5efe0 | [033-add-test-coverage-for-agents-traits-settings](./quick/033-add-test-coverage-for-agents-traits-settings/) |
 | 034 | Add in-depth tests for pipelines screen | 2026-01-30 | f474316 | [034-add-in-depth-tests-for-pipelines-screen](./quick/034-add-in-depth-tests-for-pipelines-screen/) |
 | 035 | Add tests for pipeline API routes | 2026-01-30 | c96ddb5 | [035-add-tests-for-pipeline-api-routes](./quick/035-add-tests-for-pipeline-api-routes/) |
+| 036 | Write extensive tests for pipelines screen user flow | 2026-01-30 | 0b1b96c | [036-write-extensive-tests-for-pipelines-scre](./quick/036-write-extensive-tests-for-pipelines-scre/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 035: Add tests for pipeline API routes
+Stopped at: Completed quick task 036: Write extensive tests for pipelines screen user flow
 Resume file: None
 
 ---
