@@ -47,6 +47,8 @@ export function PipelineTabPanel({
   const savePipelineMutation = useSavePipeline();
   const deletePipelineMutation = useDeletePipeline();
   const isSavingRef = useRef(false);
+  // Track if this pipeline has been saved to backend (starts false for new pipelines)
+  const hasBeenSavedRef = useRef(!!initialData);
 
   const {
     getPipeline,
@@ -149,6 +151,7 @@ export function PipelineTabPanel({
     if (!pipeline?.isDirty || isSavingRef.current) return;
 
     isSavingRef.current = true;
+    const isNew = !hasBeenSavedRef.current;
     savePipelineMutation.mutate(
       {
         id: pipelineId,
@@ -156,10 +159,11 @@ export function PipelineTabPanel({
         description: pipeline.pipelineDescription,
         nodes: pipeline.nodes,
         edges: pipeline.edges,
-        isNew: !initialData,
+        isNew,
       },
       {
         onSuccess: () => {
+          hasBeenSavedRef.current = true; // Mark as saved after first successful save
           updatePipeline(pipelineId, { isDirty: false });
           isSavingRef.current = false;
         },
@@ -169,7 +173,7 @@ export function PipelineTabPanel({
         },
       }
     );
-  }, [pipeline?.isDirty, pipelineId, pipeline?.pipelineName, pipeline?.pipelineDescription, pipeline?.nodes, pipeline?.edges, initialData, savePipelineMutation, updatePipeline]);
+  }, [pipeline?.isDirty, pipelineId, pipeline?.pipelineName, pipeline?.pipelineDescription, pipeline?.nodes, pipeline?.edges, savePipelineMutation, updatePipeline]);
 
   const handleDelete = () => {
     if (!confirm("Delete this pipeline?")) return;
