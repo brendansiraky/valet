@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useCallback, useState } from "react";
+import { useEffect, useMemo, useCallback, useRef } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { useTabStore } from "~/stores/tab-store";
+import { useSavePipeline } from "~/hooks/queries/use-pipelines";
 import { PipelineCanvas } from "./pipeline-canvas";
 import { TraitsContext, type TraitContextValue } from "./traits-context";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import {
   LayoutGrid,
-  Save,
   Trash2,
   Play,
   Loader2,
@@ -44,7 +44,8 @@ export function PipelineTabPanel({
   onOpenRunDialog,
   onDelete,
 }: PipelineTabPanelProps) {
-  const [isSaving, setIsSaving] = useState(false);
+  const savePipelineMutation = useSavePipeline();
+  const isSavingRef = useRef(false);
 
   const {
     getPipeline,
@@ -103,7 +104,7 @@ export function PipelineTabPanel({
 
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      updatePipeline(pipelineId, { pipelineName: e.target.value });
+      updatePipeline(pipelineId, { pipelineName: e.target.value, isDirty: true });
       updateTabName(pipelineId, e.target.value);
     },
     [pipelineId, updatePipeline, updateTabName]
@@ -139,41 +140,35 @@ export function PipelineTabPanel({
       pipeline.nodes,
       pipeline.edges
     );
-    updatePipeline(pipelineId, { nodes: layoutedNodes, edges: layoutedEdges });
+    updatePipeline(pipelineId, { nodes: layoutedNodes, edges: layoutedEdges, isDirty: true });
   }, [pipelineId, pipeline, updatePipeline]);
 
-  const handleSave = async () => {
-    if (!pipeline) return;
-    setIsSaving(true);
-    try {
-      const formData = new FormData();
-      formData.set("intent", initialData ? "update" : "create");
-      if (initialData) {
-        formData.set("id", pipelineId);
+  // Auto-save effect: immediately save when isDirty becomes true
+  useEffect(() => {
+    if (!pipeline?.isDirty || isSavingRef.current) return;
+
+    isSavingRef.current = true;
+    savePipelineMutation.mutate(
+      {
+        id: pipelineId,
+        name: pipeline.pipelineName,
+        description: pipeline.pipelineDescription,
+        nodes: pipeline.nodes,
+        edges: pipeline.edges,
+        isNew: !initialData,
+      },
+      {
+        onSuccess: () => {
+          updatePipeline(pipelineId, { isDirty: false });
+          isSavingRef.current = false;
+        },
+        onError: (error) => {
+          console.error("Failed to auto-save pipeline:", error);
+          isSavingRef.current = false;
+        },
       }
-      formData.set("name", pipeline.pipelineName);
-      formData.set("description", pipeline.pipelineDescription);
-      formData.set(
-        "flowData",
-        JSON.stringify({ nodes: pipeline.nodes, edges: pipeline.edges })
-      );
-
-      const response = await fetch("/api/pipelines", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      // Mark clean after save
-      updatePipeline(pipelineId, { isDirty: false });
-    } catch (error) {
-      console.error("Failed to save pipeline:", error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    );
+  }, [pipeline?.isDirty, pipelineId, pipeline?.pipelineName, pipeline?.pipelineDescription, pipeline?.nodes, pipeline?.edges, initialData, savePipelineMutation, updatePipeline]);
 
   const handleDelete = async () => {
     if (!confirm("Delete this pipeline?")) return;
@@ -206,10 +201,6 @@ export function PipelineTabPanel({
         <Button variant="outline" onClick={handleAutoLayout}>
           <LayoutGrid className="size-4 mr-2" />
           Auto Layout
-        </Button>
-        <Button onClick={handleSave} disabled={isSaving}>
-          <Save className="size-4 mr-2" />
-          {isSaving ? "Saving..." : "Save"}
         </Button>
         {initialData && (
           <>
