@@ -20,3 +20,43 @@ Read the relevant skill file when encountering matching work. Do not load all sk
 | Vitest Testing    | `.claude/skills/vitest-testing/SKILL.md`    | Writing tests, test patterns, mocking                                                                     |
 
 **Important**: Skills have `references/` subdirectories with additional detail. Read those when the main SKILL.md indicates they're relevant.
+
+## Async Data Fetching Rules
+
+**ALL async server state MUST use TanStack Query hooks.**
+
+| Use Case | Pattern | Example |
+|----------|---------|---------|
+| Server data (GET) | `useQuery` | `usePipelines()`, `useAgents()` |
+| Mutations (POST/PUT/DELETE) | `useMutation` | `useCreatePipeline()` |
+| Optimistic updates | `useMutation` + `onMutate` | Inline edit with rollback |
+
+**DO NOT use:**
+- Raw `fetch()` in components for server data
+- `useEffect` + `useState` for data fetching
+- `useFetcher` from Remix for read operations (use for forms only)
+
+**Query hook location:** `app/hooks/queries/`
+
+**Naming convention:**
+- Queries: `use{Resource}` or `use{Resource}ById`
+- Mutations: `use{Action}{Resource}` (e.g., `useCreatePipeline`, `useDeleteAgent`)
+
+**Example pattern:**
+```ts
+// app/hooks/queries/use-pipelines.ts
+import { useQuery } from "@tanstack/react-query";
+
+export function usePipelines() {
+  return useQuery({
+    queryKey: ["pipelines"],
+    queryFn: async () => {
+      const res = await fetch("/api/pipelines");
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+  });
+}
+```
+
+**Zustand is still used for:** Local UI state (sidebar collapsed, selected tab, form state). If it doesn't come from the server, Zustand is fine.
