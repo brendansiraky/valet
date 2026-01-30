@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 19 - Remove Zustand from Pipeline Builder
-Plan: 01 of 4
+Plan: 02 of 4
 Status: In progress
-Last activity: 2026-01-30 - Completed 19-01-PLAN.md (React Query flow hook)
+Last activity: 2026-01-30 - Completed 19-02-PLAN.md (Component migration to React Query)
 
-Progress: [██░░░░░░░░] 25% (v1.4: Plan 1/4 complete)
+Progress: [████░░░░░░] 50% (v1.4: Plan 2/4 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47
+- Total plans completed: 48
 - Average duration: 6 min
-- Total execution time: 4.73 hours
+- Total execution time: 4.81 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [██░░░░░░░░] 25% (v1.4: Plan 1/4 complete)
 | 16-trait-colors | 1 | 3 min | 3 min |
 | 17-dynamic-pipeline-traits | 3 | 8 min | 3 min |
 | 18-pipeline-tabs | 4 | 15 min | 4 min |
-| 19-remove-zustand | 1 | 2 min | 2 min |
+| 19-remove-zustand | 2 | 7 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 18-01 (3 min), 18-03 (4 min), 18-02 (5 min), 18-04 (3 min), 19-01 (2 min)
+- Last 5 plans: 18-03 (4 min), 18-02 (5 min), 18-04 (3 min), 19-01 (2 min), 19-02 (5 min)
 
 *Updated after each plan completion*
 
@@ -67,6 +67,8 @@ v1.2 decisions archived in milestones/v1.2-ROADMAP.md.
 | 2026-01-30 | ReactFlowProvider isolation per tab panel | Each tab gets own provider to prevent state bleed |
 | 2026-01-30 | 1000ms debounce for autosave in usePipelineFlow | Balance responsive UX with server request reduction |
 | 2026-01-30 | Pipeline types centralized in use-pipelines.ts | FlowData, AgentNodeData, TraitNodeData for easier imports |
+| 2026-01-30 | PipelineContext for pipelineId propagation | Nested components access pipelineId without prop drilling |
+| 2026-01-30 | PipelineCanvas as pure presentational | Receives all state via props, no internal state management |
 
 ### Pending Todos
 
@@ -74,7 +76,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None.
+- Some integration tests failing in pipeline-creation-flow.test.tsx - need updates in Plan 04
 
 ### Roadmap Evolution
 
@@ -126,7 +128,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed 19-01-PLAN.md (React Query flow hook)
+Stopped at: Completed 19-02-PLAN.md (Component migration to React Query)
 Resume file: None
 
 ---
