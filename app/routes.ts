@@ -13,11 +13,11 @@ export default [
     route("settings", "routes/settings.tsx"),
     route("agents", "routes/agents.tsx"),
     route("pipelines", "routes/pipelines.tsx"),
-    route("pipelines/:id", "routes/pipelines.$id.tsx"),
     route("traits", "routes/traits.tsx"),
   ]),
 
   // API routes (no layout)
+  route("api/tabs", "routes/api.tabs.ts"),
   route("api/agents", "routes/api.agents.ts"),
   route("api/traits", "routes/api.traits.ts"),
   route("api/settings", "routes/api.settings.ts"),

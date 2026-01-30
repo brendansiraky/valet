@@ -96,7 +96,12 @@ vi.mock("~/hooks/queries/use-tabs", () => ({
     isPending: false,
   })),
   useOpenTab: vi.fn(() => ({
-    mutate: vi.fn(),
+    mutate: (input: { pipelineId: string; name: string }) => {
+      // Simulate adding a tab and setting it active
+      mockTabs = [...mockTabs, { pipelineId: input.pipelineId, name: input.name }];
+      mockActiveTabId = input.pipelineId;
+      mockOpenTabMutate(input);
+    },
     isPending: false,
   })),
   canOpenNewTab: vi.fn((tabs: Array<{ pipelineId: string }>) => {
@@ -143,6 +148,7 @@ const mockDeletePipelineMutate = vi.fn();
 const mockUpdatePipelineNameMutate = vi.fn();
 const mockRunPipelineMutate = vi.fn();
 const mockCreatePipelineMutate = vi.fn();
+const mockOpenTabMutate = vi.fn();
 
 vi.mock("~/hooks/queries/use-pipelines", () => ({
   usePipeline: vi.fn(() => ({
@@ -150,7 +156,7 @@ vi.mock("~/hooks/queries/use-pipelines", () => ({
     isLoading: false,
   })),
   usePipelines: vi.fn(() => ({
-    data: [],
+    data: dbPipelines.map(p => ({ id: p.id, name: p.name })),
     isLoading: false,
   })),
   useDeletePipeline: vi.fn(() => ({
@@ -166,7 +172,22 @@ vi.mock("~/hooks/queries/use-pipelines", () => ({
     isPending: false,
   })),
   useCreatePipeline: vi.fn(() => ({
-    mutate: mockCreatePipelineMutate,
+    mutate: (input: { name: string; flowData: { nodes: unknown[]; edges: unknown[] } }, callbacks?: { onSuccess?: (pipeline: { id: string; name: string }) => void; onError?: () => void }) => {
+      // Simulate creating a pipeline in dbPipelines
+      const newPipeline = {
+        id: `pipeline-${nextPipelineId++}`,
+        name: input.name,
+        flowData: input.flowData,
+      };
+      dbPipelines.push(newPipeline);
+      apiCalls.push({ type: "CREATE_PIPELINE", data: { name: input.name } });
+
+      // Track the call
+      mockCreatePipelineMutate(input, callbacks);
+
+      // Call onSuccess with the created pipeline
+      callbacks?.onSuccess?.({ id: newPipeline.id, name: newPipeline.name });
+    },
     mutateAsync: vi.fn().mockResolvedValue({ id: "new-pipeline-id", name: "Untitled Pipeline" }),
     isPending: false,
   })),
@@ -226,6 +247,7 @@ function resetAllState() {
   mockUpdatePipelineNameMutate.mockClear();
   mockRunPipelineMutate.mockClear();
   mockCreatePipelineMutate.mockClear();
+  mockOpenTabMutate.mockClear();
 
   // Update mock implementations
   vi.mocked(useTabsQuery).mockReturnValue({

@@ -9,15 +9,11 @@ import {
   mockTraitsData,
   mockPipelinesData,
 } from "~/mocks/handlers";
-import PipelineEditorPage from "./pipelines.$id";
+import PipelinesPage from "./pipelines";
 
 // Keep track of created pipelines for mock state
 let createdPipelines: Array<{ id: string; name: string; flowData: unknown }> = [];
 let nextPipelineId = 1;
-
-// Mock navigation function
-const mockNavigate = vi.fn();
-let mockUrlId = "home";
 
 // Mock tab state - mutable for tests to modify (via React Query hooks)
 let mockTabs = [{ pipelineId: "home", name: "Home" }];
@@ -26,6 +22,7 @@ const mockCloseTabMutate = vi.fn();
 const mockFocusOrOpenTabMutate = vi.fn();
 const mockUpdateTabNameMutate = vi.fn();
 const mockSetActiveTabMutate = vi.fn();
+const mockOpenTabMutate = vi.fn();
 
 // Mock pipeline data for usePipelineFlow hook
 let mockPipelineData: Map<string, {
@@ -35,16 +32,6 @@ let mockPipelineData: Map<string, {
   edges: unknown[];
 }> = new Map();
 const mockUpdatePipeline = vi.fn();
-
-// Mock react-router hooks
-vi.mock("react-router", async () => {
-  const actual = await vi.importActual("react-router");
-  return {
-    ...actual,
-    useParams: vi.fn(() => ({ id: mockUrlId })),
-    useNavigate: vi.fn(() => mockNavigate),
-  };
-});
 
 // Mock React Query tab hooks
 vi.mock("~/hooks/queries/use-tabs", () => ({
@@ -68,14 +55,16 @@ vi.mock("~/hooks/queries/use-tabs", () => ({
     mutate: mockSetActiveTabMutate,
     isPending: false,
   })),
+  useOpenTab: vi.fn(() => ({
+    mutate: mockOpenTabMutate,
+    isPending: false,
+  })),
   canOpenNewTab: vi.fn((tabs: Array<{ pipelineId: string }>) => {
     const nonHomeTabs = tabs.filter((t) => t.pipelineId !== "home");
     return nonHomeTabs.length < 8;
   }),
   HOME_TAB_ID: "home",
 }));
-
-// pipeline-store mock removed - component now uses React Query
 
 // Mock usePipelineFlow hook used by PipelineTabPanel
 vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
@@ -127,29 +116,23 @@ vi.mock("@xyflow/react", () => ({
 
 // Import mocked modules
 import { useTabsQuery } from "~/hooks/queries/use-tabs";
-import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
-import { useParams } from "react-router";
 
-describe("PipelineEditorPage", () => {
+describe("PipelinesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     // Reset state
     createdPipelines = [];
     nextPipelineId = 1;
-    mockUrlId = "home";
     mockTabs = [{ pipelineId: "home", name: "Home" }];
     mockActiveTabId = "home";
     mockPipelineData = new Map();
-    // canOpenNewTab is a function, no mock setup needed
 
     // Reset mocks
     vi.mocked(useTabsQuery).mockReturnValue({
       data: { tabs: mockTabs, activeTabId: mockActiveTabId },
       isLoading: false,
     } as ReturnType<typeof useTabsQuery>);
-
-    vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
     // Setup MSW handlers for pipeline operations
     server.use(
@@ -237,11 +220,11 @@ describe("PipelineEditorPage", () => {
   });
 
   // ============================================
-  // BASIC RENDERING TESTS (existing)
+  // BASIC RENDERING TESTS
   // ============================================
 
   test("renders pipeline tabs component", async () => {
-    renderWithClient(<PipelineEditorPage />);
+    renderWithClient(<PipelinesPage />);
 
     await waitFor(() => {
       expect(
@@ -251,15 +234,15 @@ describe("PipelineEditorPage", () => {
   });
 
   test("renders agent sidebar", async () => {
-    renderWithClient(<PipelineEditorPage />);
+    renderWithClient(<PipelinesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Test Agent")).toBeInTheDocument();
     });
   });
 
-  test("shows home tab empty state when id is home", async () => {
-    renderWithClient(<PipelineEditorPage />);
+  test("shows home tab empty state when home tab is active", async () => {
+    renderWithClient(<PipelinesPage />);
 
     await waitFor(() => {
       expect(
@@ -286,7 +269,7 @@ describe("PipelineEditorPage", () => {
       })
     );
 
-    renderWithClient(<PipelineEditorPage />);
+    renderWithClient(<PipelinesPage />);
 
     expect(screen.getByTestId("react-flow")).toBeInTheDocument();
 
@@ -305,14 +288,11 @@ describe("PipelineEditorPage", () => {
       { pipelineId: "existing-pipeline", name: "Loading..." },
     ];
     mockActiveTabId = "existing-pipeline";
-    mockUrlId = "existing-pipeline";
 
     vi.mocked(useTabsQuery).mockReturnValue({
       data: { tabs: mockTabs, activeTabId: mockActiveTabId },
       isLoading: false,
     } as ReturnType<typeof useTabsQuery>);
-
-    vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
     // Pipeline NOT in cache - this simulates first load
     // The server will return the pipeline with a specific name
@@ -330,7 +310,7 @@ describe("PipelineEditorPage", () => {
       })
     );
 
-    renderWithClient(<PipelineEditorPage />);
+    renderWithClient(<PipelinesPage />);
 
     // Initially should show loading state (pipeline not in cache, query pending)
     await waitFor(() => {
@@ -338,8 +318,6 @@ describe("PipelineEditorPage", () => {
     });
 
     // After data loads, should show the pipeline panel (name input present)
-    // Note: The name value comes from usePipelineFlow mock, which returns "Untitled Pipeline"
-    // The actual server data integration is tested in other tests with proper mock setup
     await waitFor(
       () => {
         const nameInput = screen.getByPlaceholderText("Pipeline name");
@@ -359,7 +337,7 @@ describe("PipelineEditorPage", () => {
       })
     );
 
-    renderWithClient(<PipelineEditorPage />);
+    renderWithClient(<PipelinesPage />);
 
     await waitFor(() => {
       expect(
@@ -376,7 +354,7 @@ describe("PipelineEditorPage", () => {
 
   describe("Initial Landing State", () => {
     test("home tab is active on initial load", () => {
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Home tab should be in the tabs
       expect(mockTabs).toContainEqual({ pipelineId: "home", name: "Home" });
@@ -384,7 +362,7 @@ describe("PipelineEditorPage", () => {
     });
 
     test("canvas shows empty state message when no pipeline selected", async () => {
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         expect(
@@ -394,7 +372,7 @@ describe("PipelineEditorPage", () => {
     });
 
     test("sidebar shows 'Your Agents' section", async () => {
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         expect(screen.getByText("Test Agent")).toBeInTheDocument();
@@ -402,7 +380,7 @@ describe("PipelineEditorPage", () => {
     });
 
     test("sidebar shows traits section", async () => {
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         expect(screen.getByText("Test Trait")).toBeInTheDocument();
@@ -411,7 +389,7 @@ describe("PipelineEditorPage", () => {
   });
 
   describe("Creating First Pipeline", () => {
-    test("clicking New Pipeline in dropdown creates new pipeline", async () => {
+    test("clicking New Pipeline in dropdown creates new pipeline and opens tab", async () => {
       const user = userEvent.setup();
 
       // Mock empty pipelines list initially
@@ -421,7 +399,7 @@ describe("PipelineEditorPage", () => {
         })
       );
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Wait for initial render
       await waitFor(() => {
@@ -445,9 +423,14 @@ describe("PipelineEditorPage", () => {
         // Click "New Pipeline"
         await user.click(screen.getByText("New Pipeline"));
 
-        // Verify navigate was called with the new pipeline ID
+        // Verify openTab mutation was called (tab state is the source of truth)
         await waitFor(() => {
-          expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/\/pipelines\/pipeline-\d+/));
+          expect(mockOpenTabMutate).toHaveBeenCalledWith(
+            expect.objectContaining({
+              pipelineId: expect.stringMatching(/^pipeline-\d+$/),
+              name: "Untitled Pipeline",
+            })
+          );
         });
 
         // Verify a pipeline was created
@@ -481,7 +464,7 @@ describe("PipelineEditorPage", () => {
         })
       );
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         expect(screen.getByTitle("Home")).toBeInTheDocument();
@@ -507,7 +490,7 @@ describe("PipelineEditorPage", () => {
   });
 
   describe("Tab Management - Close and Reopen", () => {
-    test("closing a pipeline tab removes it from tab bar", async () => {
+    test("closing a pipeline tab calls closeTab mutation", async () => {
       const user = userEvent.setup();
 
       // Setup with an open pipeline tab
@@ -516,14 +499,11 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p1", name: "Test Pipeline" },
       ];
       mockActiveTabId = "p1";
-      mockUrlId = "p1";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       // Mock pipeline data in store
       mockPipelineData.set("p1", {
@@ -533,61 +513,22 @@ describe("PipelineEditorPage", () => {
         edges: [],
       });
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Wait for tab to render
       await waitFor(() => {
         expect(screen.getByText("Test Pipeline")).toBeInTheDocument();
       });
 
-      // Find close button on the tab
+      // Find close button on the tab (tab is now a div with role="button")
       const tabText = screen.getByText("Test Pipeline");
-      const tabButton = tabText.closest("button");
-      const closeButton = within(tabButton!).getByRole("button");
+      const tabButton = tabText.closest('[role="button"]');
+      const closeButton = within(tabButton as HTMLElement).getByRole("button");
 
       await user.click(closeButton);
 
       // closeTab should be called
       expect(mockCloseTabMutate).toHaveBeenCalledWith("p1");
-    });
-
-    test("after closing tab, navigates to home if no other tabs", async () => {
-      const user = userEvent.setup();
-
-      mockTabs = [
-        { pipelineId: "home", name: "Home" },
-        { pipelineId: "p1", name: "Only Pipeline" },
-      ];
-      mockActiveTabId = "p1";
-      mockUrlId = "p1";
-
-      vi.mocked(useTabsQuery).mockReturnValue({
-        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
-        isLoading: false,
-      } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
-
-      mockPipelineData.set("p1", {
-        pipelineId: "p1",
-        pipelineName: "Only Pipeline",
-        nodes: [],
-        edges: [],
-      });
-
-      renderWithClient(<PipelineEditorPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText("Only Pipeline")).toBeInTheDocument();
-      });
-
-      const tabText = screen.getByText("Only Pipeline");
-      const tabButton = tabText.closest("button");
-      const closeButton = within(tabButton!).getByRole("button");
-
-      await user.click(closeButton);
-
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/home");
     });
 
     test("dropdown shows closed pipelines that can be reopened", async () => {
@@ -596,14 +537,13 @@ describe("PipelineEditorPage", () => {
       // Home tab only, but pipelines exist in DB
       mockTabs = [{ pipelineId: "home", name: "Home" }];
       mockActiveTabId = "home";
-      mockUrlId = "home";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         expect(screen.getByTitle("Home")).toBeInTheDocument();
@@ -626,19 +566,18 @@ describe("PipelineEditorPage", () => {
       }
     });
 
-    test("clicking pipeline in dropdown opens it as tab", async () => {
+    test("clicking pipeline in dropdown opens it as tab via focusOrOpenTab mutation", async () => {
       const user = userEvent.setup();
 
       mockTabs = [{ pipelineId: "home", name: "Home" }];
       mockActiveTabId = "home";
-      mockUrlId = "home";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         expect(screen.getByTitle("Home")).toBeInTheDocument();
@@ -659,9 +598,8 @@ describe("PipelineEditorPage", () => {
         // Click on existing pipeline
         await user.click(screen.getByRole("menuitem", { name: "Test Pipeline" }));
 
-        // Should call focusOrOpenTab and navigate
+        // Should call focusOrOpenTab (no navigate - tab state is source of truth)
         expect(mockFocusOrOpenTabMutate).toHaveBeenCalledWith({ pipelineId: "pipeline-1", name: "Test Pipeline" });
-        expect(mockNavigate).toHaveBeenCalledWith("/pipelines/pipeline-1");
       }
     });
   });
@@ -698,14 +636,11 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p1", name: "Pipeline to Delete" },
       ];
       mockActiveTabId = "p1";
-      mockUrlId = "p1";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
@@ -714,7 +649,7 @@ describe("PipelineEditorPage", () => {
         edges: [],
       });
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Wait for pipeline to load and panel to render (name input indicates loading complete)
       await waitFor(() => {
@@ -722,7 +657,6 @@ describe("PipelineEditorPage", () => {
       });
 
       // Find and click delete button (the one with "Delete" text, not tab close buttons)
-      // The Delete button is in the header with text "Delete" and destructive variant
       const deleteButtons = screen.getAllByRole("button").filter(
         btn => btn.textContent?.trim() === "Delete"
       );
@@ -769,14 +703,11 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p1", name: "Pipeline to Keep" },
       ];
       mockActiveTabId = "p1";
-      mockUrlId = "p1";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
@@ -785,7 +716,7 @@ describe("PipelineEditorPage", () => {
         edges: [],
       });
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Wait for pipeline to load (name input indicates loading complete)
       await waitFor(() => {
@@ -821,14 +752,11 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p-delete", name: "To Delete" },
       ];
       mockActiveTabId = "p-delete";
-      mockUrlId = "p-delete";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p-delete", {
         pipelineId: "p-delete",
@@ -837,7 +765,7 @@ describe("PipelineEditorPage", () => {
         edges: [],
       });
 
-      const { rerender } = renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Wait for pipeline to load (name input indicates loading complete)
       await waitFor(() => {
@@ -869,14 +797,11 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p1", name: "Test Pipeline" },
       ];
       mockActiveTabId = "p1";
-      mockUrlId = "p1";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
@@ -885,7 +810,7 @@ describe("PipelineEditorPage", () => {
         edges: [],
       });
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Wait for pipeline to load (name input indicates loading complete)
       await waitFor(() => {
@@ -915,14 +840,11 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p1", name: "My Pipeline" },
       ];
       mockActiveTabId = "p1";
-      mockUrlId = "p1";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
@@ -931,7 +853,7 @@ describe("PipelineEditorPage", () => {
         edges: [],
       });
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Wait for pipeline to load (name input indicates loading complete)
       await waitFor(() => {
@@ -969,26 +891,23 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p3", name: "Pipeline 3" },
       ];
       mockActiveTabId = "p2";
-      mockUrlId = "p2";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
 
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
-
       // Add pipeline data for each
       ["p1", "p2", "p3"].forEach((id, i) => {
         mockPipelineData.set(id, {
           pipelineId: id,
           pipelineName: `Pipeline ${i + 1}`,
-            nodes: [],
+          nodes: [],
           edges: [],
         });
       });
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // All tabs should be visible
       expect(screen.getByText("Pipeline 1")).toBeInTheDocument();
@@ -996,7 +915,7 @@ describe("PipelineEditorPage", () => {
       expect(screen.getByText("Pipeline 3")).toBeInTheDocument();
     });
 
-    test("clicking different tabs navigates between them", async () => {
+    test("clicking different tabs switches active tab via setActiveTab mutation", async () => {
       const user = userEvent.setup();
 
       mockTabs = [
@@ -1005,14 +924,11 @@ describe("PipelineEditorPage", () => {
         { pipelineId: "p2", name: "Second Pipeline" },
       ];
       mockActiveTabId = "p1";
-      mockUrlId = "p1";
 
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
       } as ReturnType<typeof useTabsQuery>);
-
-      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
@@ -1028,19 +944,20 @@ describe("PipelineEditorPage", () => {
         edges: [],
       });
 
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       // Click on Second Pipeline tab
       const secondTab = screen.getByText("Second Pipeline");
       await user.click(secondTab);
 
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/p2");
+      // Should call setActiveTab mutation (no navigation)
+      expect(mockSetActiveTabMutate).toHaveBeenCalledWith("p2");
     });
   });
 
   describe("Integration with Sidebar", () => {
     test("agents from API appear in sidebar", async () => {
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         // Test Agent is from mockAgentsData
@@ -1049,7 +966,7 @@ describe("PipelineEditorPage", () => {
     });
 
     test("traits from API appear in sidebar", async () => {
-      renderWithClient(<PipelineEditorPage />);
+      renderWithClient(<PipelinesPage />);
 
       await waitFor(() => {
         // Test Trait is from mockTraitsData

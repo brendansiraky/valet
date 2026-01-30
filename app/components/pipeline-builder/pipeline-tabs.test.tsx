@@ -8,6 +8,7 @@ import { PipelineTabs } from "./pipeline-tabs";
 const mockNavigate = vi.fn();
 const mockFocusOrOpenTabMutate = vi.fn();
 const mockSetActiveTabMutate = vi.fn();
+const mockOpenTabMutate = vi.fn();
 
 // Mock tab state - updated per test
 let mockTabState = {
@@ -34,6 +35,10 @@ vi.mock("~/hooks/queries/use-tabs", () => ({
   })),
   useSetActiveTab: vi.fn(() => ({
     mutate: mockSetActiveTabMutate,
+    isPending: false,
+  })),
+  useOpenTab: vi.fn(() => ({
+    mutate: mockOpenTabMutate,
     isPending: false,
   })),
   canOpenNewTab: vi.fn((tabs) => {
@@ -94,6 +99,7 @@ describe("PipelineTabs", () => {
     mockPipelinesData = [];
     mockPipelinesLoading = false;
     mockCreatePipelineMutate.mockReset();
+    mockOpenTabMutate.mockReset();
 
     // Reset tab state to default
     mockTabState = {
@@ -272,13 +278,16 @@ describe("PipelineTabs", () => {
         })
       );
 
-      // Verify navigate was called to the new pipeline
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/new-123");
+      // Verify tab was opened for the new pipeline (tab state is source of truth, no navigation)
+      expect(mockOpenTabMutate).toHaveBeenCalledWith({
+        pipelineId: "new-123",
+        name: "Untitled Pipeline",
+      });
     });
   });
 
   describe("Tab Management", () => {
-    test("clicking a tab navigates to it", async () => {
+    test("clicking a tab sets it as active via setActiveTab mutation", async () => {
       const user = userEvent.setup();
 
       mockTabState = {
@@ -299,7 +308,8 @@ describe("PipelineTabs", () => {
       const pipelineTab = screen.getByText("My Pipeline");
       await user.click(pipelineTab);
 
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/p1");
+      // Tab state is source of truth - no navigation, just setActiveTab mutation
+      expect(mockSetActiveTabMutate).toHaveBeenCalledWith("p1");
     });
 
     test("close button appears on non-home tabs", () => {
@@ -317,12 +327,12 @@ describe("PipelineTabs", () => {
 
       renderTabs();
 
-      // Find the pipeline tab container
-      const tabWithName = screen.getByText("My Pipeline").closest("button");
+      // Find the pipeline tab container (now a div with role="button")
+      const tabWithName = screen.getByText("My Pipeline").closest('[role="button"]');
       expect(tabWithName).toBeInTheDocument();
 
-      // The close button should be a nested button
-      const closeButton = within(tabWithName!).getByRole("button");
+      // The close button should be inside the tab
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       expect(closeButton).toBeInTheDocument();
     });
 
@@ -347,9 +357,9 @@ describe("PipelineTabs", () => {
 
       renderTabs(runStates, onCloseTab);
 
-      // Find and click close button
-      const tabWithName = screen.getByText("My Pipeline").closest("button");
-      const closeButton = within(tabWithName!).getByRole("button");
+      // Find and click close button (tab is now a div with role="button")
+      const tabWithName = screen.getByText("My Pipeline").closest('[role="button"]');
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       await user.click(closeButton);
 
       // Should call parent's onCloseTab (parent handles closeTab and navigation)
@@ -379,9 +389,9 @@ describe("PipelineTabs", () => {
 
       renderTabs(runStates, onCloseTab);
 
-      // Find and click close button
-      const tabWithName = screen.getByText("Running Pipeline").closest("button");
-      const closeButton = within(tabWithName!).getByRole("button");
+      // Find and click close button (tab is now a div with role="button")
+      const tabWithName = screen.getByText("Running Pipeline").closest('[role="button"]');
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       await user.click(closeButton);
 
       // Should show confirm dialog
@@ -415,9 +425,9 @@ describe("PipelineTabs", () => {
 
       renderTabs(runStates, onCloseTab);
 
-      // Click close button
-      const tabWithName = screen.getByText("Running Pipeline").closest("button");
-      const closeButton = within(tabWithName!).getByRole("button");
+      // Click close button (tab is now a div with role="button")
+      const tabWithName = screen.getByText("Running Pipeline").closest('[role="button"]');
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       await user.click(closeButton);
 
       // Wait for dialog
@@ -457,9 +467,9 @@ describe("PipelineTabs", () => {
 
       renderTabs(runStates, onCloseTab);
 
-      // Click close button
-      const tabWithName = screen.getByText("Running Pipeline").closest("button");
-      const closeButton = within(tabWithName!).getByRole("button");
+      // Click close button (tab is now a div with role="button")
+      const tabWithName = screen.getByText("Running Pipeline").closest('[role="button"]');
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       await user.click(closeButton);
 
       // Wait for dialog
@@ -478,7 +488,7 @@ describe("PipelineTabs", () => {
       expect(onCloseTab).not.toHaveBeenCalled();
     });
 
-    test("after close, calls onCloseTab (parent handles navigation)", async () => {
+    test("after close, calls onCloseTab (parent handles tab state)", async () => {
       const user = userEvent.setup();
       const onCloseTab = vi.fn();
 
@@ -497,16 +507,16 @@ describe("PipelineTabs", () => {
 
       renderTabs(new Map(), onCloseTab);
 
-      // Close Pipeline 1
-      const tabWithName = screen.getByText("Pipeline 1").closest("button");
-      const closeButton = within(tabWithName!).getByRole("button");
+      // Close Pipeline 1 (tab is now a div with role="button")
+      const tabWithName = screen.getByText("Pipeline 1").closest('[role="button"]');
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       await user.click(closeButton);
 
-      // Should call onCloseTab (parent handles navigation)
+      // Should call onCloseTab (parent handles tab state)
       expect(onCloseTab).toHaveBeenCalledWith("p1");
     });
 
-    test("after closing last non-home tab, calls onCloseTab (parent handles navigation)", async () => {
+    test("after closing last non-home tab, calls onCloseTab (parent handles tab state)", async () => {
       const user = userEvent.setup();
       const onCloseTab = vi.fn();
 
@@ -524,12 +534,12 @@ describe("PipelineTabs", () => {
 
       renderTabs(new Map(), onCloseTab);
 
-      // Close the only pipeline
-      const tabWithName = screen.getByText("Only Pipeline").closest("button");
-      const closeButton = within(tabWithName!).getByRole("button");
+      // Close the only pipeline (tab is now a div with role="button")
+      const tabWithName = screen.getByText("Only Pipeline").closest('[role="button"]');
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       await user.click(closeButton);
 
-      // Should call onCloseTab (parent handles navigation)
+      // Should call onCloseTab (parent handles tab state)
       expect(onCloseTab).toHaveBeenCalledWith("p1");
     });
   });
@@ -573,7 +583,7 @@ describe("PipelineTabs", () => {
       expect(screen.queryByText("New Pipeline")).not.toBeInTheDocument();
     });
 
-    test("clicking home tab navigates to home", async () => {
+    test("clicking home tab sets it as active via setActiveTab mutation", async () => {
       const user = userEvent.setup();
 
       mockTabState = {
@@ -594,7 +604,8 @@ describe("PipelineTabs", () => {
       const homeButton = screen.getByTitle("Home");
       await user.click(homeButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/home");
+      // Tab state is source of truth - no navigation, just setActiveTab mutation
+      expect(mockSetActiveTabMutate).toHaveBeenCalledWith("home");
     });
 
     test("selecting existing pipeline from dropdown calls focusOrOpenTab mutation", async () => {
@@ -624,9 +635,8 @@ describe("PipelineTabs", () => {
       });
       await user.click(screen.getByText("Existing Pipeline"));
 
-      // Should call focusOrOpenTab mutation and navigate
+      // Tab state is source of truth - focusOrOpenTab mutation handles it, no navigation
       expect(mockFocusOrOpenTabMutate).toHaveBeenCalledWith({ pipelineId: "p1", name: "Existing Pipeline" });
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/p1");
     });
 
     test("active tab has primary border styling", () => {
@@ -644,8 +654,8 @@ describe("PipelineTabs", () => {
 
       renderTabs();
 
-      // Find active tab button
-      const activeTab = screen.getByText("Active Pipeline").closest("button");
+      // Find active tab (now a div with role="button")
+      const activeTab = screen.getByText("Active Pipeline").closest('[role="button"]');
       expect(activeTab).toHaveClass("border-primary");
     });
 
@@ -672,9 +682,9 @@ describe("PipelineTabs", () => {
 
       renderTabs(runStates, onCloseTab);
 
-      // Click close button
-      const tabWithName = screen.getByText("Starting Pipeline").closest("button");
-      const closeButton = within(tabWithName!).getByRole("button");
+      // Click close button (tab is now a div with role="button")
+      const tabWithName = screen.getByText("Starting Pipeline").closest('[role="button"]');
+      const closeButton = within(tabWithName as HTMLElement).getByRole("button");
       await user.click(closeButton);
 
       // Should show confirm dialog

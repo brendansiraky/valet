@@ -14,7 +14,7 @@ import { NavMain } from '~/components/nav-main'
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible='icon'>
+        <Sidebar variant='inset' collapsible='icon'>
             <SidebarHeader>
                 <div className='flex items-center justify-between px-2 py-1 group-data-[collapsible=icon]:justify-center'>
                     <span className='text-lg font-semibold group-data-[collapsible=icon]:hidden'>

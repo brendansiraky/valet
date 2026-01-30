@@ -17,10 +17,10 @@ export function PageLayout({
 }: PageLayoutProps) {
   return (
     <div
-      className={cn("container mx-auto px-4 py-8 sm:px-6 lg:px-8", className)}
+      className={cn("h-full overflow-y-auto", className)}
       {...props}
     >
-      <header className="mb-8 flex items-center justify-between">
+      <header className="flex items-center justify-between px-4 py-8 sm:px-6 lg:px-8">
         <div>
           <h1 className="text-2xl font-semibold">{title}</h1>
           {description && (
@@ -31,7 +31,7 @@ export function PageLayout({
           <div className="flex items-center gap-2">{headerActions}</div>
         )}
       </header>
-      <main>{children}</main>
+      <main className="px-4 pb-8 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 }

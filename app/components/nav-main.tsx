@@ -12,7 +12,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Agents", url: "/agents", icon: Bot },
-  { title: "Pipelines", url: "/pipelines/home", icon: GitBranch },
+  { title: "Pipelines", url: "/pipelines", icon: GitBranch },
   { title: "Traits", url: "/traits", icon: Sparkles },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
