@@ -89,4 +89,16 @@ export const handlers = [
   http.post("/api/settings", () => {
     return HttpResponse.json({ success: true });
   }),
+
+  // Pipeline run mutation
+  http.post("/api/pipeline/:id/run", () => {
+    return HttpResponse.json({ runId: "run-123" });
+  }),
+
+  // Pipeline mutations
+  http.post("/api/pipelines", () => {
+    return HttpResponse.json({
+      pipeline: mockPipelineData.pipeline,
+    });
+  }),
 ];
