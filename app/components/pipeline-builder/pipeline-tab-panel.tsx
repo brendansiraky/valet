@@ -252,6 +252,7 @@ export function PipelineTabPanel({
               pipelineId={pipelineId}
               onDropAgent={handleDropAgent}
               onDropTrait={handleDropTrait}
+              onPipelineChange={savePipeline}
               isLocked={isLocked}
             />
           </ReactFlowProvider>

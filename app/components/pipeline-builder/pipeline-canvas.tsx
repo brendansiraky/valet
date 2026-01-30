@@ -5,7 +5,12 @@ import {
   Controls,
   MiniMap,
   useReactFlow,
+  type NodeChange,
+  type EdgeChange,
+  type Connection,
+  type Node,
 } from "@xyflow/react";
+import type { PipelineNodeData } from "~/stores/pipeline-store";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { AgentNode } from "./agent-node";
 import { TraitNode } from "./trait-node";
@@ -30,6 +35,8 @@ interface PipelineCanvasProps {
     traitColor: string,
     position: { x: number; y: number }
   ) => void;
+  /** Callback when pipeline canvas is modified (node drag, edge connect, etc.) */
+  onPipelineChange?: () => void;
   /** Lock canvas to prevent editing during pipeline execution */
   isLocked?: boolean;
 }
@@ -38,6 +45,7 @@ export function PipelineCanvas({
   pipelineId,
   onDropAgent,
   onDropTrait,
+  onPipelineChange,
   isLocked,
 }: PipelineCanvasProps) {
   const {
@@ -50,17 +58,43 @@ export function PipelineCanvas({
   const pipeline = getPipeline(pipelineId);
   const { screenToFlowPosition } = useReactFlow();
 
-  const onNodesChange = useMemo(
+  // Get base store callbacks
+  const onNodesChangeBase = useMemo(
     () => createOnNodesChange(pipelineId),
     [pipelineId, createOnNodesChange]
   );
-  const onEdgesChange = useMemo(
+  const onEdgesChangeBase = useMemo(
     () => createOnEdgesChange(pipelineId),
     [pipelineId, createOnEdgesChange]
   );
-  const onConnect = useMemo(
+  const onConnectBase = useMemo(
     () => createOnConnect(pipelineId),
     [pipelineId, createOnConnect]
+  );
+
+  // Wrap store callbacks to also trigger save
+  const onNodesChange = useCallback(
+    (changes: NodeChange<Node<PipelineNodeData>>[]) => {
+      onNodesChangeBase(changes);
+      onPipelineChange?.();
+    },
+    [onNodesChangeBase, onPipelineChange]
+  );
+
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      onEdgesChangeBase(changes);
+      onPipelineChange?.();
+    },
+    [onEdgesChangeBase, onPipelineChange]
+  );
+
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      onConnectBase(connection);
+      onPipelineChange?.();
+    },
+    [onConnectBase, onPipelineChange]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
