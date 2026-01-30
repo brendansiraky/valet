@@ -68,19 +68,7 @@ vi.mock("~/stores/tab-store", () => ({
   HOME_TAB_ID: "home",
 }));
 
-vi.mock("~/stores/pipeline-store", () => ({
-  usePipelineStore: vi.fn(() => ({
-    removePipeline: mockRemovePipeline,
-    getPipeline: mockGetPipeline,
-    loadPipeline: mockLoadPipeline,
-    updatePipeline: mockUpdatePipeline,
-    addAgentNodeTo: mockAddAgentNodeTo,
-    addTraitNodeTo: mockAddTraitNodeTo,
-    createOnNodesChange: mockCreateOnNodesChange,
-    createOnEdgesChange: mockCreateOnEdgesChange,
-    createOnConnect: mockCreateOnConnect,
-  })),
-}));
+// pipeline-store mock removed - component now uses React Query
 
 // Mock usePipelineFlow hook used by PipelineTabPanel
 vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
@@ -134,7 +122,6 @@ vi.mock("@xyflow/react", () => ({
 
 // Import mocked modules
 import { useTabStore } from "~/stores/tab-store";
-import { usePipelineStore } from "~/stores/pipeline-store";
 import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
 import { useParams } from "react-router";
 
@@ -159,18 +146,6 @@ describe("PipelineEditorPage", () => {
       focusOrOpenTab: mockFocusOrOpenTab,
       updateTabName: mockUpdateTabName,
       canOpenNewTab: mockCanOpenNewTab,
-    });
-
-    vi.mocked(usePipelineStore).mockReturnValue({
-      removePipeline: mockRemovePipeline,
-      getPipeline: mockGetPipeline,
-      loadPipeline: mockLoadPipeline,
-      updatePipeline: mockUpdatePipeline,
-      addAgentNodeTo: mockAddAgentNodeTo,
-      addTraitNodeTo: mockAddTraitNodeTo,
-      createOnNodesChange: mockCreateOnNodesChange,
-      createOnEdgesChange: mockCreateOnEdgesChange,
-      createOnConnect: mockCreateOnConnect,
     });
 
     vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
