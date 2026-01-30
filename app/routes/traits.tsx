@@ -1,4 +1,4 @@
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -8,13 +8,14 @@ import {
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { TraitCard } from "~/components/trait-card";
+import { TraitCardSkeleton } from "~/components/trait-card-skeleton";
 import { TraitFormDialog } from "~/components/trait-form-dialog";
 import { useTraits } from "~/hooks/queries/use-traits";
 
 export default function Traits() {
   const traitsQuery = useTraits();
 
-  // Loading state
+  // Loading state - show skeleton cards
   if (traitsQuery.isPending) {
     return (
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -26,8 +27,10 @@ export default function Traits() {
             </p>
           </div>
         </div>
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TraitCardSkeleton key={i} />
+          ))}
         </div>
       </div>
     );

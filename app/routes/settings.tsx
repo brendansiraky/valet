@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { ThemeSwitcher, ColorModeToggle } from "~/components/ui/theme-switcher";
+import { SettingsSkeleton } from "~/components/settings-skeleton";
 import { CheckCircle2, Info, Loader2 } from "lucide-react";
 import {
   useSettings,
@@ -120,21 +121,9 @@ export default function Settings() {
     );
   };
 
-  // Loading state
+  // Loading state - show skeleton cards
   if (settingsQuery.isLoading) {
-    return (
-      <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
-        <div>
-          <h1 className="text-2xl font-semibold">Settings</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your account, API keys, and preferences
-          </p>
-        </div>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   // Error state
