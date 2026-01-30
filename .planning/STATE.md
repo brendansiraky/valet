@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 027: Add 5 themes from tweakcn
+Last activity: 2026-01-30 - Completed quick task 028: Implement auto-save on pipeline screen
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -61,7 +61,7 @@ v1.2 decisions archived in milestones/v1.2-ROADMAP.md.
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-01-30 | Maintain legacy API alongside new multi-pipeline API | Allows Plan 01 to compile without modifying consumers; Plan 02 will migrate consumers |
-| 2026-01-30 | 1-second debounce for autosave | Balance between responsiveness and API load |
+| 2026-01-30 | Immediate auto-save (no debounce) | User feedback: prefer instant saves over coalesced |
 | 2026-01-30 | CSS display:none for inactive tabs | Preserves React Flow state without unmounting |
 | 2026-01-30 | ReactFlowProvider isolation per tab panel | Each tab gets own provider to prevent state bleed |
 
@@ -107,11 +107,12 @@ None.
 | 025 | Fix Settings skeleton card width | 2026-01-30 | 51675e1 | [025-fix-settings-skeleton-card-width](./quick/025-fix-settings-skeleton-card-width/) |
 | 026 | Migrate Pipeline screen to React Query | 2026-01-30 | f8dbeb9 | [026-migrate-pipeline-screen-to-react-query](./quick/026-migrate-pipeline-screen-to-react-query/) |
 | 027 | Add 5 themes from tweakcn | 2026-01-30 | d42e350 | [027-add-northern-lights-theme-from-tweakcn](./quick/027-add-northern-lights-theme-from-tweakcn/) |
+| 028 | Implement auto-save on pipeline screen | 2026-01-30 | 43b7bed | [028-implement-auto-save-on-pipeline-screen-r](./quick/028-implement-auto-save-on-pipeline-screen-r/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 027: Add 5 themes from tweakcn
+Stopped at: Completed quick task 028: Implement auto-save on pipeline screen
 Resume file: None
 
 ---
