@@ -39,7 +39,6 @@ export interface PipelineData {
   pipelineDescription: string;
   nodes: Node<PipelineNodeData>[];
   edges: Edge[];
-  isDirty: boolean; // Track unsaved changes for autosave
 }
 
 // Special key for backward-compatible single-pipeline mode
@@ -61,8 +60,6 @@ interface PipelineState {
   ) => void;
   removePipeline: (id: string) => void;
   getPipeline: (id: string) => PipelineData | undefined;
-  markDirty: (id: string) => void;
-  markClean: (id: string) => void;
 
   // React Flow callbacks factory (returns callbacks scoped to pipeline ID)
   createOnNodesChange: (
@@ -156,7 +153,6 @@ function createCompatPipeline(): PipelineData {
     pipelineDescription: "",
     nodes: [],
     edges: [],
-    isDirty: false,
   };
 }
 
@@ -196,22 +192,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
     return get().pipelines.get(id);
   },
 
-  markDirty: (id) => {
-    set({
-      pipelines: updatePipelineInMap(get().pipelines, id, () => ({
-        isDirty: true,
-      })),
-    });
-  },
-
-  markClean: (id) => {
-    set({
-      pipelines: updatePipelineInMap(get().pipelines, id, () => ({
-        isDirty: false,
-      })),
-    });
-  },
-
   createOnNodesChange: (pipelineId) => (changes) => {
     set({
       pipelines: updatePipelineInMap(
@@ -219,7 +199,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         pipelineId,
         (pipeline) => ({
           nodes: applyNodeChanges(changes, pipeline.nodes),
-          isDirty: true,
         })
       ),
     });
@@ -232,7 +211,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         pipelineId,
         (pipeline) => ({
           edges: applyEdgeChanges(changes, pipeline.edges),
-          isDirty: true,
         })
       ),
     });
@@ -245,7 +223,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         pipelineId,
         (pipeline) => ({
           edges: addEdge(connection, pipeline.edges),
-          isDirty: true,
         })
       ),
     });
@@ -270,7 +247,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         pipelineId,
         (pipeline) => ({
           nodes: [...pipeline.nodes, newNode],
-          isDirty: true,
         })
       ),
     });
@@ -293,7 +269,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
         pipelineId,
         (pipeline) => ({
           nodes: [...pipeline.nodes, newNode],
-          isDirty: true,
         })
       ),
     });
@@ -309,7 +284,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
           edges: pipeline.edges.filter(
             (e) => e.source !== nodeId && e.target !== nodeId
           ),
-          isDirty: true,
         })
       ),
     });
@@ -333,7 +307,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
               },
             };
           }),
-          isDirty: true,
         })
       ),
     });
@@ -359,7 +332,6 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
               },
             };
           }),
-          isDirty: true,
         })
       ),
     });

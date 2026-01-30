@@ -27,7 +27,6 @@ import {
 } from "@xyflow/react";
 import type { AgentNodeData } from "~/stores/pipeline-store";
 import type { TraitContextValue } from "~/components/pipeline-builder/traits-context";
-import { useAutosave } from "~/hooks/use-autosave";
 import { useAgents } from "~/hooks/queries/useAgents";
 import { useTraits } from "~/hooks/queries/use-traits";
 import { usePipeline, useRunPipeline } from "~/hooks/queries/use-pipelines";
@@ -262,7 +261,7 @@ export default function PipelineEditorPage() {
                   style={{ display: isActive ? "flex" : "none" }}
                   className="absolute inset-0 flex-col"
                 >
-                  <PipelineTabPanelWithAutosave
+                  <PipelineTabPanel
                     pipelineId={tab.pipelineId}
                     initialData={initialData}
                     agents={userAgents}
@@ -373,47 +372,5 @@ export default function PipelineEditorPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-// Wrapper that adds autosave to each tab panel
-function PipelineTabPanelWithAutosave({
-  pipelineId,
-  initialData,
-  agents,
-  traits,
-  traitsMap,
-  runState,
-  onOpenRunDialog,
-  onDelete,
-}: {
-  pipelineId: string;
-  initialData: {
-    id: string;
-    name: string;
-    description: string | null;
-    flowData: unknown;
-  } | null;
-  agents: Array<{ id: string; name: string; instructions: string | null }>;
-  traits: Array<{ id: string; name: string; color: string }>;
-  traitsMap: Map<string, TraitContextValue>;
-  runState: { runId: string | null; isStarting: boolean };
-  onOpenRunDialog: () => void;
-  onDelete: () => void;
-}) {
-  // Autosave for this pipeline
-  useAutosave(pipelineId);
-
-  return (
-    <PipelineTabPanel
-      pipelineId={pipelineId}
-      initialData={initialData}
-      agents={agents}
-      traits={traits}
-      traitsMap={traitsMap}
-      runState={runState}
-      onOpenRunDialog={onOpenRunDialog}
-      onDelete={onDelete}
-    />
   );
 }

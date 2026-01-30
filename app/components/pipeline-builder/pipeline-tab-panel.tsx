@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useCallback, useRef } from "react";
+import type { Node, Edge } from "@xyflow/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { useTabStore } from "~/stores/tab-store";
@@ -15,7 +16,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
-import type { Node, Edge } from "@xyflow/react";
 import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
 
 interface PipelineTabPanelProps {
@@ -46,7 +46,6 @@ export function PipelineTabPanel({
 }: PipelineTabPanelProps) {
   const savePipelineMutation = useSavePipeline();
   const deletePipelineMutation = useDeletePipeline();
-  const isSavingRef = useRef(false);
   // Track if this pipeline has been saved to backend (starts false for new pipelines)
   const hasBeenSavedRef = useRef(!!initialData);
 
@@ -89,7 +88,6 @@ export function PipelineTabPanel({
         pipelineDescription: initialData?.description || "",
         nodes: enrichedNodes,
         edges: flowData.edges,
-        isDirty: false,
       });
     }
   }, [pipelineId, initialData, agents, pipeline, loadPipeline]);
@@ -105,12 +103,39 @@ export function PipelineTabPanel({
     });
   }, [pipeline, agents]);
 
+  // Event-driven save callback - called directly from handlers, not from useEffect
+  const savePipeline = useCallback(() => {
+    const currentPipeline = getPipeline(pipelineId);
+    if (!currentPipeline) return;
+
+    const isNew = !hasBeenSavedRef.current;
+    savePipelineMutation.mutate(
+      {
+        id: pipelineId,
+        name: currentPipeline.pipelineName,
+        description: currentPipeline.pipelineDescription,
+        nodes: currentPipeline.nodes,
+        edges: currentPipeline.edges,
+        isNew,
+      },
+      {
+        onSuccess: () => {
+          hasBeenSavedRef.current = true;
+        },
+        onError: (error) => {
+          console.error("Failed to auto-save pipeline:", error);
+        },
+      }
+    );
+  }, [pipelineId, getPipeline, savePipelineMutation]);
+
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      updatePipeline(pipelineId, { pipelineName: e.target.value, isDirty: true });
+      updatePipeline(pipelineId, { pipelineName: e.target.value });
       updateTabName(pipelineId, e.target.value);
+      savePipeline();
     },
-    [pipelineId, updatePipeline, updateTabName]
+    [pipelineId, updatePipeline, updateTabName, savePipeline]
   );
 
   const handleDropAgent = useCallback(
@@ -121,8 +146,9 @@ export function PipelineTabPanel({
       position: { x: number; y: number }
     ) => {
       addAgentNodeTo(pipelineId, { id: agentId, name: agentName, instructions }, position);
+      savePipeline();
     },
-    [pipelineId, addAgentNodeTo]
+    [pipelineId, addAgentNodeTo, savePipeline]
   );
 
   const handleDropTrait = useCallback(
@@ -133,8 +159,9 @@ export function PipelineTabPanel({
       position: { x: number; y: number }
     ) => {
       addTraitNodeTo(pipelineId, { id: traitId, name: traitName, color: traitColor }, position);
+      savePipeline();
     },
-    [pipelineId, addTraitNodeTo]
+    [pipelineId, addTraitNodeTo, savePipeline]
   );
 
   const handleAutoLayout = useCallback(() => {
@@ -143,37 +170,9 @@ export function PipelineTabPanel({
       pipeline.nodes,
       pipeline.edges
     );
-    updatePipeline(pipelineId, { nodes: layoutedNodes, edges: layoutedEdges, isDirty: true });
-  }, [pipelineId, pipeline, updatePipeline]);
-
-  // Auto-save effect: immediately save when isDirty becomes true
-  useEffect(() => {
-    if (!pipeline?.isDirty || isSavingRef.current) return;
-
-    isSavingRef.current = true;
-    const isNew = !hasBeenSavedRef.current;
-    savePipelineMutation.mutate(
-      {
-        id: pipelineId,
-        name: pipeline.pipelineName,
-        description: pipeline.pipelineDescription,
-        nodes: pipeline.nodes,
-        edges: pipeline.edges,
-        isNew,
-      },
-      {
-        onSuccess: () => {
-          hasBeenSavedRef.current = true; // Mark as saved after first successful save
-          updatePipeline(pipelineId, { isDirty: false });
-          isSavingRef.current = false;
-        },
-        onError: (error) => {
-          console.error("Failed to auto-save pipeline:", error);
-          isSavingRef.current = false;
-        },
-      }
-    );
-  }, [pipeline?.isDirty, pipelineId, pipeline?.pipelineName, pipeline?.pipelineDescription, pipeline?.nodes, pipeline?.edges, savePipelineMutation, updatePipeline]);
+    updatePipeline(pipelineId, { nodes: layoutedNodes, edges: layoutedEdges });
+    savePipeline();
+  }, [pipelineId, pipeline, updatePipeline, savePipeline]);
 
   const handleDelete = () => {
     if (!confirm("Delete this pipeline?")) return;
