@@ -1,10 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Node, Edge } from "@xyflow/react";
+
+// Flow data structure for pipeline canvas state
+export interface FlowData {
+  nodes: Node[];
+  edges: Edge[];
+}
+
+// Agent node data for React Flow nodes
+export interface AgentNodeData {
+  agentId: string;
+  agentName: string;
+  agentInstructions?: string;
+  isOrphaned?: boolean;
+  traitIds: string[];
+  [key: string]: unknown; // Required for React Flow compatibility
+}
+
+// Trait node data for standalone trait nodes on canvas
+export interface TraitNodeData {
+  traitId: string;
+  traitName: string;
+  traitColor: string;
+  [key: string]: unknown; // Required for React Flow compatibility
+}
+
+// Union type for all pipeline node data types
+export type PipelineNodeData = AgentNodeData | TraitNodeData;
 
 export interface Pipeline {
   id: string;
   name: string;
   description: string | null;
-  flowData: unknown;
+  flowData: FlowData;
 }
 
 interface PipelineListItem {
