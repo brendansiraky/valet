@@ -33,42 +33,9 @@ Read the relevant skill file when encountering matching work. Do not load all sk
 
 These skills contain project-specific patterns and must be loaded to ensure consistency. Do not rely on general knowledge - invoke the skill first.
 
-## Async Data Fetching Rules
+## Data Fetching
 
-**ALL async server state MUST use TanStack Query hooks.**
+**ALL async server state MUST use TanStack Query.** Invoke `/react-query` for patterns.
 
-| Use Case | Pattern | Example |
-|----------|---------|---------|
-| Server data (GET) | `useQuery` | `usePipelines()`, `useAgents()` |
-| Mutations (POST/PUT/DELETE) | `useMutation` | `useCreatePipeline()` |
-| Optimistic updates | `useMutation` + `onMutate` | Inline edit with rollback |
-
-**DO NOT use:**
-- Raw `fetch()` in components for server data
-- `useEffect` + `useState` for data fetching
-- `useFetcher` from Remix for read operations (use for forms only)
-
-**Query hook location:** `app/hooks/queries/`
-
-**Naming convention:**
-- Queries: `use{Resource}` or `use{Resource}ById`
-- Mutations: `use{Action}{Resource}` (e.g., `useCreatePipeline`, `useDeleteAgent`)
-
-**Example pattern:**
-```ts
-// app/hooks/queries/use-pipelines.ts
-import { useQuery } from "@tanstack/react-query";
-
-export function usePipelines() {
-  return useQuery({
-    queryKey: ["pipelines"],
-    queryFn: async () => {
-      const res = await fetch("/api/pipelines");
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
-  });
-}
-```
-
-**Zustand is still used for:** Local UI state (sidebar collapsed, selected tab, form state). If it doesn't come from the server, Zustand is fine.
+- Query hooks live in `app/hooks/queries/`
+- Zustand is for local UI state only (sidebar, tabs, form state)
