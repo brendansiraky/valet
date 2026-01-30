@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Link, redirect, useLoaderData } from "react-router";
+import { redirect, useLoaderData, useNavigate } from "react-router";
+import { toast } from "sonner";
 import { db, pipelines } from "~/db";
 import { eq, asc, and } from "drizzle-orm";
 import { getSession } from "~/services/session.server";
@@ -10,6 +11,7 @@ import {
 } from "~/components/ui/card";
 import { Plus } from "lucide-react";
 import { PipelineCard } from "~/components/pipeline-card";
+import { useTabStore } from "~/stores/tab-store";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -54,6 +56,29 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function PipelinesPage() {
   const { pipelines: userPipelines } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
+  const { canOpenNewTab } = useTabStore();
+
+  const handleNewPipeline = async () => {
+    if (!canOpenNewTab()) {
+      toast.error("Maximum 8 tabs open. Close a tab to create a new pipeline.");
+      return;
+    }
+
+    // Create new pipeline in DB
+    const formData = new FormData();
+    formData.set("intent", "create");
+    formData.set("name", "Untitled Pipeline");
+    formData.set("flowData", JSON.stringify({ nodes: [], edges: [] }));
+
+    const response = await fetch("/api/pipelines", {
+      method: "POST",
+      body: formData,
+    });
+
+    const { pipeline } = await response.json();
+    navigate(`/pipelines/${pipeline.id}`);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -64,11 +89,9 @@ export default function PipelinesPage() {
             Create and manage your agent pipelines
           </p>
         </div>
-        <Button asChild>
-          <Link to="/pipelines/new">
-            <Plus className="size-4 mr-2" />
-            New Pipeline
-          </Link>
+        <Button onClick={handleNewPipeline}>
+          <Plus className="size-4 mr-2" />
+          New Pipeline
         </Button>
       </div>
 
@@ -78,8 +101,8 @@ export default function PipelinesPage() {
             <p className="text-muted-foreground mb-4">
               You haven't created any pipelines yet.
             </p>
-            <Button asChild>
-              <Link to="/pipelines/new">Create your first pipeline</Link>
+            <Button onClick={handleNewPipeline}>
+              Create your first pipeline
             </Button>
           </CardContent>
         </Card>
