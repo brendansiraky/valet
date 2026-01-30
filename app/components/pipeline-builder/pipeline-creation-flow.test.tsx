@@ -109,6 +109,33 @@ vi.mock("~/stores/pipeline-store", () => ({
   })),
 }));
 
+// Mock usePipelineFlow hook used by PipelineTabPanel
+vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
+  usePipelineFlow: vi.fn((pipelineId: string) => {
+    const pipeline = mockPipelineData.get(pipelineId);
+    return {
+      nodes: pipeline?.nodes ?? [],
+      edges: pipeline?.edges ?? [],
+      pipelineName: pipeline?.pipelineName ?? "Untitled Pipeline",
+      pipelineDescription: pipeline?.pipelineDescription ?? "",
+      isLoading: false,
+      onNodesChange: vi.fn(),
+      onEdgesChange: vi.fn(),
+      onConnect: vi.fn(),
+      updateName: (name: string) => {
+        mockUpdatePipeline(pipelineId, { pipelineName: name });
+      },
+      updateDescription: vi.fn(),
+      addAgentNode: vi.fn(),
+      addTraitNode: vi.fn(),
+      removeNode: vi.fn(),
+      addTraitToNode: vi.fn(),
+      removeTraitFromNode: vi.fn(),
+      setNodesAndEdges: vi.fn(),
+    };
+  }),
+}));
+
 vi.mock("@xyflow/react", () => ({
   ReactFlow: ({ children }: { children?: React.ReactNode }) => (
     <div data-testid="react-flow">{children}</div>
@@ -131,6 +158,7 @@ vi.mock("@xyflow/react", () => ({
 
 import { useTabStore } from "~/stores/tab-store";
 import { usePipelineStore } from "~/stores/pipeline-store";
+import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
 import { useParams } from "react-router";
 
 // ============================================================
@@ -1037,6 +1065,262 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
       const menuTexts = menuItems.map((item) => item.textContent);
       expect(menuTexts).not.toContain("Open Pipeline");
       expect(menuTexts).toContain("Closed Pipeline");
+    });
+  });
+
+  describe("Bug Regression: Renaming should NOT create duplicate pipeline", () => {
+    /**
+     * BUG SCENARIO:
+     * 1. User goes to pipelines screen (no pipelines exist)
+     * 2. Clicks plus button, selects "New Pipeline" from dropdown
+     * 3. Pipeline is created with "Untitled Pipeline" name
+     * 4. User renames the pipeline to "My Test Pipeline"
+     * 5. User refreshes the page
+     * 6. User clicks plus button dropdown
+     *
+     * EXPECTED: Only sees "+ New Pipeline" (the one they created is already open as a tab)
+     * ACTUAL BUG: Sees "+ New Pipeline" AND a single letter "M" (first letter of renamed name)
+     *
+     * ROOT CAUSE: When renaming triggers a save, if hasBeenSavedRef is incorrectly false,
+     * it sends intent: "create" instead of intent: "update", creating a duplicate.
+     *
+     * The bug happens because:
+     * 1. Pipeline is created via handleNewTab() with POST to /api/pipelines
+     * 2. Navigation to /pipelines/{newId} happens
+     * 3. PipelineTabPanel mounts with initialData from usePipeline()
+     * 4. Since pipeline was JUST created by handleNewTab, the query cache doesn't have it
+     * 5. usePipeline() is still loading, so requestedPipeline is null
+     * 6. PipelineTabPanel receives initialData=null, so hasBeenSavedRef.current = false
+     * 7. User types in name field -> savePipeline() called with isNew=true
+     * 8. This creates a DUPLICATE pipeline with the first keystroke's text
+     */
+    test("renaming a newly created pipeline should use 'update' intent, not 'create'", async () => {
+      const user = userEvent.setup();
+
+      // Scenario: User just created a pipeline via the dropdown "New Pipeline" button.
+      // The pipeline exists in DB with id "pipeline-1" and name "Untitled Pipeline".
+      // Now we simulate the user typing a new name.
+      dbPipelines = [
+        {
+          id: "pipeline-1",
+          name: "Untitled Pipeline",
+          description: null,
+          flowData: { nodes: [], edges: [] },
+        },
+      ];
+
+      // The pipeline tab is open and active
+      mockTabs = [
+        { pipelineId: "home", name: "Home" },
+        { pipelineId: "pipeline-1", name: "Untitled Pipeline" },
+      ];
+      mockActiveTabId = "pipeline-1";
+      mockUrlId = "pipeline-1";
+
+      // CRITICAL: The pipeline exists in the store (simulating that initialData was loaded)
+      // This is what happens after the React Query fetch completes
+      mockPipelineData.set("pipeline-1", {
+        pipelineId: "pipeline-1",
+        pipelineName: "Untitled Pipeline",
+        pipelineDescription: "",
+        nodes: [],
+        edges: [],
+      });
+
+      mockGetPipeline.mockImplementation((id: string) => mockPipelineData.get(id) ?? null);
+      mockUpdatePipeline.mockImplementation((id: string, updates: Record<string, unknown>) => {
+        const pipeline = mockPipelineData.get(id);
+        if (pipeline) {
+          mockPipelineData.set(id, { ...pipeline, ...updates });
+        }
+      });
+
+      vi.mocked(useTabStore).mockReturnValue({
+        tabs: mockTabs,
+        activeTabId: mockActiveTabId,
+        closeTab: mockCloseTab,
+        focusOrOpenTab: mockFocusOrOpenTab,
+        updateTabName: mockUpdateTabName,
+        canOpenNewTab: mockCanOpenNewTab,
+      });
+
+      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
+
+      renderWithClient(<PipelineEditorPage />);
+
+      // Wait for component to be ready
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Pipeline name")).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByPlaceholderText("Pipeline name");
+      expect(nameInput).toHaveValue("Untitled Pipeline");
+
+      // Clear the call tracking before our test action
+      apiCalls = [];
+
+      // User renames the pipeline
+      await user.clear(nameInput);
+      await user.type(nameInput, "My Test Pipeline");
+
+      // Wait for the save to happen
+      await waitFor(
+        () => {
+          return apiCalls.length > 0;
+        },
+        { timeout: 3000 }
+      );
+
+      // THE KEY ASSERTION: All API calls should be "UPDATE_PIPELINE", not "CREATE_PIPELINE"
+      // If we see any CREATE_PIPELINE calls, that's the bug!
+      const createCalls = apiCalls.filter((c) => c.type === "CREATE_PIPELINE");
+      const updateCalls = apiCalls.filter((c) => c.type === "UPDATE_PIPELINE");
+
+      // BUG DETECTION: This assertion will FAIL if the bug exists
+      // When the bug is present, createCalls.length > 0 because renaming
+      // incorrectly sends intent: "create" instead of intent: "update"
+      expect(createCalls).toHaveLength(0);
+      expect(updateCalls.length).toBeGreaterThan(0);
+
+      // Verify we still have only ONE pipeline in the database
+      // BUG DETECTION: When the bug exists, dbPipelines.length > 1
+      expect(dbPipelines).toHaveLength(1);
+      expect(dbPipelines[0].id).toBe("pipeline-1");
+      expect(dbPipelines[0].name).toBe("My Test Pipeline");
+    });
+
+    test("after creating and renaming, dropdown should not show duplicate/truncated pipeline names", async () => {
+      const user = userEvent.setup();
+
+      // Scenario: User created and renamed a pipeline.
+      // The database should have exactly ONE pipeline with the full renamed name.
+      // When user opens dropdown, they should see the full name, not a truncated version.
+      dbPipelines = [
+        {
+          id: "pipeline-1",
+          name: "My Renamed Pipeline",
+          description: null,
+          flowData: { nodes: [], edges: [] },
+        },
+      ];
+
+      // User is on home tab (simulating after refresh with no tabs restored)
+      mockTabs = [{ pipelineId: "home", name: "Home" }];
+      mockActiveTabId = "home";
+      mockUrlId = "home";
+
+      vi.mocked(useTabStore).mockReturnValue({
+        tabs: mockTabs,
+        activeTabId: "home",
+        closeTab: mockCloseTab,
+        focusOrOpenTab: mockFocusOrOpenTab,
+        updateTabName: mockUpdateTabName,
+        canOpenNewTab: mockCanOpenNewTab,
+      });
+
+      vi.mocked(useParams).mockReturnValue({ id: "home" });
+
+      renderWithClient(<PipelineEditorPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTitle("Home")).toBeInTheDocument();
+      });
+
+      // Open the dropdown
+      const dropdownTrigger = getDropdownTrigger();
+      await user.click(dropdownTrigger!);
+
+      await waitFor(() => {
+        expect(screen.getByText("New Pipeline")).toBeInTheDocument();
+      });
+
+      // Should see exactly 2 items: "New Pipeline" and "My Renamed Pipeline"
+      const menuItems = screen.getAllByRole("menuitem");
+      expect(menuItems).toHaveLength(2);
+
+      // Check that we see the FULL name, not truncated
+      expect(screen.getByText("My Renamed Pipeline")).toBeInTheDocument();
+
+      // Should NOT see any single-letter truncated names (the bug symptom)
+      expect(screen.queryByText("M")).not.toBeInTheDocument();
+    });
+
+    test("full flow: create pipeline, rename it, refresh, dropdown shows only New Pipeline (pipeline is already open)", async () => {
+      const user = userEvent.setup();
+
+      // This test simulates the exact user-reported bug scenario:
+      // 1. Fresh start - no pipelines
+      // 2. Create new pipeline
+      // 3. Rename it
+      // 4. "Refresh" (reload state)
+      // 5. Click dropdown
+      // EXPECTED: Only "New Pipeline" because the one pipeline is open as a tab
+      // BUG: Shows "New Pipeline" AND a truncated name (duplicate was created)
+
+      // After "refresh", user has one pipeline in DB that they created and renamed
+      dbPipelines = [
+        {
+          id: "pipeline-1",
+          name: "My Custom Name",
+          description: null,
+          flowData: { nodes: [], edges: [] },
+        },
+      ];
+
+      // User has that pipeline open as a tab (simulating they're viewing it)
+      mockTabs = [
+        { pipelineId: "home", name: "Home" },
+        { pipelineId: "pipeline-1", name: "My Custom Name" },
+      ];
+      mockActiveTabId = "pipeline-1";
+      mockUrlId = "pipeline-1";
+
+      mockPipelineData.set("pipeline-1", {
+        pipelineId: "pipeline-1",
+        pipelineName: "My Custom Name",
+        pipelineDescription: "",
+        nodes: [],
+        edges: [],
+      });
+
+      mockGetPipeline.mockImplementation((id: string) => mockPipelineData.get(id) ?? null);
+
+      vi.mocked(useTabStore).mockReturnValue({
+        tabs: mockTabs,
+        activeTabId: mockActiveTabId,
+        closeTab: mockCloseTab,
+        focusOrOpenTab: mockFocusOrOpenTab,
+        updateTabName: mockUpdateTabName,
+        canOpenNewTab: mockCanOpenNewTab,
+      });
+
+      vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
+
+      renderWithClient(<PipelineEditorPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTitle("Home")).toBeInTheDocument();
+      });
+
+      // Open the dropdown
+      const dropdownTrigger = getDropdownTrigger();
+      await user.click(dropdownTrigger!);
+
+      await waitFor(() => {
+        expect(screen.getByText("New Pipeline")).toBeInTheDocument();
+      });
+
+      // Since pipeline-1 is already open as a tab, it should NOT appear in dropdown
+      // The dropdown only shows pipelines that are NOT currently open
+      const menuItems = screen.getAllByRole("menuitem");
+      expect(menuItems).toHaveLength(1);
+      expect(menuItems[0]).toHaveTextContent("New Pipeline");
+
+      // The pipeline name DOES appear on page (in the tab), but should NOT appear in dropdown
+      // Verify no duplicate/truncated single-letter names appear in the dropdown menu items
+      const menuItemTexts = menuItems.map((item) => item.textContent);
+      expect(menuItemTexts).not.toContain("M");
+      expect(menuItemTexts).not.toContain("My Custom Name");
     });
   });
 

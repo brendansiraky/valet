@@ -1,10 +1,11 @@
 import { useMemo, useCallback } from "react";
 import type { Node, Edge } from "@xyflow/react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { usePipelineStore } from "~/stores/pipeline-store";
 import { useTabStore } from "~/stores/tab-store";
-import { useSavePipeline, useDeletePipeline } from "~/hooks/queries/use-pipelines";
+import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
+import { useDeletePipeline } from "~/hooks/queries/use-pipelines";
 import { PipelineCanvas } from "./pipeline-canvas";
+import { PipelineContext } from "./pipeline-context";
 import { TraitsContext, type TraitContextValue } from "./traits-context";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -16,7 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { getLayoutedElements } from "~/lib/pipeline-layout";
-import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
+import type { AgentNodeData, PipelineNodeData } from "~/hooks/queries/use-pipelines";
 
 interface PipelineTabPanelProps {
   pipelineId: string;
@@ -36,104 +37,63 @@ interface PipelineTabPanelProps {
 
 export function PipelineTabPanel({
   pipelineId,
-  initialData,
   agents,
-  traits,
   traitsMap,
   runState,
   onOpenRunDialog,
   onDelete,
 }: PipelineTabPanelProps) {
-  const savePipelineMutation = useSavePipeline();
   const deletePipelineMutation = useDeletePipeline();
-
-  const {
-    getPipeline,
-    loadPipeline,
-    updatePipeline,
-    addAgentNodeTo,
-    addTraitNodeTo,
-  } = usePipelineStore();
-
   const { updateTabName } = useTabStore();
 
-  // Lazy initialization: load pipeline into store on first access if not present
-  // This replaces the useEffect-based initialization pattern
-  let pipeline = getPipeline(pipelineId);
-  if (!pipeline) {
-    const validAgentIds = new Set(agents.map((a) => a.id));
-    const flowData = (initialData?.flowData || { nodes: [], edges: [] }) as {
-      nodes: Node<PipelineNodeData>[];
-      edges: Edge[];
-    };
+  const {
+    nodes,
+    edges,
+    pipelineName,
+    isLoading,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    updateName,
+    addAgentNode,
+    addTraitNode,
+    setNodesAndEdges,
+  } = usePipelineFlow(pipelineId);
 
-    // Enrich nodes with orphan status
-    const enrichedNodes = flowData.nodes.map((node) => {
+  // Compute enriched nodes with orphan status during render (NO useEffect)
+  const enrichedNodes = useMemo(() => {
+    const validAgentIds = new Set(agents.map((a) => a.id));
+    return nodes.map((node) => {
       if (node.type === "agent") {
         const agentData = node.data as AgentNodeData;
-        return {
-          ...node,
-          data: { ...agentData, isOrphaned: !validAgentIds.has(agentData.agentId) },
-        };
+        const isOrphaned = !validAgentIds.has(agentData.agentId);
+        if (agentData.isOrphaned !== isOrphaned) {
+          return {
+            ...node,
+            data: { ...agentData, isOrphaned },
+          };
+        }
       }
       return node;
     });
-
-    // Load immediately - this is synchronous and deterministic
-    loadPipeline({
-      pipelineId,
-      pipelineName: initialData?.name || "Untitled Pipeline",
-      pipelineDescription: initialData?.description || "",
-      nodes: enrichedNodes,
-      edges: flowData.edges,
-    });
-
-    // Re-fetch after loading
-    pipeline = getPipeline(pipelineId);
-  }
+  }, [nodes, agents]);
 
   // Detect orphaned agents
   const hasOrphanedAgents = useMemo(() => {
-    if (!pipeline) return false;
     const validAgentIds = new Set(agents.map((a) => a.id));
-    return pipeline.nodes.some((n) => {
+    return nodes.some((n) => {
       if (n.type !== "agent") return false;
       const agentData = n.data as AgentNodeData;
       return agentData.agentId && !validAgentIds.has(agentData.agentId);
     });
-  }, [pipeline, agents]);
-
-  // Event-driven save callback - called directly from handlers, not from useEffect
-  // Note: Pipeline is always created by handleNewTab() before this component mounts,
-  // so we always use isNew: false (update intent) for saves.
-  const savePipeline = useCallback(() => {
-    const currentPipeline = getPipeline(pipelineId);
-    if (!currentPipeline) return;
-
-    savePipelineMutation.mutate(
-      {
-        id: pipelineId,
-        name: currentPipeline.pipelineName,
-        description: currentPipeline.pipelineDescription,
-        nodes: currentPipeline.nodes,
-        edges: currentPipeline.edges,
-        isNew: false,
-      },
-      {
-        onError: (error) => {
-          console.error("Failed to auto-save pipeline:", error);
-        },
-      }
-    );
-  }, [pipelineId, getPipeline, savePipelineMutation]);
+  }, [nodes, agents]);
 
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      updatePipeline(pipelineId, { pipelineName: e.target.value });
+      updateName(e.target.value);
       updateTabName(pipelineId, e.target.value);
-      savePipeline();
     },
-    [pipelineId, updatePipeline, updateTabName, savePipeline]
+    [pipelineId, updateName, updateTabName]
   );
 
   const handleDropAgent = useCallback(
@@ -143,10 +103,9 @@ export function PipelineTabPanel({
       instructions: string | undefined,
       position: { x: number; y: number }
     ) => {
-      addAgentNodeTo(pipelineId, { id: agentId, name: agentName, instructions }, position);
-      savePipeline();
+      addAgentNode({ id: agentId, name: agentName, instructions }, position);
     },
-    [pipelineId, addAgentNodeTo, savePipeline]
+    [addAgentNode]
   );
 
   const handleDropTrait = useCallback(
@@ -156,21 +115,18 @@ export function PipelineTabPanel({
       traitColor: string,
       position: { x: number; y: number }
     ) => {
-      addTraitNodeTo(pipelineId, { id: traitId, name: traitName, color: traitColor }, position);
-      savePipeline();
+      addTraitNode({ id: traitId, name: traitName, color: traitColor }, position);
     },
-    [pipelineId, addTraitNodeTo, savePipeline]
+    [addTraitNode]
   );
 
   const handleAutoLayout = useCallback(() => {
-    if (!pipeline) return;
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-      pipeline.nodes,
-      pipeline.edges
+      enrichedNodes,
+      edges
     );
-    updatePipeline(pipelineId, { nodes: layoutedNodes, edges: layoutedEdges });
-    savePipeline();
-  }, [pipelineId, pipeline, updatePipeline, savePipeline]);
+    setNodesAndEdges(layoutedNodes, layoutedEdges);
+  }, [enrichedNodes, edges, setNodesAndEdges]);
 
   const handleDelete = () => {
     if (!confirm("Delete this pipeline?")) return;
@@ -188,7 +144,7 @@ export function PipelineTabPanel({
     );
   };
 
-  if (!pipeline) {
+  if (isLoading) {
     return <div className="flex-1 flex items-center justify-center">Loading...</div>;
   }
 
@@ -199,7 +155,7 @@ export function PipelineTabPanel({
       {/* Header */}
       <div className="h-[78px] z-10 border-b bg-background p-4 flex items-center gap-4">
         <Input
-          value={pipeline.pipelineName}
+          value={pipelineName}
           onChange={handleNameChange}
           placeholder="Pipeline name"
           className="max-w-xs font-semibold"
@@ -245,15 +201,20 @@ export function PipelineTabPanel({
       {/* Canvas with isolated ReactFlowProvider */}
       <div className="flex-1 min-h-0">
         <TraitsContext.Provider value={traitsMap}>
-          <ReactFlowProvider>
-            <PipelineCanvas
-              pipelineId={pipelineId}
-              onDropAgent={handleDropAgent}
-              onDropTrait={handleDropTrait}
-              onPipelineChange={savePipeline}
-              isLocked={isLocked}
-            />
-          </ReactFlowProvider>
+          <PipelineContext.Provider value={{ pipelineId }}>
+            <ReactFlowProvider>
+              <PipelineCanvas
+                nodes={enrichedNodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onDropAgent={handleDropAgent}
+                onDropTrait={handleDropTrait}
+                isLocked={isLocked}
+              />
+            </ReactFlowProvider>
+          </PipelineContext.Provider>
         </TraitsContext.Provider>
       </div>
     </div>

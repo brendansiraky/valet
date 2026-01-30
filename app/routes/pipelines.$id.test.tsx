@@ -82,6 +82,33 @@ vi.mock("~/stores/pipeline-store", () => ({
   })),
 }));
 
+// Mock usePipelineFlow hook used by PipelineTabPanel
+vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
+  usePipelineFlow: vi.fn((pipelineId: string) => {
+    const pipeline = mockPipelineData.get(pipelineId);
+    return {
+      nodes: pipeline?.nodes ?? [],
+      edges: pipeline?.edges ?? [],
+      pipelineName: pipeline?.pipelineName ?? "Untitled Pipeline",
+      pipelineDescription: pipeline?.pipelineDescription ?? "",
+      isLoading: false,
+      onNodesChange: vi.fn(),
+      onEdgesChange: vi.fn(),
+      onConnect: vi.fn(),
+      updateName: (name: string) => {
+        mockUpdatePipeline(pipelineId, { pipelineName: name });
+      },
+      updateDescription: vi.fn(),
+      addAgentNode: vi.fn(),
+      addTraitNode: vi.fn(),
+      removeNode: vi.fn(),
+      addTraitToNode: vi.fn(),
+      removeTraitFromNode: vi.fn(),
+      setNodesAndEdges: vi.fn(),
+    };
+  }),
+}));
+
 // Mock @xyflow/react to avoid canvas issues in jsdom
 vi.mock("@xyflow/react", () => ({
   ReactFlow: ({ children }: { children?: React.ReactNode }) => (
@@ -108,6 +135,7 @@ vi.mock("@xyflow/react", () => ({
 // Import mocked modules
 import { useTabStore } from "~/stores/tab-store";
 import { usePipelineStore } from "~/stores/pipeline-store";
+import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
 import { useParams } from "react-router";
 
 describe("PipelineEditorPage", () => {
@@ -295,6 +323,72 @@ describe("PipelineEditorPage", () => {
     await waitFor(
       () => {
         expect(screen.getByText("Test Agent")).toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  test("shows loading state while fetching pipeline data, then displays correct name", async () => {
+    // Setup: viewing an existing pipeline (not in store yet, needs to load from server)
+    mockTabs = [
+      { pipelineId: "home", name: "Home" },
+      { pipelineId: "existing-pipeline", name: "Loading..." },
+    ];
+    mockActiveTabId = "existing-pipeline";
+    mockUrlId = "existing-pipeline";
+
+    vi.mocked(useTabStore).mockReturnValue({
+      tabs: mockTabs,
+      activeTabId: mockActiveTabId,
+      closeTab: mockCloseTab,
+      focusOrOpenTab: mockFocusOrOpenTab,
+      updateTabName: mockUpdateTabName,
+      canOpenNewTab: mockCanOpenNewTab,
+    });
+
+    vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
+
+    // Make mockLoadPipeline actually populate the store
+    mockLoadPipeline.mockImplementation((data: { pipelineId: string; pipelineName: string; pipelineDescription?: string }) => {
+      mockPipelineData.set(data.pipelineId, {
+        pipelineId: data.pipelineId,
+        pipelineName: data.pipelineName,
+        pipelineDescription: data.pipelineDescription || "",
+        nodes: [],
+        edges: [],
+      });
+    });
+
+    // Pipeline NOT in store - this simulates first load
+    // The server will return the pipeline with a specific name
+    server.use(
+      http.get("/api/pipelines/:id", async ({ params }) => {
+        // Add delay to simulate network latency
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return HttpResponse.json({
+          pipeline: {
+            id: params.id,
+            name: "My Saved Pipeline",
+            description: "Loaded from server",
+            flowData: { nodes: [], edges: [] },
+          },
+        });
+      })
+    );
+
+    renderWithClient(<PipelineEditorPage />);
+
+    // Initially should show loading state (pipeline not in store, query pending)
+    await waitFor(() => {
+      expect(screen.getByText("Loading pipeline...")).toBeInTheDocument();
+    });
+
+    // After data loads, should show the correct pipeline name (not "Untitled Pipeline")
+    await waitFor(
+      () => {
+        // The name input should have the server's name
+        const nameInput = screen.getByPlaceholderText("Pipeline name");
+        expect(nameInput).toHaveValue("My Saved Pipeline");
       },
       { timeout: 2000 }
     );

@@ -7,67 +7,63 @@ import { PipelineTabPanel } from "./pipeline-tab-panel";
 /**
  * PipelineTabPanel Tests
  *
- * These tests verify the pipeline name initialization behavior:
- * 1. When initialData is available, pipeline loads with that name
- * 2. When initialData is null (new pipeline), pipeline loads with "Untitled Pipeline"
- * 3. Name editing updates store, tab, and triggers save
+ * These tests verify the pipeline tab panel behavior:
+ * 1. Displays pipeline name from usePipelineFlow hook
+ * 2. Name editing updates React Query cache via updateName
+ * 3. Tab name is also updated via tab store
  *
- * NOTE: The component uses lazy initialization during render, not useEffect.
- * This avoids race conditions - the pipeline is initialized synchronously
- * when the component first renders with the data available at that time.
+ * NOTE: The component now uses usePipelineFlow hook which manages state via React Query.
  */
 
 // ============================================================
 // MOCK SETUP
 // ============================================================
 
-// Pipeline store mocks
-let mockPipelineData: Map<
-  string,
-  {
-    pipelineId: string;
-    pipelineName: string;
-    pipelineDescription: string;
-    nodes: unknown[];
-    edges: unknown[];
-  }
-> = new Map();
+// usePipelineFlow mock state
+let mockFlowState = {
+  nodes: [] as unknown[],
+  edges: [] as unknown[],
+  pipelineName: "Untitled Pipeline",
+  pipelineDescription: "",
+  isLoading: false,
+};
 
-const mockGetPipeline = vi.fn((id: string) => mockPipelineData.get(id) ?? undefined);
-const mockLoadPipeline = vi.fn(
-  (data: { pipelineId: string; pipelineName: string; pipelineDescription?: string }) => {
-    mockPipelineData.set(data.pipelineId, {
-      pipelineId: data.pipelineId,
-      pipelineName: data.pipelineName,
-      pipelineDescription: data.pipelineDescription || "",
-      nodes: [],
-      edges: [],
-    });
-  }
-);
-const mockUpdatePipeline = vi.fn((id: string, updates: Record<string, unknown>) => {
-  const pipeline = mockPipelineData.get(id);
-  if (pipeline) {
-    mockPipelineData.set(id, { ...pipeline, ...updates });
-  }
-});
-const mockAddAgentNodeTo = vi.fn();
-const mockAddTraitNodeTo = vi.fn();
+const mockOnNodesChange = vi.fn();
+const mockOnEdgesChange = vi.fn();
+const mockOnConnect = vi.fn();
+const mockUpdateName = vi.fn();
+const mockUpdateDescription = vi.fn();
+const mockAddAgentNode = vi.fn();
+const mockAddTraitNode = vi.fn();
+const mockRemoveNode = vi.fn();
+const mockAddTraitToNode = vi.fn();
+const mockRemoveTraitFromNode = vi.fn();
+const mockSetNodesAndEdges = vi.fn();
 
 // Tab store mocks
 const mockUpdateTabName = vi.fn();
 
 // Mutation mocks
-const mockSavePipelineMutate = vi.fn();
 const mockDeletePipelineMutate = vi.fn();
 
-vi.mock("~/stores/pipeline-store", () => ({
-  usePipelineStore: vi.fn(() => ({
-    getPipeline: mockGetPipeline,
-    loadPipeline: mockLoadPipeline,
-    updatePipeline: mockUpdatePipeline,
-    addAgentNodeTo: mockAddAgentNodeTo,
-    addTraitNodeTo: mockAddTraitNodeTo,
+vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
+  usePipelineFlow: vi.fn(() => ({
+    nodes: mockFlowState.nodes,
+    edges: mockFlowState.edges,
+    pipelineName: mockFlowState.pipelineName,
+    pipelineDescription: mockFlowState.pipelineDescription,
+    isLoading: mockFlowState.isLoading,
+    onNodesChange: mockOnNodesChange,
+    onEdgesChange: mockOnEdgesChange,
+    onConnect: mockOnConnect,
+    updateName: mockUpdateName,
+    updateDescription: mockUpdateDescription,
+    addAgentNode: mockAddAgentNode,
+    addTraitNode: mockAddTraitNode,
+    removeNode: mockRemoveNode,
+    addTraitToNode: mockAddTraitToNode,
+    removeTraitFromNode: mockRemoveTraitFromNode,
+    setNodesAndEdges: mockSetNodesAndEdges,
   })),
 }));
 
@@ -78,9 +74,6 @@ vi.mock("~/stores/tab-store", () => ({
 }));
 
 vi.mock("~/hooks/queries/use-pipelines", () => ({
-  useSavePipeline: vi.fn(() => ({
-    mutate: mockSavePipelineMutate,
-  })),
   useDeletePipeline: vi.fn(() => ({
     mutate: mockDeletePipelineMutate,
   })),
@@ -131,32 +124,25 @@ const defaultProps = {
 };
 
 function resetAllMocks() {
-  mockPipelineData = new Map();
-  mockGetPipeline.mockClear();
-  mockGetPipeline.mockImplementation((id: string) => mockPipelineData.get(id) ?? undefined);
-  mockLoadPipeline.mockClear();
-  mockLoadPipeline.mockImplementation(
-    (data: { pipelineId: string; pipelineName: string; pipelineDescription?: string }) => {
-      mockPipelineData.set(data.pipelineId, {
-        pipelineId: data.pipelineId,
-        pipelineName: data.pipelineName,
-        pipelineDescription: data.pipelineDescription || "",
-        nodes: [],
-        edges: [],
-      });
-    }
-  );
-  mockUpdatePipeline.mockClear();
-  mockUpdatePipeline.mockImplementation((id: string, updates: Record<string, unknown>) => {
-    const pipeline = mockPipelineData.get(id);
-    if (pipeline) {
-      mockPipelineData.set(id, { ...pipeline, ...updates });
-    }
-  });
-  mockAddAgentNodeTo.mockClear();
-  mockAddTraitNodeTo.mockClear();
+  mockFlowState = {
+    nodes: [],
+    edges: [],
+    pipelineName: "Untitled Pipeline",
+    pipelineDescription: "",
+    isLoading: false,
+  };
+  mockOnNodesChange.mockClear();
+  mockOnEdgesChange.mockClear();
+  mockOnConnect.mockClear();
+  mockUpdateName.mockClear();
+  mockUpdateDescription.mockClear();
+  mockAddAgentNode.mockClear();
+  mockAddTraitNode.mockClear();
+  mockRemoveNode.mockClear();
+  mockAddTraitToNode.mockClear();
+  mockRemoveTraitFromNode.mockClear();
+  mockSetNodesAndEdges.mockClear();
   mockUpdateTabName.mockClear();
-  mockSavePipelineMutate.mockClear();
   mockDeletePipelineMutate.mockClear();
 }
 
@@ -170,15 +156,8 @@ describe("PipelineTabPanel - Name Initialization", () => {
   });
 
   describe("Initial Load with Data", () => {
-    test("displays pipeline name from initialData when available on mount", async () => {
-      // Pre-populate pipeline in store with the correct name (simulating loadPipeline having run)
-      mockPipelineData.set("test-pipeline-1", {
-        pipelineId: "test-pipeline-1",
-        pipelineName: "My Custom Pipeline",
-        pipelineDescription: "Test description",
-        nodes: [],
-        edges: [],
-      });
+    test("displays pipeline name from usePipelineFlow hook", async () => {
+      mockFlowState.pipelineName = "My Custom Pipeline";
 
       renderWithClient(
         <PipelineTabPanel
@@ -200,25 +179,32 @@ describe("PipelineTabPanel - Name Initialization", () => {
       expect(nameInput).toHaveValue("My Custom Pipeline");
     });
 
-    test("loads pipeline with 'Untitled Pipeline' when initialData is null (new pipeline)", async () => {
-      // Pipeline not in store yet - will be created by loadPipeline during render
-      renderWithClient(
-        <PipelineTabPanel {...defaultProps} initialData={null} />
-      );
+    test("shows loading state when isLoading is true", async () => {
+      mockFlowState.isLoading = true;
 
-      // loadPipeline should have been called with default name
+      renderWithClient(<PipelineTabPanel {...defaultProps} />);
+
       await waitFor(() => {
-        expect(mockLoadPipeline).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pipelineName: "Untitled Pipeline",
-            pipelineDescription: "",
-          })
-        );
+        expect(screen.getByText("Loading...")).toBeInTheDocument();
       });
     });
 
-    test("loads pipeline with initialData name when provided", async () => {
-      // Pipeline not in store yet - will be created with initialData
+    test("displays 'Untitled Pipeline' when pipeline is new", async () => {
+      mockFlowState.pipelineName = "Untitled Pipeline";
+
+      renderWithClient(<PipelineTabPanel {...defaultProps} initialData={null} />);
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Pipeline name")).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByPlaceholderText("Pipeline name");
+      expect(nameInput).toHaveValue("Untitled Pipeline");
+    });
+
+    test("displays the correct name when provided", async () => {
+      mockFlowState.pipelineName = "Server Pipeline Name";
+
       renderWithClient(
         <PipelineTabPanel
           {...defaultProps}
@@ -231,33 +217,24 @@ describe("PipelineTabPanel - Name Initialization", () => {
         />
       );
 
-      // loadPipeline should have been called with the server name
       await waitFor(() => {
-        expect(mockLoadPipeline).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pipelineName: "Server Pipeline Name",
-            pipelineDescription: "From server",
-          })
-        );
+        expect(screen.getByPlaceholderText("Pipeline name")).toBeInTheDocument();
       });
+
+      const nameInput = screen.getByPlaceholderText("Pipeline name");
+      expect(nameInput).toHaveValue("Server Pipeline Name");
     });
 
-    test("does not reload pipeline if already in store", async () => {
-      // Pipeline already in store
-      mockPipelineData.set("test-pipeline-1", {
-        pipelineId: "test-pipeline-1",
-        pipelineName: "Already In Store",
-        pipelineDescription: "",
-        nodes: [],
-        edges: [],
-      });
+    test("renders pipeline canvas when not loading", async () => {
+      mockFlowState.isLoading = false;
+      mockFlowState.pipelineName = "Test Pipeline";
 
       renderWithClient(
         <PipelineTabPanel
           {...defaultProps}
           initialData={{
             id: "test-pipeline-1",
-            name: "Different Name From Server",
+            name: "Test Pipeline",
             description: null,
             flowData: { nodes: [], edges: [] },
           }}
@@ -265,29 +242,15 @@ describe("PipelineTabPanel - Name Initialization", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText("Pipeline name")).toBeInTheDocument();
+        expect(screen.getByTestId("pipeline-canvas")).toBeInTheDocument();
       });
-
-      // loadPipeline should NOT have been called - pipeline already exists
-      expect(mockLoadPipeline).not.toHaveBeenCalled();
-
-      // Should show the store name, not the initialData name
-      const nameInput = screen.getByPlaceholderText("Pipeline name");
-      expect(nameInput).toHaveValue("Already In Store");
     });
   });
 
   describe("Name Editing", () => {
-    test("editing name updates store and triggers save", async () => {
+    test("editing name calls updateName and updateTabName", async () => {
       const user = userEvent.setup();
-
-      mockPipelineData.set("test-pipeline-1", {
-        pipelineId: "test-pipeline-1",
-        pipelineName: "Original Name",
-        pipelineDescription: "",
-        nodes: [],
-        edges: [],
-      });
+      mockFlowState.pipelineName = "Original Name";
 
       renderWithClient(
         <PipelineTabPanel
@@ -311,27 +274,17 @@ describe("PipelineTabPanel - Name Initialization", () => {
       await user.clear(nameInput);
       await user.type(nameInput, "New Name");
 
-      // Should update store
-      expect(mockUpdatePipeline).toHaveBeenCalled();
+      // Should call updateName from usePipelineFlow
+      expect(mockUpdateName).toHaveBeenCalled();
 
       // Should update tab name
       expect(mockUpdateTabName).toHaveBeenCalled();
-
-      // Should trigger save
-      expect(mockSavePipelineMutate).toHaveBeenCalled();
     });
   });
 
   describe("Pipeline ID Changes (Tab Switching)", () => {
-    test("loads new pipeline when pipelineId changes", async () => {
-      // First pipeline in store
-      mockPipelineData.set("pipeline-1", {
-        pipelineId: "pipeline-1",
-        pipelineName: "Pipeline One",
-        pipelineDescription: "",
-        nodes: [],
-        edges: [],
-      });
+    test("component re-renders when pipelineId changes", async () => {
+      mockFlowState.pipelineName = "Pipeline One";
 
       const { rerender } = renderWithClient(
         <PipelineTabPanel
@@ -350,7 +303,10 @@ describe("PipelineTabPanel - Name Initialization", () => {
         expect(screen.getByPlaceholderText("Pipeline name")).toHaveValue("Pipeline One");
       });
 
-      // Switch to second pipeline (not yet in store)
+      // Update the mock state for the new pipeline
+      mockFlowState.pipelineName = "Pipeline Two";
+
+      // Switch to second pipeline
       rerender(
         <PipelineTabPanel
           {...defaultProps}
@@ -364,14 +320,8 @@ describe("PipelineTabPanel - Name Initialization", () => {
         />
       );
 
-      // Should load the second pipeline
       await waitFor(() => {
-        expect(mockLoadPipeline).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pipelineId: "pipeline-2",
-            pipelineName: "Pipeline Two",
-          })
-        );
+        expect(screen.getByPlaceholderText("Pipeline name")).toHaveValue("Pipeline Two");
       });
     });
   });

@@ -1,17 +1,17 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
   useReactFlow,
-  type NodeChange,
-  type EdgeChange,
-  type Connection,
   type Node,
+  type Edge,
+  type OnNodesChange,
+  type OnEdgesChange,
+  type OnConnect,
 } from "@xyflow/react";
-import type { PipelineNodeData } from "~/stores/pipeline-store";
-import { usePipelineStore } from "~/stores/pipeline-store";
+import type { PipelineNodeData } from "~/hooks/queries/use-pipelines";
 import { AgentNode } from "./agent-node";
 import { TraitNode } from "./trait-node";
 
@@ -22,7 +22,11 @@ const nodeTypes = {
 };
 
 interface PipelineCanvasProps {
-  pipelineId: string;
+  nodes: Node<PipelineNodeData>[];
+  edges: Edge[];
+  onNodesChange: OnNodesChange<Node<PipelineNodeData>>;
+  onEdgesChange: OnEdgesChange;
+  onConnect: OnConnect;
   onDropAgent: (
     agentId: string,
     agentName: string,
@@ -35,73 +39,29 @@ interface PipelineCanvasProps {
     traitColor: string,
     position: { x: number; y: number }
   ) => void;
-  /** Callback when pipeline canvas is modified (node drag, edge connect, etc.) */
-  onPipelineChange?: () => void;
-  /** Lock canvas to prevent editing during pipeline execution */
   isLocked?: boolean;
 }
 
 export function PipelineCanvas({
-  pipelineId,
+  nodes,
+  edges,
+  onNodesChange,
+  onEdgesChange,
+  onConnect,
   onDropAgent,
   onDropTrait,
-  onPipelineChange,
   isLocked,
 }: PipelineCanvasProps) {
-  const {
-    getPipeline,
-    createOnNodesChange,
-    createOnEdgesChange,
-    createOnConnect,
-  } = usePipelineStore();
-
-  const pipeline = getPipeline(pipelineId);
   const { screenToFlowPosition } = useReactFlow();
 
-  // Get base store callbacks
-  const onNodesChangeBase = useMemo(
-    () => createOnNodesChange(pipelineId),
-    [pipelineId, createOnNodesChange]
-  );
-  const onEdgesChangeBase = useMemo(
-    () => createOnEdgesChange(pipelineId),
-    [pipelineId, createOnEdgesChange]
-  );
-  const onConnectBase = useMemo(
-    () => createOnConnect(pipelineId),
-    [pipelineId, createOnConnect]
-  );
-
-  // Wrap store callbacks to also trigger save
-  const onNodesChange = useCallback(
-    (changes: NodeChange<Node<PipelineNodeData>>[]) => {
-      onNodesChangeBase(changes);
-      onPipelineChange?.();
+  const onDragOver = useCallback(
+    (event: React.DragEvent) => {
+      if (isLocked) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
     },
-    [onNodesChangeBase, onPipelineChange]
+    [isLocked]
   );
-
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => {
-      onEdgesChangeBase(changes);
-      onPipelineChange?.();
-    },
-    [onEdgesChangeBase, onPipelineChange]
-  );
-
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      onConnectBase(connection);
-      onPipelineChange?.();
-    },
-    [onConnectBase, onPipelineChange]
-  );
-
-  const onDragOver = useCallback((event: React.DragEvent) => {
-    if (isLocked) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  }, [isLocked]);
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
@@ -137,20 +97,11 @@ export function PipelineCanvas({
     [isLocked, screenToFlowPosition, onDropAgent, onDropTrait]
   );
 
-  // Handle case where pipeline is not yet loaded
-  if (!pipeline) {
-    return (
-      <div className="h-full w-full flex items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
   return (
     <div className="h-full w-full">
       <ReactFlow
-        nodes={pipeline.nodes}
-        edges={pipeline.edges}
+        nodes={nodes}
+        edges={edges}
         nodeTypes={nodeTypes}
         onNodesChange={isLocked ? undefined : onNodesChange}
         onEdgesChange={isLocked ? undefined : onEdgesChange}
