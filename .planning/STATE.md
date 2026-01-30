@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 019: Migrate Agents screen to TanStack Query
+Last activity: 2026-01-30 - Completed quick task 020: Migrate Traits screen to React Query
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -99,11 +99,12 @@ None.
 | 017 | Fix pipeline dropdown fetch | 2026-01-30 | a134e71 | [017-fix-pipeline-dropdown-fetch](./quick/017-fix-pipeline-dropdown-fetch/) |
 | 018 | Install TanStack Query and enforce pattern | 2026-01-30 | f753ae9 | [018-install-tanstack-query-enforce-pattern](./quick/018-install-tanstack-query-enforce-pattern/) |
 | 019 | Migrate Agents screen to TanStack Query | 2026-01-30 | cff8138 | [019-migrate-agents-screen-to-tanstack-query](./quick/019-migrate-agents-screen-to-tanstack-query/) |
+| 020 | Migrate Traits screen to React Query | 2026-01-30 | d491e74 | [020-migrate-traits-screen-to-react-query](./quick/020-migrate-traits-screen-to-react-query/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 019: Migrate Agents screen to TanStack Query
+Stopped at: Completed quick task 020: Migrate Traits screen to React Query
 Resume file: None
 
 ---
