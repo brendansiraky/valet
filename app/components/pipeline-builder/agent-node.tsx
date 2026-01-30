@@ -3,8 +3,9 @@ import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
 import { Unplug } from "lucide-react";
 import { cn } from "~/lib/utils";
-import type { AgentNodeData } from "~/stores/pipeline-store";
-import { usePipelineStore } from "~/stores/pipeline-store";
+import type { AgentNodeData } from "~/hooks/queries/use-pipelines";
+import { usePipelineContext } from "./pipeline-context";
+import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
 import { TraitChip } from "./trait-chip";
 import { useTraitsContext } from "./traits-context";
 
@@ -16,7 +17,8 @@ export const AgentNode = memo(
   ({ id, data, selected }: NodeProps<AgentNodeType>) => {
     const [isDragOver, setIsDragOver] = useState(false);
     const traitsMap = useTraitsContext();
-    const { addTraitToNode, removeTraitFromNode } = usePipelineStore();
+    const { pipelineId } = usePipelineContext();
+    const { addTraitToNode, removeTraitFromNode } = usePipelineFlow(pipelineId);
 
     const handleDragOver = (e: React.DragEvent) => {
       // Only accept trait drops (not agent drops)
