@@ -1,11 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { TabData } from "~/db/schema/user-tabs";
+import type { TabData } from "~/db/schema/pipeline-tabs";
 
 export const HOME_TAB_ID = "home";
 const MAX_TABS = 8;
 
 interface TabState {
   tabs: TabData[];
+  activeTabId: string | null;
+}
+
+// API input shape - name is NOT sent, it's derived from pipeline join
+interface TabInput {
+  pipelineId: string;
+  pinned?: boolean;
+}
+
+interface TabsPayload {
+  tabs: TabInput[];
   activeTabId: string | null;
 }
 
@@ -27,11 +38,19 @@ export function useTabsQuery() {
 
 // --- Save Mutation (internal) ---
 
-async function saveTabs(state: TabState): Promise<TabState> {
+// Convert TabData[] to TabInput[] for API
+function toTabInputs(tabs: TabData[]): TabInput[] {
+  return tabs.map((t) => ({
+    pipelineId: t.pipelineId,
+    pinned: t.pinned,
+  }));
+}
+
+async function saveTabs(payload: TabsPayload): Promise<TabState> {
   const res = await fetch("/api/tabs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(state),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Failed to save tabs");
   return res.json();
@@ -64,7 +83,10 @@ export function useOpenTab() {
 
       // Check if already open - just switch active
       if (current.tabs.some((t) => t.pipelineId === pipelineId)) {
-        return saveMutation.mutateAsync({ ...current, activeTabId: pipelineId });
+        return saveMutation.mutateAsync({
+          tabs: toTabInputs(current.tabs),
+          activeTabId: pipelineId,
+        });
       }
 
       // Check tab limit
@@ -73,8 +95,9 @@ export function useOpenTab() {
       }
 
       // Add new tab and set as active
+      const newTabs = [...current.tabs, { pipelineId, name, pinned: false } as TabData];
       return saveMutation.mutateAsync({
-        tabs: [...current.tabs, { pipelineId, name }],
+        tabs: toTabInputs(newTabs),
         activeTabId: pipelineId,
       });
     },
@@ -90,8 +113,9 @@ export function useOpenTab() {
             activeTabId: pipelineId,
           });
         } else if (canOpenNewTab(previous.tabs)) {
+          // Optimistically add with name for UI (will be replaced by server response)
           queryClient.setQueryData<TabState>(["tabs"], {
-            tabs: [...previous.tabs, { pipelineId, name }],
+            tabs: [...previous.tabs, { pipelineId, name, pinned: false } as TabData],
             activeTabId: pipelineId,
           });
         }
@@ -103,6 +127,10 @@ export function useOpenTab() {
       if (context?.previous) {
         queryClient.setQueryData(["tabs"], context.previous);
       }
+    },
+    onSettled: () => {
+      // Refetch to get accurate names from server
+      queryClient.invalidateQueries({ queryKey: ["tabs"] });
     },
   });
 }
@@ -142,7 +170,10 @@ export function useCloseTab() {
         }
       }
 
-      return saveMutation.mutateAsync({ tabs: newTabs, activeTabId: newActiveId });
+      return saveMutation.mutateAsync({
+        tabs: toTabInputs(newTabs),
+        activeTabId: newActiveId,
+      });
     },
     onMutate: async (pipelineId) => {
       if (pipelineId === HOME_TAB_ID) return { previous: undefined };
@@ -197,7 +228,10 @@ export function useSetActiveTab() {
         throw new Error("Tab not found");
       }
 
-      return saveMutation.mutateAsync({ ...current, activeTabId: pipelineId });
+      return saveMutation.mutateAsync({
+        tabs: toTabInputs(current.tabs),
+        activeTabId: pipelineId,
+      });
     },
     onMutate: async (pipelineId) => {
       await queryClient.cancelQueries({ queryKey: ["tabs"] });
@@ -232,14 +266,18 @@ export function useFocusOrOpenTab() {
       const existing = current.tabs.find((t) => t.pipelineId === pipelineId);
       if (existing) {
         // Focus existing tab
-        return saveMutation.mutateAsync({ ...current, activeTabId: pipelineId });
+        return saveMutation.mutateAsync({
+          tabs: toTabInputs(current.tabs),
+          activeTabId: pipelineId,
+        });
       } else {
         // Open new tab
         if (!canOpenNewTab(current.tabs)) {
           throw new Error("Maximum tabs reached");
         }
+        const newTabs = [...current.tabs, { pipelineId, name, pinned: false } as TabData];
         return saveMutation.mutateAsync({
-          tabs: [...current.tabs, { pipelineId, name }],
+          tabs: toTabInputs(newTabs),
           activeTabId: pipelineId,
         });
       }
@@ -256,8 +294,9 @@ export function useFocusOrOpenTab() {
             activeTabId: pipelineId,
           });
         } else if (canOpenNewTab(previous.tabs)) {
+          // Optimistically add with name for UI (will be replaced by server response)
           queryClient.setQueryData<TabState>(["tabs"], {
-            tabs: [...previous.tabs, { pipelineId, name }],
+            tabs: [...previous.tabs, { pipelineId, name, pinned: false } as TabData],
             activeTabId: pipelineId,
           });
         }
@@ -270,24 +309,30 @@ export function useFocusOrOpenTab() {
         queryClient.setQueryData(["tabs"], context.previous);
       }
     },
+    onSettled: () => {
+      // Refetch to get accurate names from server
+      queryClient.invalidateQueries({ queryKey: ["tabs"] });
+    },
   });
 }
 
+/**
+ * Updates the tab name in the local cache ONLY.
+ *
+ * With the normalized schema, tab names come from the pipelines table via JOIN.
+ * This hook provides immediate UI feedback by updating the cache.
+ * The actual persistence happens via useUpdatePipelineName.
+ *
+ * When the pipeline name is updated, invalidate the tabs query to refresh
+ * names from the server.
+ */
 export function useUpdateTabName() {
   const queryClient = useQueryClient();
-  const saveMutation = useSaveTabsMutation();
 
   return useMutation({
+    // This is a cache-only mutation - returns immediately
     mutationFn: async ({ pipelineId, name }: { pipelineId: string; name: string }) => {
-      const current = queryClient.getQueryData<TabState>(["tabs"]);
-      if (!current) throw new Error("Tab state not loaded");
-
-      return saveMutation.mutateAsync({
-        tabs: current.tabs.map((t) =>
-          t.pipelineId === pipelineId ? { ...t, name } : t
-        ),
-        activeTabId: current.activeTabId,
-      });
+      return { pipelineId, name };
     },
     onMutate: async ({ pipelineId, name }) => {
       await queryClient.cancelQueries({ queryKey: ["tabs"] });

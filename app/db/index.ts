@@ -8,13 +8,13 @@ import * as pipelines from "./schema/pipelines";
 import * as pipelineRuns from "./schema/pipeline-runs";
 import * as traits from "./schema/traits";
 import * as agentTraits from "./schema/agent-traits";
-import * as userTabs from "./schema/user-tabs";
+import * as pipelineTabs from "./schema/pipeline-tabs";
 
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString);
 
 export const db = drizzle(client, {
-  schema: { ...users, ...sessions, ...apiKeys, ...agents, ...pipelines, ...pipelineRuns, ...traits, ...agentTraits, ...userTabs },
+  schema: { ...users, ...sessions, ...apiKeys, ...agents, ...pipelines, ...pipelineRuns, ...traits, ...agentTraits, ...pipelineTabs },
 });
 
 export * from "./schema/users";
@@ -25,4 +25,4 @@ export * from "./schema/pipelines";
 export * from "./schema/pipeline-runs";
 export * from "./schema/traits";
 export * from "./schema/agent-traits";
-export * from "./schema/user-tabs";
+export * from "./schema/pipeline-tabs";

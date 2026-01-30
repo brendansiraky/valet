@@ -57,6 +57,13 @@
       "when": 1769771990857,
       "tag": "0007_ordinary_randall",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1769858400000,
+      "tag": "0008_normalize_tabs",
+      "breakpoints": true
     }
   ]
 }

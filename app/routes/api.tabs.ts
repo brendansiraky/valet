@@ -1,14 +1,23 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { eq } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { getUserId } from "~/services/auth.server";
-import { db, userTabs, pipelines } from "~/db";
-import type { TabData } from "~/db/schema/user-tabs";
+import { db, pipelineTabs, pipelines } from "~/db";
 
 function jsonResponse(data: unknown, status: number = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+// Response shape for tabs - name comes from pipeline join
+export interface TabResponse {
+  id: string;
+  pipelineId: string;
+  name: string; // From pipelines table
+  pinned: boolean;
+  position: number;
+  isActive: boolean;
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -18,40 +27,39 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return jsonResponse({ error: "Authentication required" }, 401);
   }
 
-  // Fetch user's tab state
-  const [tabState] = await db
-    .select()
-    .from(userTabs)
-    .where(eq(userTabs.userId, userId));
+  // Fetch user's tabs with pipeline names via join
+  const tabs = await db
+    .select({
+      id: pipelineTabs.id,
+      pipelineId: pipelineTabs.pipelineId,
+      name: pipelines.name,
+      pinned: pipelineTabs.pinned,
+      position: pipelineTabs.position,
+      isActive: pipelineTabs.isActive,
+    })
+    .from(pipelineTabs)
+    .innerJoin(pipelines, eq(pipelineTabs.pipelineId, pipelines.id))
+    .where(eq(pipelineTabs.userId, userId))
+    .orderBy(asc(pipelineTabs.position));
 
-  if (!tabState) {
-    // No tab state yet - return empty
-    return jsonResponse({ tabs: [], activeTabId: null });
-  }
-
-  // Filter out tabs for deleted pipelines
-  const existingPipelines = await db
-    .select({ id: pipelines.id })
-    .from(pipelines)
-    .where(eq(pipelines.userId, userId));
-
-  const validIds = new Set(existingPipelines.map((p) => p.id));
-  const validTabs = tabState.tabs.filter(
-    (t) => t.pipelineId === "home" || validIds.has(t.pipelineId)
-  );
-
-  // Persist cleanup if tabs were filtered
-  if (validTabs.length !== tabState.tabs.length) {
-    await db
-      .update(userTabs)
-      .set({ tabs: validTabs })
-      .where(eq(userTabs.id, tabState.id));
-  }
+  // Find active tab
+  const activeTab = tabs.find((t) => t.isActive);
 
   return jsonResponse({
-    tabs: validTabs,
-    activeTabId: tabState.activeTabId,
+    tabs,
+    activeTabId: activeTab?.pipelineId ?? null,
   });
+}
+
+// Input for creating/updating tabs
+interface TabInput {
+  pipelineId: string;
+  pinned?: boolean;
+}
+
+interface TabsUpdatePayload {
+  tabs: TabInput[];
+  activeTabId: string | null;
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -61,28 +69,46 @@ export async function action({ request }: ActionFunctionArgs) {
     return jsonResponse({ error: "Authentication required" }, 401);
   }
 
-  const body = await request.json();
-  const tabs = body.tabs as TabData[];
-  const activeTabId = body.activeTabId as string | null;
+  const body = (await request.json()) as TabsUpdatePayload;
+  const { tabs: tabInputs, activeTabId } = body;
 
-  if (!Array.isArray(tabs)) {
+  if (!Array.isArray(tabInputs)) {
     return jsonResponse({ error: "tabs must be an array" }, 400);
   }
 
-  // Check if user already has tab state
-  const [existing] = await db
-    .select({ id: userTabs.id })
-    .from(userTabs)
-    .where(eq(userTabs.userId, userId));
+  // Delete all existing tabs for this user
+  await db.delete(pipelineTabs).where(eq(pipelineTabs.userId, userId));
 
-  if (existing) {
-    await db
-      .update(userTabs)
-      .set({ tabs, activeTabId })
-      .where(eq(userTabs.id, existing.id));
-  } else {
-    await db.insert(userTabs).values({ userId, tabs, activeTabId });
+  // Insert new tabs with positions
+  if (tabInputs.length > 0) {
+    const newTabs = tabInputs.map((tab, index) => ({
+      userId,
+      pipelineId: tab.pipelineId,
+      position: index,
+      pinned: tab.pinned ?? false,
+      isActive: tab.pipelineId === activeTabId,
+    }));
+
+    await db.insert(pipelineTabs).values(newTabs);
   }
 
-  return jsonResponse({ tabs, activeTabId });
+  // Fetch the newly created tabs with pipeline names
+  const tabs = await db
+    .select({
+      id: pipelineTabs.id,
+      pipelineId: pipelineTabs.pipelineId,
+      name: pipelines.name,
+      pinned: pipelineTabs.pinned,
+      position: pipelineTabs.position,
+      isActive: pipelineTabs.isActive,
+    })
+    .from(pipelineTabs)
+    .innerJoin(pipelines, eq(pipelineTabs.pipelineId, pipelines.id))
+    .where(eq(pipelineTabs.userId, userId))
+    .orderBy(asc(pipelineTabs.position));
+
+  return jsonResponse({
+    tabs,
+    activeTabId,
+  });
 }
