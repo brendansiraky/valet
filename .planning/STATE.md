@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 Phase: 18 of 18 - Pipeline Tabs
 Plan: 04 of 4 complete
 Status: Complete
-Last activity: 2026-01-30 - Completed quick task 025: Fix Settings skeleton card width
+Last activity: 2026-01-30 - Completed quick task 026: Migrate Pipeline screen to React Query
 
 Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 
@@ -105,11 +105,12 @@ None.
 | 023 | Implement skeleton loading on Traits screen | 2026-01-30 | 0dd1f60 | [023-implement-skeleton-loading-on-traits-sc](./quick/023-implement-skeleton-loading-on-traits-sc/) |
 | 024 | Implement skeleton loading on Settings screen | 2026-01-30 | 0dd1f60 | [024-implement-skeleton-loading-on-settings-](./quick/024-implement-skeleton-loading-on-settings-/) |
 | 025 | Fix Settings skeleton card width | 2026-01-30 | 51675e1 | [025-fix-settings-skeleton-card-width](./quick/025-fix-settings-skeleton-card-width/) |
+| 026 | Migrate Pipeline screen to React Query | 2026-01-30 | f8dbeb9 | [026-migrate-pipeline-screen-to-react-query](./quick/026-migrate-pipeline-screen-to-react-query/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 025: Fix Settings skeleton card width
+Stopped at: Completed quick task 026: Migrate Pipeline screen to React Query
 Resume file: None
 
 ---
