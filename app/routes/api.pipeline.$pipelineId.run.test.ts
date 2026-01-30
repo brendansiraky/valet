@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { action } from "./api.pipeline.$pipelineId.run";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RouteArgs = { request: Request; params: Record<string, string>; context: any; unstable_pattern: string };
+
 // Mock dependencies
 vi.mock("~/services/session.server", () => ({
   getSession: vi.fn(),
@@ -81,7 +84,8 @@ describe("api.pipeline.$pipelineId.run", () => {
         request,
         params: { pipelineId: "pipe-123" },
         context: {},
-      });
+        unstable_pattern: "",
+      } as RouteArgs);
 
       expect(response.status).toBe(401);
       const data = await parseResponse(response);
@@ -96,7 +100,8 @@ describe("api.pipeline.$pipelineId.run", () => {
         request,
         params: {}, // No pipelineId param
         context: {},
-      });
+        unstable_pattern: "",
+      } as RouteArgs);
 
       expect(response.status).toBe(400);
       const data = await parseResponse(response);
@@ -112,7 +117,8 @@ describe("api.pipeline.$pipelineId.run", () => {
         request,
         params: { pipelineId: "pipe-nonexistent" },
         context: {},
-      });
+        unstable_pattern: "",
+      } as RouteArgs);
 
       expect(response.status).toBe(404);
       const data = await parseResponse(response);
@@ -139,7 +145,8 @@ describe("api.pipeline.$pipelineId.run", () => {
         request,
         params: { pipelineId: "pipe-123" },
         context: {},
-      });
+        unstable_pattern: "",
+      } as RouteArgs);
 
       expect(response.status).toBe(200);
       const data = await parseResponse(response);
@@ -180,7 +187,8 @@ describe("api.pipeline.$pipelineId.run", () => {
         request,
         params: { pipelineId: "pipe-123" },
         context: {},
-      });
+        unstable_pattern: "",
+      } as RouteArgs);
 
       expect(mockSend).toHaveBeenCalledWith(
         "pipeline-run",

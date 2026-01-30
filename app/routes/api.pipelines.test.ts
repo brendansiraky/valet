@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { loader, action } from "./api.pipelines";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RouteArgs = { request: Request; params: Record<string, string>; context: any; unstable_pattern: string };
+
 // Mock dependencies
 vi.mock("~/services/session.server", () => ({
   getSession: vi.fn(),
@@ -87,7 +90,7 @@ describe("api.pipelines", () => {
       (getSession as Mock).mockResolvedValue(createMockSession(null));
 
       const request = new Request("http://test/api/pipelines");
-      const response = await loader({ request, params: {}, context: {} });
+      const response = await loader({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(401);
       const data = await parseResponse(response);
@@ -103,7 +106,7 @@ describe("api.pipelines", () => {
       mockSelectChain(mockPipelines);
 
       const request = new Request("http://test/api/pipelines");
-      const response = await loader({ request, params: {}, context: {} });
+      const response = await loader({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(200);
       const data = await parseResponse(response);
@@ -116,7 +119,7 @@ describe("api.pipelines", () => {
       (getSession as Mock).mockResolvedValue(createMockSession(null));
 
       const request = createRequest({ intent: "create", name: "Test Pipeline" });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(401);
       const data = await parseResponse(response);
@@ -127,7 +130,7 @@ describe("api.pipelines", () => {
       (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
 
       const request = createRequest({ intent: "create" });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(400);
       const data = await parseResponse(response);
@@ -150,7 +153,7 @@ describe("api.pipelines", () => {
         name: "Test Pipeline",
         description: "A test pipeline",
       });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(200);
       const data = await parseResponse(response);
@@ -167,7 +170,7 @@ describe("api.pipelines", () => {
         name: "Test Pipeline",
         flowData: JSON.stringify(flowData),
       });
-      await action({ request, params: {}, context: {} });
+      await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(insertChain.values).toHaveBeenCalledWith(
         expect.objectContaining({ flowData })
@@ -185,7 +188,7 @@ describe("api.pipelines", () => {
         name: "Updated",
         flowData: "{}",
       });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(401);
       const data = await parseResponse(response);
@@ -200,7 +203,7 @@ describe("api.pipelines", () => {
         name: "Updated",
         flowData: "{}",
       });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(400);
       const data = await parseResponse(response);
@@ -215,7 +218,7 @@ describe("api.pipelines", () => {
         id: "pipe-1",
         flowData: "{}",
       });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(400);
       const data = await parseResponse(response);
@@ -232,7 +235,7 @@ describe("api.pipelines", () => {
         name: "Updated",
         flowData: "{}",
       });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(404);
       const data = await parseResponse(response);
@@ -256,7 +259,7 @@ describe("api.pipelines", () => {
         description: "Updated desc",
         flowData: JSON.stringify({ nodes: [{ id: "1" }], edges: [] }),
       });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(200);
       const data = await parseResponse(response);
@@ -269,7 +272,7 @@ describe("api.pipelines", () => {
       (getSession as Mock).mockResolvedValue(createMockSession(null));
 
       const request = createRequest({ intent: "delete", id: "pipe-1" });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(401);
       const data = await parseResponse(response);
@@ -280,7 +283,7 @@ describe("api.pipelines", () => {
       (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
 
       const request = createRequest({ intent: "delete" });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(400);
       const data = await parseResponse(response);
@@ -292,7 +295,7 @@ describe("api.pipelines", () => {
       mockDeleteChain([]); // Empty result = not found
 
       const request = createRequest({ intent: "delete", id: "pipe-nonexistent" });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(404);
       const data = await parseResponse(response);
@@ -304,7 +307,7 @@ describe("api.pipelines", () => {
       mockDeleteChain([{ id: "pipe-1" }]);
 
       const request = createRequest({ intent: "delete", id: "pipe-1" });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(200);
       const data = await parseResponse(response);
@@ -317,7 +320,7 @@ describe("api.pipelines", () => {
       (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
 
       const request = createRequest({ intent: "invalid-action" });
-      const response = await action({ request, params: {}, context: {} });
+      const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
       expect(response.status).toBe(400);
       const data = await parseResponse(response);
