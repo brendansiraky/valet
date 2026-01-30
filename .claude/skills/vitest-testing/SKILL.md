@@ -23,16 +23,16 @@ For other test types:
 
 ### File Naming and Location
 
-Place component test files adjacent to the component with `_test.tsx` suffix:
+Place component test files adjacent to the component with `.test.tsx` suffix:
 
 ```
 app/
   components/
     Button.tsx
-    Button_test.tsx     # Tests for Button.tsx
+    Button.test.tsx     # Tests for Button.tsx
     Form/
       Form.tsx
-      Form_test.tsx
+      Form.test.tsx
 ```
 
 ### Test Coverage Approach
@@ -83,7 +83,7 @@ npx vitest
 npx vitest run
 
 # Run specific file
-npx vitest Button_test.tsx
+npx vitest Button.test.tsx
 
 # Filter by test name
 npx vitest -t "renders"
@@ -298,4 +298,4 @@ afterAll(() => {
 
 ### Example Files
 
-- **`examples/component_test.tsx`** - Basic component test patterns
+- **`examples/component.test.tsx`** - Basic component test patterns

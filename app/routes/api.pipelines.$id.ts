@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db, pipelines } from "~/db";
 import { eq, and } from "drizzle-orm";
 
@@ -11,8 +11,7 @@ function jsonResponse(data: unknown, status: number = 200): Response {
 }
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);

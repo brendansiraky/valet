@@ -5,8 +5,8 @@ import { loader, action } from "./api.pipelines";
 type RouteArgs = { request: Request; params: Record<string, string>; context: any; unstable_pattern: string };
 
 // Mock dependencies
-vi.mock("~/services/session.server", () => ({
-  getSession: vi.fn(),
+vi.mock("~/services/auth.server", () => ({
+  getUserId: vi.fn(),
 }));
 
 vi.mock("~/db", () => ({
@@ -19,15 +19,8 @@ vi.mock("~/db", () => ({
   pipelines: { id: "id", name: "name", userId: "userId", updatedAt: "updatedAt" },
 }));
 
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db } from "~/db";
-
-// Helper to create mock session
-function createMockSession(userId: string | null) {
-  return {
-    get: vi.fn((key: string) => (key === "userId" ? userId : null)),
-  };
-}
 
 // Helper to create Request with FormData
 function createRequest(formData: Record<string, string>, method = "POST") {
@@ -87,7 +80,7 @@ describe("api.pipelines", () => {
 
   describe("loader (GET /api/pipelines)", () => {
     it("returns 401 when no userId in session", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession(null));
+      (getUserId as Mock).mockResolvedValue(null);
 
       const request = new Request("http://test/api/pipelines");
       const response = await loader({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
@@ -98,7 +91,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns list of pipelines for authenticated user", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockPipelines = [
         { id: "pipe-1", name: "Pipeline 1" },
         { id: "pipe-2", name: "Pipeline 2" },
@@ -116,7 +109,7 @@ describe("api.pipelines", () => {
 
   describe("action with intent=create", () => {
     it("returns 401 when unauthenticated", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession(null));
+      (getUserId as Mock).mockResolvedValue(null);
 
       const request = createRequest({ intent: "create", name: "Test Pipeline" });
       const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
@@ -127,7 +120,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns 400 when name is missing", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = createRequest({ intent: "create" });
       const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
@@ -138,7 +131,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns pipeline object on success", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const newPipeline = {
         id: "pipe-new",
         name: "Test Pipeline",
@@ -161,7 +154,7 @@ describe("api.pipelines", () => {
     });
 
     it("uses provided flowData when present", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const flowData = { nodes: [{ id: "1" }], edges: [] };
       const insertChain = mockInsertChain([{ id: "pipe-new", flowData }]);
 
@@ -180,7 +173,7 @@ describe("api.pipelines", () => {
 
   describe("action with intent=update", () => {
     it("returns 401 when unauthenticated", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession(null));
+      (getUserId as Mock).mockResolvedValue(null);
 
       const request = createRequest({
         intent: "update",
@@ -196,7 +189,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns 400 when id is missing", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = createRequest({
         intent: "update",
@@ -211,7 +204,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns 400 when name is missing", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = createRequest({
         intent: "update",
@@ -226,7 +219,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns 404 when pipeline not found", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       mockUpdateChain([]); // Empty result = not found
 
       const request = createRequest({
@@ -243,7 +236,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns updated pipeline on success", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const updatedPipeline = {
         id: "pipe-1",
         name: "Updated Pipeline",
@@ -269,7 +262,7 @@ describe("api.pipelines", () => {
 
   describe("action with intent=delete", () => {
     it("returns 401 when unauthenticated", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession(null));
+      (getUserId as Mock).mockResolvedValue(null);
 
       const request = createRequest({ intent: "delete", id: "pipe-1" });
       const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
@@ -280,7 +273,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns 400 when id is missing", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = createRequest({ intent: "delete" });
       const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
@@ -291,7 +284,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns 404 when pipeline not found", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       mockDeleteChain([]); // Empty result = not found
 
       const request = createRequest({ intent: "delete", id: "pipe-nonexistent" });
@@ -303,7 +296,7 @@ describe("api.pipelines", () => {
     });
 
     it("returns success: true on successful delete", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       mockDeleteChain([{ id: "pipe-1" }]);
 
       const request = createRequest({ intent: "delete", id: "pipe-1" });
@@ -317,7 +310,7 @@ describe("api.pipelines", () => {
 
   describe("action with invalid intent", () => {
     it("returns 400 with Invalid intent error", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = createRequest({ intent: "invalid-action" });
       const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);

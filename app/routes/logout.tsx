@@ -1,13 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
-import { redirect } from "react-router";
-import { getSession, destroySession } from "~/services/session.server";
+import { logout } from "~/services/auth.server";
 
 export async function action({ request }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  return redirect("/login", {
-    headers: {
-      "Set-Cookie": await destroySession(session),
-    },
-  });
+  return logout(request, "/login");
 }

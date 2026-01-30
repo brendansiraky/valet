@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Agent } from "~/db/schema/agents";
+import { queries } from "./keys";
 
 // Types for API responses
 interface AgentWithTraitIds extends Agent {
@@ -38,7 +39,7 @@ async function fetchAgents(): Promise<AgentsData> {
 // Query hook for agents list
 export function useAgents() {
   return useQuery({
-    queryKey: ["agents"],
+    queryKey: queries.agents.all.queryKey,
     queryFn: fetchAgents,
   });
 }
@@ -51,11 +52,15 @@ interface CreateAgentData {
   traitIds?: string[];
 }
 
+interface CreateAgentResult {
+  agent: AgentWithTraitIds;
+}
+
 export function useCreateAgent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateAgentData) => {
+    mutationFn: async (data: CreateAgentData): Promise<CreateAgentResult> => {
       const formData = new FormData();
       formData.append("intent", "create");
       formData.append("name", data.name);
@@ -82,8 +87,46 @@ export function useCreateAgent() {
 
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["agents"] });
+    onMutate: async (data) => {
+      // Cancel in-flight queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: queries.agents._def });
+
+      // Snapshot current state for rollback
+      const previous = queryClient.getQueryData<AgentsData>(queries.agents.all.queryKey);
+
+      // Create optimistic agent with temporary ID
+      const optimisticAgent: AgentWithTraitIds = {
+        id: `temp-${Date.now()}`,
+        userId: "temp-user",
+        name: data.name,
+        instructions: data.instructions,
+        model: data.model ?? null,
+        capability: "none",
+        traitIds: data.traitIds ?? [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Optimistically add the agent to the cache
+      queryClient.setQueryData<AgentsData>(queries.agents.all.queryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          agents: [optimisticAgent, ...old.agents],
+        };
+      });
+
+      return { previous };
+    },
+    onError: (_err, _data, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(queries.agents.all.queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      // Always refetch to ensure server state
+      queryClient.invalidateQueries({ queryKey: queries.agents._def });
     },
   });
 }
@@ -133,8 +176,44 @@ export function useUpdateAgent() {
 
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["agents"] });
+    onMutate: async (data) => {
+      // Cancel in-flight queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: queries.agents._def });
+
+      // Snapshot current state for rollback
+      const previous = queryClient.getQueryData<AgentsData>(queries.agents.all.queryKey);
+
+      // Optimistically update the agent in the cache
+      queryClient.setQueryData<AgentsData>(queries.agents.all.queryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          agents: old.agents.map((agent) =>
+            agent.id === data.agentId
+              ? {
+                  ...agent,
+                  name: data.name,
+                  instructions: data.instructions,
+                  model: data.model ?? agent.model,
+                  traitIds: data.traitsUpdated ? (data.traitIds ?? []) : agent.traitIds,
+                  updatedAt: new Date(),
+                }
+              : agent
+          ),
+        };
+      });
+
+      return { previous };
+    },
+    onError: (_err, _data, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(queries.agents.all.queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      // Always refetch to ensure server state
+      queryClient.invalidateQueries({ queryKey: queries.agents._def });
     },
   });
 }
@@ -168,8 +247,33 @@ export function useDeleteAgent() {
 
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["agents"] });
+    onMutate: async (data) => {
+      // Cancel in-flight queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: queries.agents._def });
+
+      // Snapshot current state for rollback
+      const previous = queryClient.getQueryData<AgentsData>(queries.agents.all.queryKey);
+
+      // Optimistically remove the agent from the cache
+      queryClient.setQueryData<AgentsData>(queries.agents.all.queryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          agents: old.agents.filter((agent) => agent.id !== data.agentId),
+        };
+      });
+
+      return { previous };
+    },
+    onError: (_err, _data, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(queries.agents.all.queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      // Always refetch to ensure server state
+      queryClient.invalidateQueries({ queryKey: queries.agents._def });
     },
   });
 }

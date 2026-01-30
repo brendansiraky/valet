@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Node, Edge } from "@xyflow/react";
+import { queries } from "./keys";
 
 // Flow data structure for pipeline canvas state
 export interface FlowData {
@@ -31,7 +32,6 @@ export type PipelineNodeData = AgentNodeData | TraitNodeData;
 export interface Pipeline {
   id: string;
   name: string;
-  description: string | null;
   flowData: FlowData;
 }
 
@@ -49,7 +49,7 @@ async function fetchPipelines(): Promise<PipelineListItem[]> {
 
 export function usePipelines() {
   return useQuery({
-    queryKey: ["pipelines"],
+    queryKey: queries.pipelines.all.queryKey,
     queryFn: fetchPipelines,
   });
 }
@@ -63,7 +63,7 @@ async function fetchPipeline(id: string): Promise<Pipeline> {
 
 export function usePipeline(id: string | undefined) {
   return useQuery({
-    queryKey: ["pipelines", id],
+    queryKey: queries.pipelines.detail(id!).queryKey,
     queryFn: () => fetchPipeline(id!),
     enabled: !!id && id !== "home" && id !== "new",
   });
@@ -107,7 +107,6 @@ export function useRunPipeline() {
 interface SavePipelineInput {
   id: string;
   name: string;
-  description: string;
   nodes: unknown[];
   edges: unknown[];
   isNew: boolean;
@@ -120,7 +119,6 @@ async function savePipeline(data: SavePipelineInput): Promise<Pipeline> {
     formData.set("id", data.id);
   }
   formData.set("name", data.name);
-  formData.set("description", data.description);
   formData.set("flowData", JSON.stringify({ nodes: data.nodes, edges: data.edges }));
 
   const response = await fetch("/api/pipelines", {
@@ -171,9 +169,130 @@ export function useDeletePipeline() {
 
   return useMutation({
     mutationFn: deletePipeline,
-    onSuccess: () => {
-      // Invalidate pipelines list to refresh dropdown
-      queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+
+    onMutate: async (deletedPipeline) => {
+      // Cancel in-flight queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: queries.pipelines.all.queryKey });
+
+      // Snapshot current state for rollback
+      const previousPipelines = queryClient.getQueryData<PipelineListItem[]>(
+        queries.pipelines.all.queryKey
+      );
+
+      // Optimistically remove from cache
+      queryClient.setQueryData<PipelineListItem[]>(
+        queries.pipelines.all.queryKey,
+        (old) => old?.filter((p) => p.id !== deletedPipeline.id)
+      );
+
+      return { previousPipelines };
+    },
+
+    onError: (_err, _deletedPipeline, context) => {
+      // Rollback on error
+      if (context?.previousPipelines) {
+        queryClient.setQueryData(
+          queries.pipelines.all.queryKey,
+          context.previousPipelines
+        );
+      }
+    },
+
+    onSettled: () => {
+      // Always refetch to ensure consistency with server
+      queryClient.invalidateQueries({ queryKey: queries.pipelines._def });
+    },
+  });
+}
+
+// Create new empty pipeline with optimistic update
+interface CreatePipelineInput {
+  name: string;
+  flowData: FlowData;
+}
+
+interface CreatePipelineResponse {
+  id: string;
+  name: string;
+  flowData: FlowData;
+}
+
+async function createPipeline(data: CreatePipelineInput): Promise<CreatePipelineResponse> {
+  const formData = new FormData();
+  formData.set("intent", "create");
+  formData.set("name", data.name);
+  formData.set("flowData", JSON.stringify(data.flowData));
+
+  const response = await fetch("/api/pipelines", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.error) {
+    throw new Error(result.error || "Failed to create pipeline");
+  }
+
+  return result.pipeline;
+}
+
+export function useCreatePipeline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createPipeline,
+
+    onMutate: async (newPipeline) => {
+      // Cancel in-flight queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: queries.pipelines.all.queryKey });
+
+      // Snapshot current state for rollback
+      const previousPipelines = queryClient.getQueryData<PipelineListItem[]>(
+        queries.pipelines.all.queryKey
+      );
+
+      // Generate a temporary ID for optimistic display
+      const tempId = `temp-${Date.now()}`;
+
+      // Optimistically add to cache
+      queryClient.setQueryData<PipelineListItem[]>(
+        queries.pipelines.all.queryKey,
+        (old) => [
+          ...(old ?? []),
+          { id: tempId, name: newPipeline.name },
+        ]
+      );
+
+      return { previousPipelines, tempId };
+    },
+
+    onError: (_err, _newPipeline, context) => {
+      // Rollback on error
+      if (context?.previousPipelines) {
+        queryClient.setQueryData(
+          queries.pipelines.all.queryKey,
+          context.previousPipelines
+        );
+      }
+    },
+
+    onSuccess: (createdPipeline, _variables, context) => {
+      // Replace temp item with real one from server
+      queryClient.setQueryData<PipelineListItem[]>(
+        queries.pipelines.all.queryKey,
+        (old) =>
+          old?.map((p) =>
+            p.id === context?.tempId
+              ? { id: createdPipeline.id, name: createdPipeline.name }
+              : p
+          )
+      );
+    },
+
+    onSettled: () => {
+      // Always refetch to ensure consistency with server
+      queryClient.invalidateQueries({ queryKey: queries.pipelines._def });
     },
   });
 }

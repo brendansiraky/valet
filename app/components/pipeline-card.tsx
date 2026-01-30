@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { ResourceCard } from "./resource-card";
 import { PipelineDeleteDialog } from "./pipeline-delete-dialog";
-import { useTabStore } from "~/stores/tab-store";
+import { useTabsQuery, useFocusOrOpenTab, canOpenNewTab } from "~/hooks/queries/use-tabs";
 
 interface PipelineCardProps {
   pipeline: {
@@ -17,18 +17,21 @@ interface PipelineCardProps {
 
 export function PipelineCard({ pipeline }: PipelineCardProps) {
   const navigate = useNavigate();
-  const { focusOrOpenTab, canOpenNewTab, tabs } = useTabStore();
+  const { data: tabState } = useTabsQuery();
+  const focusOrOpenTab = useFocusOrOpenTab();
+
+  const tabs = tabState?.tabs ?? [];
 
   const handleEdit = () => {
     // Check if already open
     const isAlreadyOpen = tabs.some((t) => t.pipelineId === pipeline.id);
 
-    if (!isAlreadyOpen && !canOpenNewTab()) {
+    if (!isAlreadyOpen && !canOpenNewTab(tabs)) {
       toast.error("Maximum 8 tabs open. Close a tab to open another.");
       return;
     }
 
-    focusOrOpenTab(pipeline.id, pipeline.name);
+    focusOrOpenTab.mutate({ pipelineId: pipeline.id, name: pipeline.name });
     navigate(`/pipelines/${pipeline.id}`);
   };
 

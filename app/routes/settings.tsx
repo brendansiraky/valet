@@ -1,11 +1,8 @@
-import type { LoaderFunctionArgs } from "react-router";
-import { redirect, useLoaderData, Form } from "react-router";
+import { Form } from "react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { getSession } from "~/services/session.server";
 import { ANTHROPIC_MODELS, OPENAI_MODELS } from "~/lib/models";
-import { db, users } from "~/db";
-import { eq } from "drizzle-orm";
+import { useUser } from "~/contexts/user-context";
 import {
   Card,
   CardContent,
@@ -36,29 +33,8 @@ import {
   useUpdateModelPreference,
 } from "~/hooks/queries/useSettings";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (!userId) {
-    return redirect("/login");
-  }
-
-  // Get user email for display (static, no React Query needed)
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: { email: true },
-  });
-
-  if (!user) {
-    return redirect("/login");
-  }
-
-  return { user: { email: user.email } };
-}
-
 export default function Settings() {
-  const { user } = useLoaderData<typeof loader>();
+  const user = useUser();
 
   // React Query hooks
   const settingsQuery = useSettings();

@@ -1,5 +1,7 @@
 # React Query Best Practices
 
+Detailed patterns and techniques that extend the core guidance in SKILL.md.
+
 ## TypeScript
 
 ### Avoid Return-Only Generics
@@ -88,11 +90,11 @@ useInfiniteQuery({
 
 ## Query Key Management
 
-Use [@lukemorales/query-key-factory](https://github.com/lukemorales/query-key-factory) to centralize and type query keys.
+Use [@lukemorales/query-key-factory](https://github.com/lukemorales/query-key-factory) to centralize and type query keys. **All query keys in this codebase MUST use the factory.**
 
 ### Define Feature-Based Keys
 
-Create a factory per feature with `createQueryKeys`. Colocate the `queryFn` with the key.
+Create a factory per feature with `createQueryKeys` in `app/hooks/queries/keys/`:
 
 ```typescript
 // app/hooks/queries/keys/users.ts
@@ -100,23 +102,16 @@ import { createQueryKeys } from "@lukemorales/query-key-factory";
 
 export const usersKeys = createQueryKeys("users", {
   all: null,
-  list: (filters: { status?: string }) => ({
-    queryKey: [{ filters }],
-    queryFn: () => fetchUsers(filters),
-  }),
-  detail: (userId: string) => ({
-    queryKey: [userId],
-    queryFn: () => fetchUser(userId),
-  }),
+  detail: (userId: string) => [userId],
+  list: (filters: { status?: string }) => [{ filters }],
 });
 ```
 
 ### Merge Into Single Store
 
-Combine feature factories for a unified query key store.
+Combine feature factories in `app/hooks/queries/keys/index.ts`:
 
 ```typescript
-// app/hooks/queries/keys/index.ts
 import { mergeQueryKeys } from "@lukemorales/query-key-factory";
 import { usersKeys } from "./users";
 import { pipelinesKeys } from "./pipelines";
@@ -126,58 +121,53 @@ export const queries = mergeQueryKeys(usersKeys, pipelinesKeys);
 
 ### Use in Hooks
 
-Spread the factory output directly into `useQuery`.
+Import `queries` and use `.queryKey` for query definitions:
 
 ```typescript
-// ✅ Keys and queryFn come from the factory
+import { queries } from './keys'
+
 function useUser(userId: string) {
-  return useQuery(queries.users.detail(userId));
+  return useQuery({
+    queryKey: queries.users.detail(userId).queryKey,
+    queryFn: () => fetchUser(userId),
+  });
 }
 
-function useUsers(filters: { status?: string }) {
-  return useQuery(queries.users.list(filters));
+function useUsers() {
+  return useQuery({
+    queryKey: queries.users.all.queryKey,
+    queryFn: fetchUsers,
+  });
 }
 ```
 
 ### Invalidation Patterns
 
-Use `._def` to target all variations of a key scope.
+Use `._def` to target all variations of a key scope:
 
 ```typescript
 const queryClient = useQueryClient();
 
-// Invalidate all user queries
+// Invalidate all user queries (list, detail, etc.)
 queryClient.invalidateQueries({ queryKey: queries.users._def });
 
 // Invalidate all user lists (any filter combination)
 queryClient.invalidateQueries({ queryKey: queries.users.list._def });
 
-// Invalidate specific user
+// Invalidate specific user detail
 queryClient.invalidateQueries({ queryKey: queries.users.detail(userId).queryKey });
 ```
 
+### Adding New Query Keys
+
+When adding a new feature:
+
+1. Create `app/hooks/queries/keys/{feature}.ts`
+2. Define keys with `createQueryKeys`
+3. Export and merge in `app/hooks/queries/keys/index.ts`
+4. Use `queries.{feature}` in hooks
+
 ## Mutations
-
-### Basic Structure
-
-Mutations are imperative—call `mutate()` explicitly. Pass multiple values as an object.
-
-```typescript
-function useCreateUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: { name: string; email: string }) =>
-      fetch("/api/users", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }).then((res) => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queries.users._def });
-    },
-  });
-}
-```
 
 ### Callback Placement
 
@@ -223,68 +213,7 @@ mutation.mutate(data);
 await mutation.mutateAsync(data);
 ```
 
-### Optimistic Updates
-
-Use sparingly—only when mutations rarely fail and instant feedback matters (toggles, likes). Prefer invalidation for complex state.
-
-```typescript
-function useToggleTodo() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (todoId: string) =>
-      fetch(`/api/todos/${todoId}/toggle`, { method: "POST" }),
-
-    onMutate: async (todoId) => {
-      // Cancel in-flight queries
-      await queryClient.cancelQueries({ queryKey: queries.todos._def });
-
-      // Snapshot current state
-      const previous = queryClient.getQueryData(queries.todos.list({}).queryKey);
-
-      // Optimistically update
-      queryClient.setQueryData(
-        queries.todos.list({}).queryKey,
-        (old: Todo[] | undefined) =>
-          old?.map((todo) =>
-            todo.id === todoId ? { ...todo, done: !todo.done } : todo
-          )
-      );
-
-      return { previous };
-    },
-
-    onError: (_err, _todoId, context) => {
-      // Rollback on error
-      if (context?.previous) {
-        queryClient.setQueryData(queries.todos.list({}).queryKey, context.previous);
-      }
-    },
-
-    onSettled: () => {
-      // Refetch to ensure server state
-      queryClient.invalidateQueries({ queryKey: queries.todos._def });
-    },
-  });
-}
-```
-
-**When to skip optimistic updates:**
-
-- Operations that frequently fail
-- Complex state changes (sorting, filtering)
-- Data with server-computed fields
-- Forms with validation—just use `isPending` state
-
 ## Error Handling
-
-### Approaches by Use Case
-
-| Approach | Use For |
-|----------|---------|
-| `isError` / `status` | Component-specific error UI |
-| Error Boundary | Unrecoverable errors, full-page failures |
-| Global `QueryCache.onError` | Toasts, logging, background refetch failures |
 
 ### Component-Level Errors
 

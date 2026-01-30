@@ -1,6 +1,7 @@
 /**
  * Example React component tests with Vitest and Testing Library.
  */
+import React from "react";
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -90,8 +91,6 @@ function Counter({ initialCount = 0 }: { initialCount?: number }) {
     </div>
   );
 }
-
-import React from "react";
 
 describe("Counter", () => {
   test("renders initial count", () => {

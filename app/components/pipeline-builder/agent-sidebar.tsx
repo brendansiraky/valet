@@ -36,7 +36,7 @@ export function AgentSidebar({ agents, traits }: AgentSidebarProps) {
     }
 
     return (
-        <div className='w-64 h-[calc(100vh-78px)] border-r bg-background p-4 overflow-y-auto'>
+        <div className='w-64 h-[calc(100vh-45px)] border-r bg-background p-4 overflow-y-auto'>
             <h2 className='font-semibold mb-4'>Your Agents</h2>
             {agents.length === 0 ? (
                 <p className='text-sm text-muted-foreground'>

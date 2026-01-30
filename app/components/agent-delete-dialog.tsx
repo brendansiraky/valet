@@ -23,14 +23,9 @@ export function AgentDeleteDialog({ agent, trigger }: AgentDeleteDialogProps) {
   const deleteMutation = useDeleteAgent();
 
   const handleDelete = () => {
-    deleteMutation.mutate(
-      { agentId: agent.id },
-      {
-        onSuccess: () => {
-          setOpen(false);
-        },
-      }
-    );
+    // Close immediately - optimistic update handles the UI
+    setOpen(false);
+    deleteMutation.mutate({ agentId: agent.id });
   };
 
   return (
@@ -45,12 +40,8 @@ export function AgentDeleteDialog({ agent, trigger }: AgentDeleteDialogProps) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-          >
-            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+          <Button variant="destructive" onClick={handleDelete}>
+            Delete
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

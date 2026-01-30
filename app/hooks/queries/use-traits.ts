@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queries } from "./keys";
 
 export interface Trait {
   id: string;
@@ -14,6 +15,7 @@ interface TraitsResponse {
 
 interface MutationResponse {
   success?: boolean;
+  trait?: Trait;
   errors?: {
     name?: string[];
     context?: string[];
@@ -31,7 +33,7 @@ async function fetchTraits(): Promise<Trait[]> {
 
 export function useTraits() {
   return useQuery({
-    queryKey: ["traits"],
+    queryKey: queries.traits.all.queryKey,
     queryFn: fetchTraits,
   });
 }
@@ -74,8 +76,33 @@ export function useCreateTrait() {
 
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["traits"] });
+    onMutate: async (newTrait) => {
+      await queryClient.cancelQueries({ queryKey: queries.traits.all.queryKey });
+
+      const previous = queryClient.getQueryData<Trait[]>(queries.traits.all.queryKey);
+
+      const optimisticTrait: Trait = {
+        id: `temp-${Date.now()}`,
+        name: newTrait.name,
+        context: newTrait.context,
+        color: newTrait.color ?? "#3b82f6",
+        updatedAt: new Date(),
+      };
+
+      queryClient.setQueryData<Trait[]>(queries.traits.all.queryKey, (old) => [
+        optimisticTrait,
+        ...(old ?? []),
+      ]);
+
+      return { previous };
+    },
+    onError: (_err, _newTrait, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queries.traits.all.queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queries.traits._def });
     },
   });
 }
@@ -120,8 +147,34 @@ export function useUpdateTrait() {
 
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["traits"] });
+    onMutate: async (updatedTrait) => {
+      await queryClient.cancelQueries({ queryKey: queries.traits.all.queryKey });
+
+      const previous = queryClient.getQueryData<Trait[]>(queries.traits.all.queryKey);
+
+      queryClient.setQueryData<Trait[]>(queries.traits.all.queryKey, (old) =>
+        old?.map((trait) =>
+          trait.id === updatedTrait.traitId
+            ? {
+                ...trait,
+                name: updatedTrait.name,
+                context: updatedTrait.context,
+                color: updatedTrait.color ?? trait.color,
+                updatedAt: new Date(),
+              }
+            : trait
+        )
+      );
+
+      return { previous };
+    },
+    onError: (_err, _updatedTrait, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queries.traits.all.queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queries.traits._def });
     },
   });
 }
@@ -152,8 +205,24 @@ export function useDeleteTrait() {
 
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["traits"] });
+    onMutate: async (deletedTrait) => {
+      await queryClient.cancelQueries({ queryKey: queries.traits.all.queryKey });
+
+      const previous = queryClient.getQueryData<Trait[]>(queries.traits.all.queryKey);
+
+      queryClient.setQueryData<Trait[]>(queries.traits.all.queryKey, (old) =>
+        old?.filter((trait) => trait.id !== deletedTrait.traitId)
+      );
+
+      return { previous };
+    },
+    onError: (_err, _deletedTrait, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queries.traits.all.queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queries.traits._def });
     },
   });
 }

@@ -25,58 +25,36 @@ interface TraitFormDialogProps {
 export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
   const [open, setOpen] = useState(false);
   const [color, setColor] = useState(trait?.color ?? DEFAULT_TRAIT_COLOR);
-  const [error, setError] = useState<string | null>(null);
 
   const createMutation = useCreateTrait();
   const updateMutation = useUpdateTrait();
 
   const isEditing = !!trait;
   const mutation = isEditing ? updateMutation : createMutation;
-  const isSubmitting = mutation.isPending;
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (!newOpen) {
       // Reset color to trait's color (or default) when dialog closes
       setColor(trait?.color ?? DEFAULT_TRAIT_COLOR);
-      setError(null);
       mutation.reset();
     }
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
 
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const context = formData.get("context") as string;
 
     if (isEditing) {
-      updateMutation.mutate(
-        { traitId: trait.id, name, context, color },
-        {
-          onSuccess: () => {
-            setOpen(false);
-          },
-          onError: (err) => {
-            setError(err.message);
-          },
-        }
-      );
+      updateMutation.mutate({ traitId: trait.id, name, context, color });
     } else {
-      createMutation.mutate(
-        { name, context, color },
-        {
-          onSuccess: () => {
-            setOpen(false);
-          },
-          onError: (err) => {
-            setError(err.message);
-          },
-        }
-      );
+      createMutation.mutate({ name, context, color });
     }
+
+    setOpen(false);
   };
 
   return (
@@ -129,17 +107,9 @@ export function TraitFormDialog({ trait, trigger }: TraitFormDialogProps) {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? "Saving..."
-                : isEditing
-                  ? "Save Changes"
-                  : "Create Trait"}
+            <Button type="submit">
+              {isEditing ? "Save Changes" : "Create Trait"}
             </Button>
           </DialogFooter>
         </form>

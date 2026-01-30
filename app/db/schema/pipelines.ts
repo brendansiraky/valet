@@ -31,7 +31,6 @@ export const pipelines = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    description: text("description"),
     flowData: jsonb("flow_data").notNull().$type<FlowData>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")

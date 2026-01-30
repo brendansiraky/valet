@@ -1,15 +1,6 @@
-import type { LoaderFunctionArgs } from "react-router";
-import { redirect } from "react-router";
-import { getSession } from "~/services/session.server";
+import { Navigate } from "react-router";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (!userId) {
-    return redirect("/login");
-  }
-
-  // Redirect to home tab
-  return redirect("/pipelines/home");
+// Client-side redirect to home tab - no server loader to avoid blocking navigation
+export default function PipelinesIndex() {
+  return <Navigate to="/pipelines/home" replace />;
 }

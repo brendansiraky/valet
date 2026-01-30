@@ -1,6 +1,10 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Form, Link, redirect, useActionData, useLoaderData } from "react-router";
-import { authenticator } from "~/services/auth.server";
+import { Form, Link, redirect, useLoaderData } from "react-router";
+import {
+  authenticator,
+  isAuthenticated,
+  createUserSession,
+} from "~/services/auth.server";
 import { getSession, commitSession } from "~/services/session.server";
 import {
   Card,
@@ -15,14 +19,13 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (userId) {
-    return redirect("/dashboard");
-  }
+  // Redirect to dashboard if already authenticated
+  await isAuthenticated(request, {
+    successRedirect: "/dashboard",
+  });
 
   // Get flash error if exists
+  const session = await getSession(request.headers.get("Cookie"));
   const error = session.get("error") as string | undefined;
 
   return { error };
@@ -30,21 +33,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
-    // Clone request since we need to read form data twice
-    const clonedRequest = request.clone();
-    const user = await authenticator.authenticate("user-pass", clonedRequest);
-
-    const session = await getSession(request.headers.get("Cookie"));
-    session.set("userId", user.id);
-
-    return redirect("/dashboard", {
-      headers: {
-        "Set-Cookie": await commitSession(session, {
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-        }),
-      },
-    });
+    const user = await authenticator.authenticate("user-pass", request);
+    return createUserSession(request, user, "/dashboard");
   } catch (error) {
+    // Handle authentication errors
+    if (error instanceof Response) throw error;
+
     const session = await getSession(request.headers.get("Cookie"));
     session.flash("error", "Invalid email or password");
 
@@ -58,7 +52,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Login() {
   const loaderData = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">

@@ -5,8 +5,8 @@ import { action } from "./api.pipeline.$pipelineId.run";
 type RouteArgs = { request: Request; params: Record<string, string>; context: any; unstable_pattern: string };
 
 // Mock dependencies
-vi.mock("~/services/session.server", () => ({
-  getSession: vi.fn(),
+vi.mock("~/services/auth.server", () => ({
+  getUserId: vi.fn(),
 }));
 
 vi.mock("~/db", () => ({
@@ -25,16 +25,9 @@ vi.mock("~/services/job-queue.server", () => ({
   }),
 }));
 
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db } from "~/db";
 import { registerPipelineWorker, getJobQueue } from "~/services/job-queue.server";
-
-// Helper to create mock session
-function createMockSession(userId: string | null) {
-  return {
-    get: vi.fn((key: string) => (key === "userId" ? userId : null)),
-  };
-}
 
 // Helper to create Request with FormData
 function createRequest(formData: Record<string, string> = {}) {
@@ -77,7 +70,7 @@ describe("api.pipeline.$pipelineId.run", () => {
 
   describe("action (POST /api/pipeline/:pipelineId/run)", () => {
     it("returns 401 when unauthenticated", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession(null));
+      (getUserId as Mock).mockResolvedValue(null);
 
       const request = createRequest();
       const response = await action({
@@ -93,7 +86,7 @@ describe("api.pipeline.$pipelineId.run", () => {
     });
 
     it("returns 400 when pipelineId param is missing", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = createRequest();
       const response = await action({
@@ -109,7 +102,7 @@ describe("api.pipeline.$pipelineId.run", () => {
     });
 
     it("returns 404 when pipeline not found", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       mockSelectChain([]); // Empty result = not found
 
       const request = createRequest();
@@ -126,7 +119,7 @@ describe("api.pipeline.$pipelineId.run", () => {
     });
 
     it("creates run record and queues job on success", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       // Mock pipeline exists
       const mockPipeline = { id: "pipe-123", userId: "user-123" };
@@ -170,7 +163,7 @@ describe("api.pipeline.$pipelineId.run", () => {
     });
 
     it("uses empty string for input when not provided", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       // Mock pipeline exists
       mockSelectChain([{ id: "pipe-123", userId: "user-123" }]);

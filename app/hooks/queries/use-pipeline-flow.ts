@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { queries } from "./keys";
 import {
   applyNodeChanges,
   applyEdgeChanges,
@@ -33,7 +34,6 @@ export interface UsePipelineFlowReturn {
   nodes: Node<PipelineNodeData>[];
   edges: Edge[];
   pipelineName: string;
-  pipelineDescription: string;
   isLoading: boolean;
 
   // React Flow callbacks
@@ -43,7 +43,6 @@ export interface UsePipelineFlowReturn {
 
   // Actions
   updateName: (name: string) => void;
-  updateDescription: (description: string) => void;
   addAgentNode: (
     agent: { id: string; name: string; instructions?: string },
     position: { x: number; y: number }
@@ -86,7 +85,7 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
   const updateCache = useCallback(
     (updater: (old: Pipeline) => Pipeline) => {
       queryClient.setQueryData<Pipeline>(
-        ["pipelines", pipelineId],
+        queries.pipelines.detail(pipelineId).queryKey,
         (old) => {
           if (!old) return old;
           return updater(old);
@@ -110,7 +109,6 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
         saveMutation.mutate({
           id: pipelineId,
           name: pipeline.name,
-          description: pipeline.description || "",
           nodes: fd.nodes,
           edges: fd.edges,
           isNew: false,
@@ -177,14 +175,6 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
   const updateName = useCallback(
     (name: string) => {
       updateCache((old) => ({ ...old, name }));
-      debouncedSave();
-    },
-    [updateCache, debouncedSave]
-  );
-
-  const updateDescription = useCallback(
-    (description: string) => {
-      updateCache((old) => ({ ...old, description }));
       debouncedSave();
     },
     [updateCache, debouncedSave]
@@ -343,7 +333,6 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
     nodes: flowData.nodes as Node<PipelineNodeData>[],
     edges: flowData.edges,
     pipelineName: pipelineQuery.data?.name ?? "Untitled Pipeline",
-    pipelineDescription: pipelineQuery.data?.description ?? "",
     isLoading: pipelineQuery.isLoading,
 
     // React Flow callbacks
@@ -353,7 +342,6 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
 
     // Actions
     updateName,
-    updateDescription,
     addAgentNode,
     addTraitNode,
     removeNode,

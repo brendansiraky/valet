@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { and, eq } from "drizzle-orm";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db, pipelineRuns, pipelines } from "~/db";
 import { getJobQueue, registerPipelineWorker } from "~/services/job-queue.server";
 
@@ -16,8 +16,7 @@ function jsonResponse(data: unknown, status: number = 200): Response {
  * Starts a pipeline execution by creating a run record and queueing a job.
  */
 export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Unauthorized" }, 401);

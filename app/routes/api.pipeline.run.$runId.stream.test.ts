@@ -5,8 +5,8 @@ import { loader } from "./api.pipeline.run.$runId.stream";
 type RouteArgs = { request: Request; params: Record<string, string>; context: any; unstable_pattern: string };
 
 // Mock dependencies
-vi.mock("~/services/session.server", () => ({
-  getSession: vi.fn(),
+vi.mock("~/services/auth.server", () => ({
+  getUserId: vi.fn(),
 }));
 
 vi.mock("~/db", () => ({
@@ -37,17 +37,10 @@ vi.mock("~/services/run-emitter.server", () => ({
   },
 }));
 
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db } from "~/db";
 import { eventStream } from "remix-utils/sse/server";
 import { runEmitter } from "~/services/run-emitter.server";
-
-// Helper to create mock session
-function createMockSession(userId: string | null) {
-  return {
-    get: vi.fn((key: string) => (key === "userId" ? userId : null)),
-  };
-}
 
 // Setup mock chain helper
 function mockSelectChain(result: unknown[]) {
@@ -67,7 +60,7 @@ describe("api.pipeline.run.$runId.stream", () => {
 
   describe("loader (GET /api/pipeline/run/:runId/stream)", () => {
     it("returns 401 text response when unauthenticated", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession(null));
+      (getUserId as Mock).mockResolvedValue(null);
 
       const request = new Request("http://test/api/pipeline/run/run-123/stream");
       const response = await loader({
@@ -82,7 +75,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("returns 400 text response when runId param is missing", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = new Request("http://test/api/pipeline/run//stream");
       const response = await loader({
@@ -97,7 +90,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("returns 404 text response when run not found", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       mockSelectChain([]); // Empty result = not found
 
       const request = new Request("http://test/api/pipeline/run/run-nonexistent/stream");
@@ -113,7 +106,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("calls eventStream with AbortSignal and setup function on success", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockRun = { id: "run-123", userId: "user-123", status: "pending" };
       mockSelectChain([mockRun]);
 
@@ -135,7 +128,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("setup function registers event listener on runEmitter", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockRun = { id: "run-123", userId: "user-123", status: "pending" };
       mockSelectChain([mockRun]);
 
@@ -157,7 +150,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("cleanup function unregisters event listener", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockRun = { id: "run-123", userId: "user-123", status: "pending" };
       mockSelectChain([mockRun]);
 
@@ -181,7 +174,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("sends initial status if run.status is not pending", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockRun = { id: "run-123", userId: "user-123", status: "running" };
       mockSelectChain([mockRun]);
 
@@ -205,7 +198,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("does not send initial status if run.status is pending", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockRun = { id: "run-123", userId: "user-123", status: "pending" };
       mockSelectChain([mockRun]);
 
@@ -226,7 +219,7 @@ describe("api.pipeline.run.$runId.stream", () => {
     });
 
     it("event handler sends events to client", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockRun = { id: "run-123", userId: "user-123", status: "pending" };
       mockSelectChain([mockRun]);
 

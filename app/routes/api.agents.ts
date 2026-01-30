@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { z } from "zod";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db, agents, agentTraits, traits, apiKeys } from "~/db";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, desc } from "drizzle-orm";
 
 function jsonResponse(data: unknown, status: number = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -18,17 +18,16 @@ const AgentSchema = z.object({
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);
   }
 
-  // Query agents with their trait assignments
+  // Query agents with their trait assignments, ordered by creation date (newest first)
   const userAgents = await db.query.agents.findMany({
     where: eq(agents.userId, userId),
-    orderBy: [asc(agents.name)],
+    orderBy: [desc(agents.createdAt)],
     with: {
       agentTraits: {
         columns: { traitId: true },
@@ -63,8 +62,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);

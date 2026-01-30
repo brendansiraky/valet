@@ -3,6 +3,7 @@ import { render, type RenderOptions } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { ThemeProvider } from "~/components/theme-provider";
+import { UserProvider, type AuthUser } from "~/contexts/user-context";
 
 /**
  * Creates a fresh QueryClient configured for testing.
@@ -43,20 +44,42 @@ interface RenderWithClientResult extends ReturnType<typeof render> {
 interface RenderWithClientOptions extends Omit<RenderOptions, "wrapper"> {
   withTheme?: boolean;
   withRouter?: boolean;
+  withUser?: AuthUser | boolean;
 }
+
+const DEFAULT_TEST_USER: AuthUser = {
+  id: "test-user-123",
+  email: "test@example.com",
+};
 
 /**
  * Renders a component wrapped in QueryClientProvider.
  * Returns the render result plus the queryClient for cache manipulation.
  * @param options.withTheme - If true, wraps in ThemeProvider (for components using useTheme)
  * @param options.withRouter - If true, wraps in RouterProvider (for components using react-router hooks)
+ * @param options.withUser - If true, wraps in UserProvider with default test user. If AuthUser object, uses that user.
  */
 export function renderWithClient(
   ui: ReactElement,
   options?: RenderWithClientOptions
 ): RenderWithClientResult {
-  const { withTheme = false, withRouter = false, ...renderOptions } = options ?? {};
+  const { withTheme = false, withRouter = false, withUser = false, ...renderOptions } = options ?? {};
   const queryClient = createTestQueryClient();
+
+  // Determine the user to provide (if any)
+  const user = withUser === true ? DEFAULT_TEST_USER : withUser || null;
+
+  // Helper to wrap content with optional providers
+  const wrapWithProviders = (content: ReactNode): ReactNode => {
+    let wrapped = content;
+    if (user) {
+      wrapped = <UserProvider user={user}>{wrapped}</UserProvider>;
+    }
+    if (withTheme) {
+      wrapped = <ThemeProvider>{wrapped}</ThemeProvider>;
+    }
+    return wrapped;
+  };
 
   // If withRouter is true, we need to render the component inside a router
   if (withRouter) {
@@ -73,13 +96,7 @@ export function renderWithClient(
     return {
       ...render(
         <QueryClientProvider client={queryClient}>
-          {withTheme ? (
-            <ThemeProvider>
-              <RouterProvider router={router} />
-            </ThemeProvider>
-          ) : (
-            <RouterProvider router={router} />
-          )}
+          {wrapWithProviders(<RouterProvider router={router} />)}
         </QueryClientProvider>,
         renderOptions
       ),
@@ -90,12 +107,11 @@ export function renderWithClient(
   return {
     ...render(ui, {
       wrapper: ({ children }: WrapperProps) => {
-        const content = (
+        return (
           <QueryClientProvider client={queryClient}>
-            {children}
+            {wrapWithProviders(children)}
           </QueryClientProvider>
         );
-        return withTheme ? <ThemeProvider>{content}</ThemeProvider> : content;
       },
       ...renderOptions,
     }),

@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { eventStream } from "remix-utils/sse/server";
 import { and, eq } from "drizzle-orm";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db, pipelineRuns } from "~/db";
 import { runEmitter, type RunEvent } from "~/services/run-emitter.server";
 
@@ -10,8 +10,7 @@ import { runEmitter, type RunEvent } from "~/services/run-emitter.server";
  * Server-Sent Events endpoint for real-time pipeline execution updates.
  */
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return new Response("Unauthorized", { status: 401 });

@@ -24,7 +24,6 @@ let mockFlowState = {
   nodes: [] as unknown[],
   edges: [] as unknown[],
   pipelineName: "Untitled Pipeline",
-  pipelineDescription: "",
   isLoading: false,
 };
 
@@ -32,7 +31,6 @@ const mockOnNodesChange = vi.fn();
 const mockOnEdgesChange = vi.fn();
 const mockOnConnect = vi.fn();
 const mockUpdateName = vi.fn();
-const mockUpdateDescription = vi.fn();
 const mockAddAgentNode = vi.fn();
 const mockAddTraitNode = vi.fn();
 const mockRemoveNode = vi.fn();
@@ -40,8 +38,8 @@ const mockAddTraitToNode = vi.fn();
 const mockRemoveTraitFromNode = vi.fn();
 const mockSetNodesAndEdges = vi.fn();
 
-// Tab store mocks
-const mockUpdateTabName = vi.fn();
+// Tab mutation mocks
+const mockUpdateTabNameMutate = vi.fn();
 
 // Mutation mocks
 const mockDeletePipelineMutate = vi.fn();
@@ -51,13 +49,11 @@ vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
     nodes: mockFlowState.nodes,
     edges: mockFlowState.edges,
     pipelineName: mockFlowState.pipelineName,
-    pipelineDescription: mockFlowState.pipelineDescription,
     isLoading: mockFlowState.isLoading,
     onNodesChange: mockOnNodesChange,
     onEdgesChange: mockOnEdgesChange,
     onConnect: mockOnConnect,
     updateName: mockUpdateName,
-    updateDescription: mockUpdateDescription,
     addAgentNode: mockAddAgentNode,
     addTraitNode: mockAddTraitNode,
     removeNode: mockRemoveNode,
@@ -67,9 +63,10 @@ vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
   })),
 }));
 
-vi.mock("~/stores/tab-store", () => ({
-  useTabStore: vi.fn(() => ({
-    updateTabName: mockUpdateTabName,
+vi.mock("~/hooks/queries/use-tabs", () => ({
+  useUpdateTabName: vi.fn(() => ({
+    mutate: mockUpdateTabNameMutate,
+    isPending: false,
   })),
 }));
 
@@ -112,7 +109,6 @@ const defaultProps = {
   initialData: null as {
     id: string;
     name: string;
-    description: string | null;
     flowData: unknown;
   } | null,
   agents: [],
@@ -128,21 +124,19 @@ function resetAllMocks() {
     nodes: [],
     edges: [],
     pipelineName: "Untitled Pipeline",
-    pipelineDescription: "",
     isLoading: false,
   };
   mockOnNodesChange.mockClear();
   mockOnEdgesChange.mockClear();
   mockOnConnect.mockClear();
   mockUpdateName.mockClear();
-  mockUpdateDescription.mockClear();
   mockAddAgentNode.mockClear();
   mockAddTraitNode.mockClear();
   mockRemoveNode.mockClear();
   mockAddTraitToNode.mockClear();
   mockRemoveTraitFromNode.mockClear();
   mockSetNodesAndEdges.mockClear();
-  mockUpdateTabName.mockClear();
+  mockUpdateTabNameMutate.mockClear();
   mockDeletePipelineMutate.mockClear();
 }
 
@@ -165,7 +159,6 @@ describe("PipelineTabPanel - Name Initialization", () => {
           initialData={{
             id: "test-pipeline-1",
             name: "My Custom Pipeline",
-            description: "Test description",
             flowData: { nodes: [], edges: [] },
           }}
         />
@@ -211,7 +204,6 @@ describe("PipelineTabPanel - Name Initialization", () => {
           initialData={{
             id: "test-pipeline-1",
             name: "Server Pipeline Name",
-            description: "From server",
             flowData: { nodes: [], edges: [] },
           }}
         />
@@ -235,7 +227,6 @@ describe("PipelineTabPanel - Name Initialization", () => {
           initialData={{
             id: "test-pipeline-1",
             name: "Test Pipeline",
-            description: null,
             flowData: { nodes: [], edges: [] },
           }}
         />
@@ -258,7 +249,6 @@ describe("PipelineTabPanel - Name Initialization", () => {
           initialData={{
             id: "test-pipeline-1",
             name: "Original Name",
-            description: null,
             flowData: { nodes: [], edges: [] },
           }}
         />
@@ -277,8 +267,8 @@ describe("PipelineTabPanel - Name Initialization", () => {
       // Should call updateName from usePipelineFlow
       expect(mockUpdateName).toHaveBeenCalled();
 
-      // Should update tab name
-      expect(mockUpdateTabName).toHaveBeenCalled();
+      // Should update tab name via mutation
+      expect(mockUpdateTabNameMutate).toHaveBeenCalled();
     });
   });
 
@@ -293,7 +283,6 @@ describe("PipelineTabPanel - Name Initialization", () => {
           initialData={{
             id: "pipeline-1",
             name: "Pipeline One",
-            description: null,
             flowData: { nodes: [], edges: [] },
           }}
         />
@@ -314,7 +303,6 @@ describe("PipelineTabPanel - Name Initialization", () => {
           initialData={{
             id: "pipeline-2",
             name: "Pipeline Two",
-            description: null,
             flowData: { nodes: [], edges: [] },
           }}
         />

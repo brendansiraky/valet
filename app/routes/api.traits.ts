@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { z } from "zod";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db, traits } from "~/db";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 function jsonResponse(data: unknown, status: number = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -21,17 +21,16 @@ const TraitSchema = z.object({
 });
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);
   }
 
-  // Query traits for this user, ordered by name
+  // Query traits for this user, ordered by creation date (newest first)
   const userTraits = await db.query.traits.findMany({
     where: eq(traits.userId, userId),
-    orderBy: [asc(traits.name)],
+    orderBy: [desc(traits.createdAt)],
     columns: {
       id: true,
       name: true,
@@ -45,8 +44,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);

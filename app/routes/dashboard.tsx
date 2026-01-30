@@ -1,31 +1,7 @@
-import type { LoaderFunctionArgs } from "react-router";
-import { redirect, useLoaderData } from "react-router";
-import { getSession } from "~/services/session.server";
-import { db, users } from "~/db";
-import { eq } from "drizzle-orm";
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (!userId) {
-    return redirect("/login");
-  }
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-  });
-
-  if (!user) {
-    // User was deleted but session still exists
-    return redirect("/login");
-  }
-
-  return { user: { id: user.id, email: user.email } };
-}
+import { useUser } from "~/contexts/user-context";
 
 export default function Dashboard() {
-  const { user } = useLoaderData<typeof loader>();
+  const user = useUser();
 
   return (
     <div className="flex h-full items-center justify-center">

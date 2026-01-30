@@ -6,66 +6,45 @@ Advanced patterns for testing React components with Vitest and Testing Library.
 
 ### Providers
 
-Wrap components that need context:
+Use the project's `renderWithClient` for components needing providers:
 
 ```typescript
-import { render } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-function renderWithProviders(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {ui}
-    </QueryClientProvider>
-  );
-}
+import { renderWithClient } from "~/test-utils";
 
 test("component with providers", () => {
-  renderWithProviders(<UserProfile />);
+  renderWithClient(<UserProfile />);
+});
+
+test("component with router context", () => {
+  renderWithClient(<UserProfile />, { withRouter: true });
+});
+
+test("component with theme context", () => {
+  renderWithClient(<ThemedComponent />, { withTheme: true });
 });
 ```
 
 ### Custom Render
 
-Create a custom render with all providers:
+This project uses `renderWithClient` from `~/test-utils`:
 
 ```typescript
-// test-utils.tsx
-import { render, RenderOptions } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { renderWithClient } from "~/test-utils";
 
-const AllProviders = ({ children }: { children: React.ReactNode }) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+// Basic usage - wraps in QueryClientProvider
+renderWithClient(<MyComponent />);
 
-  // For components that need routing context
-  const router = createMemoryRouter([
-    { path: "*", element: children },
-  ]);
+// With theme context (for components using useTheme)
+renderWithClient(<ThemedComponent />, { withTheme: true });
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
-};
+// With router context (for components using react-router hooks)
+renderWithClient(<PageWithLinks />, { withRouter: true });
 
-export function renderWithProviders(
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
-) {
-  return render(ui, { wrapper: AllProviders, ...options });
-}
+// With both
+renderWithClient(<FullPage />, { withTheme: true, withRouter: true });
 
-export * from "@testing-library/react";
+// Access queryClient for cache manipulation
+const { queryClient } = renderWithClient(<MyComponent />);
 ```
 
 ## Mocking Patterns
@@ -122,14 +101,14 @@ test("displays error state", () => {
 });
 ```
 
-### Mock Remix Router
+### Mock React Router
 
 ```typescript
 import { vi } from "vitest";
-import { useNavigate, useParams } from "@remix-run/react";
+import { useNavigate, useParams } from "react-router";
 
-vi.mock("@remix-run/react", async () => {
-  const actual = await vi.importActual("@remix-run/react");
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual("react-router");
   return {
     ...actual,
     useNavigate: vi.fn(),

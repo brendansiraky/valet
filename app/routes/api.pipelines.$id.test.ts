@@ -5,8 +5,8 @@ import { loader } from "./api.pipelines.$id";
 type RouteArgs = { request: Request; params: Record<string, string>; context: any; unstable_pattern: string };
 
 // Mock dependencies
-vi.mock("~/services/session.server", () => ({
-  getSession: vi.fn(),
+vi.mock("~/services/auth.server", () => ({
+  getUserId: vi.fn(),
 }));
 
 vi.mock("~/db", () => ({
@@ -16,15 +16,8 @@ vi.mock("~/db", () => ({
   pipelines: { id: "id", userId: "userId" },
 }));
 
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db } from "~/db";
-
-// Helper to create mock session
-function createMockSession(userId: string | null) {
-  return {
-    get: vi.fn((key: string) => (key === "userId" ? userId : null)),
-  };
-}
 
 // Helper to parse JSON response
 async function parseResponse(response: Response) {
@@ -48,7 +41,7 @@ describe("api.pipelines.$id", () => {
 
   describe("loader (GET /api/pipelines/:id)", () => {
     it("returns 401 when unauthenticated", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession(null));
+      (getUserId as Mock).mockResolvedValue(null);
 
       const request = new Request("http://test/api/pipelines/pipe-123");
       const response = await loader({
@@ -64,7 +57,7 @@ describe("api.pipelines.$id", () => {
     });
 
     it("returns 400 when id param is missing", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
 
       const request = new Request("http://test/api/pipelines/");
       const response = await loader({
@@ -80,7 +73,7 @@ describe("api.pipelines.$id", () => {
     });
 
     it("returns 404 when pipeline not found", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       mockSelectChain([]); // Empty result = not found
 
       const request = new Request("http://test/api/pipelines/pipe-nonexistent");
@@ -97,7 +90,7 @@ describe("api.pipelines.$id", () => {
     });
 
     it("returns pipeline object on success", async () => {
-      (getSession as Mock).mockResolvedValue(createMockSession("user-123"));
+      (getUserId as Mock).mockResolvedValue("user-123");
       const mockPipeline = {
         id: "pipe-123",
         name: "Test Pipeline",

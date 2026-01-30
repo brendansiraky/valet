@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from "react";
 import type { Node, Edge } from "@xyflow/react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { useTabStore } from "~/stores/tab-store";
+import { useUpdateTabName } from "~/hooks/queries/use-tabs";
 import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
 import { useDeletePipeline } from "~/hooks/queries/use-pipelines";
 import { PipelineCanvas } from "./pipeline-canvas";
@@ -24,7 +24,6 @@ interface PipelineTabPanelProps {
   initialData: {
     id: string;
     name: string;
-    description: string | null;
     flowData: unknown; // Comes from DB as JSON, cast internally
   } | null; // null for new pipeline
   agents: Array<{ id: string; name: string; instructions: string | null }>;
@@ -44,7 +43,7 @@ export function PipelineTabPanel({
   onDelete,
 }: PipelineTabPanelProps) {
   const deletePipelineMutation = useDeletePipeline();
-  const { updateTabName } = useTabStore();
+  const updateTabNameMutation = useUpdateTabName();
 
   const {
     nodes,
@@ -91,9 +90,9 @@ export function PipelineTabPanel({
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       updateName(e.target.value);
-      updateTabName(pipelineId, e.target.value);
+      updateTabNameMutation.mutate({ pipelineId, name: e.target.value });
     },
-    [pipelineId, updateName, updateTabName]
+    [pipelineId, updateName, updateTabNameMutation]
   );
 
   const handleDropAgent = useCallback(

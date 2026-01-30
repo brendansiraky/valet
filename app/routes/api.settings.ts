@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { encrypt } from "~/services/encryption.server";
 import { validateApiKey } from "~/services/anthropic.server";
 import { OpenAIProvider } from "~/lib/providers/openai";
@@ -15,8 +15,7 @@ function jsonResponse(data: unknown, status: number = 200): Response {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);
@@ -38,8 +37,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);

@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db, pipelines } from "~/db";
 import { eq, and, desc } from "drizzle-orm";
 import type { FlowData } from "~/db/schema/pipelines";
@@ -12,8 +12,7 @@ function jsonResponse(data: unknown, status: number = 200): Response {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);
@@ -29,9 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  // Require authentication
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse({ error: "Authentication required" }, 401);
@@ -43,7 +40,6 @@ export async function action({ request }: ActionFunctionArgs) {
   switch (intent) {
     case "create": {
       const name = formData.get("name") as string;
-      const description = formData.get("description") as string | null;
       const flowDataStr = formData.get("flowData") as string;
 
       if (!name) {
@@ -59,7 +55,6 @@ export async function action({ request }: ActionFunctionArgs) {
         .values({
           userId,
           name,
-          description,
           flowData,
         })
         .returning();
@@ -70,7 +65,6 @@ export async function action({ request }: ActionFunctionArgs) {
     case "update": {
       const id = formData.get("id") as string;
       const name = formData.get("name") as string;
-      const description = formData.get("description") as string | null;
       const flowDataStr = formData.get("flowData") as string;
 
       if (!id || !name) {
@@ -83,7 +77,6 @@ export async function action({ request }: ActionFunctionArgs) {
         .update(pipelines)
         .set({
           name,
-          description,
           flowData,
           updatedAt: new Date(),
         })

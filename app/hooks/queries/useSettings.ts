@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queries } from "./keys";
 
 // Types for API responses
 interface SettingsData {
@@ -24,7 +25,7 @@ async function fetchSettings(): Promise<SettingsData> {
 // Query hook for settings
 export function useSettings() {
   return useQuery({
-    queryKey: ["settings"],
+    queryKey: queries.settings.all.queryKey,
     queryFn: fetchSettings,
   });
 }
@@ -59,7 +60,7 @@ export function useSaveApiKey() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      queryClient.invalidateQueries({ queryKey: queries.settings._def });
     },
   });
 }
@@ -94,7 +95,7 @@ export function useSaveOpenAIKey() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      queryClient.invalidateQueries({ queryKey: queries.settings._def });
     },
   });
 }
@@ -129,7 +130,7 @@ export function useUpdateModelPreference() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      queryClient.invalidateQueries({ queryKey: queries.settings._def });
     },
   });
 }

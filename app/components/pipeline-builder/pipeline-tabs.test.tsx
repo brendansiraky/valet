@@ -6,9 +6,14 @@ import { PipelineTabs } from "./pipeline-tabs";
 
 // Mock dependencies
 const mockNavigate = vi.fn();
-const mockCloseTab = vi.fn();
-const mockFocusOrOpenTab = vi.fn();
-const mockCanOpenNewTab = vi.fn(() => true);
+const mockFocusOrOpenTabMutate = vi.fn();
+const mockSetActiveTabMutate = vi.fn();
+
+// Mock tab state - updated per test
+let mockTabState = {
+  tabs: [{ pipelineId: "home", name: "Home" }],
+  activeTabId: "home" as string | null,
+};
 
 vi.mock("react-router", async () => {
   const actual = await vi.importActual("react-router");
@@ -18,25 +23,39 @@ vi.mock("react-router", async () => {
   };
 });
 
-vi.mock("~/stores/tab-store", () => ({
-  useTabStore: vi.fn(() => ({
-    tabs: [{ pipelineId: "home", name: "Home" }],
-    activeTabId: "home",
-    closeTab: mockCloseTab,
-    focusOrOpenTab: mockFocusOrOpenTab,
-    canOpenNewTab: mockCanOpenNewTab,
+vi.mock("~/hooks/queries/use-tabs", () => ({
+  useTabsQuery: vi.fn(() => ({
+    data: mockTabState,
+    isLoading: false,
   })),
+  useFocusOrOpenTab: vi.fn(() => ({
+    mutate: mockFocusOrOpenTabMutate,
+    isPending: false,
+  })),
+  useSetActiveTab: vi.fn(() => ({
+    mutate: mockSetActiveTabMutate,
+    isPending: false,
+  })),
+  canOpenNewTab: vi.fn((tabs) => {
+    const nonHomeTabs = tabs.filter((t: { pipelineId: string }) => t.pipelineId !== "home");
+    return nonHomeTabs.length < 8;
+  }),
   HOME_TAB_ID: "home",
 }));
 
 // Variable to control mock pipeline data per test
 let mockPipelinesData: Array<{ id: string; name: string }> = [];
 let mockPipelinesLoading = false;
+const mockCreatePipelineMutate = vi.fn();
 
 vi.mock("~/hooks/queries/use-pipelines", () => ({
   usePipelines: () => ({
     data: mockPipelinesData,
     isLoading: mockPipelinesLoading,
+  }),
+  useCreatePipeline: () => ({
+    mutate: mockCreatePipelineMutate,
+    isPending: false,
   }),
 }));
 
@@ -47,7 +66,7 @@ vi.mock("sonner", () => ({
 }));
 
 // Import mocked modules to access/modify
-import { useTabStore } from "~/stores/tab-store";
+import { useTabsQuery, canOpenNewTab } from "~/hooks/queries/use-tabs";
 import { toast } from "sonner";
 
 describe("PipelineTabs", () => {
@@ -74,16 +93,19 @@ describe("PipelineTabs", () => {
     vi.clearAllMocks();
     mockPipelinesData = [];
     mockPipelinesLoading = false;
-    mockCanOpenNewTab.mockReturnValue(true);
+    mockCreatePipelineMutate.mockReset();
 
-    // Reset useTabStore mock to default
-    vi.mocked(useTabStore).mockReturnValue({
+    // Reset tab state to default
+    mockTabState = {
       tabs: [{ pipelineId: "home", name: "Home" }],
       activeTabId: "home",
-      closeTab: mockCloseTab,
-      focusOrOpenTab: mockFocusOrOpenTab,
-      canOpenNewTab: mockCanOpenNewTab,
-    });
+    };
+
+    // Reset useTabsQuery mock to return updated state
+    vi.mocked(useTabsQuery).mockReturnValue({
+      data: mockTabState,
+      isLoading: false,
+    } as ReturnType<typeof useTabsQuery>);
   });
 
   describe("Initial State", () => {
@@ -182,16 +204,17 @@ describe("PipelineTabs", () => {
       const user = userEvent.setup();
 
       // Pipeline 1 is open as a tab
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Pipeline 1" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       // Both pipelines exist in DB
       mockPipelinesData = [
@@ -218,14 +241,14 @@ describe("PipelineTabs", () => {
       expect(pipelineNames).toContain("Pipeline 2");
     });
 
-    test("clicking 'New Pipeline' creates new pipeline via POST", async () => {
+    test("clicking 'New Pipeline' creates new pipeline via mutation", async () => {
       const user = userEvent.setup();
 
-      // Mock fetch for pipeline creation
-      const mockFetch = vi.fn().mockResolvedValue({
-        json: () => Promise.resolve({ pipeline: { id: "new-123", name: "Untitled Pipeline" } }),
+      // Configure mock to simulate successful creation
+      mockCreatePipelineMutate.mockImplementation((_data, options) => {
+        // Simulate onSuccess callback with created pipeline
+        options?.onSuccess?.({ id: "new-123", name: "Untitled Pipeline", flowData: { nodes: [], edges: [] } });
       });
-      global.fetch = mockFetch;
 
       renderTabs();
 
@@ -240,19 +263,17 @@ describe("PipelineTabs", () => {
       });
       await user.click(screen.getByText("New Pipeline"));
 
-      // Verify fetch was called with correct parameters
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith("/api/pipelines", {
-          method: "POST",
-          body: expect.any(FormData),
-        });
-      });
+      // Verify mutation was called with correct parameters
+      expect(mockCreatePipelineMutate).toHaveBeenCalledWith(
+        { name: "Untitled Pipeline", flowData: { nodes: [], edges: [] } },
+        expect.objectContaining({
+          onSuccess: expect.any(Function),
+          onError: expect.any(Function),
+        })
+      );
 
       // Verify navigate was called to the new pipeline
       expect(mockNavigate).toHaveBeenCalledWith("/pipelines/new-123");
-
-      // Cleanup
-      vi.restoreAllMocks();
     });
   });
 
@@ -260,16 +281,17 @@ describe("PipelineTabs", () => {
     test("clicking a tab navigates to it", async () => {
       const user = userEvent.setup();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "My Pipeline" },
         ],
         activeTabId: "home",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       renderTabs();
 
@@ -281,16 +303,17 @@ describe("PipelineTabs", () => {
     });
 
     test("close button appears on non-home tabs", () => {
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "My Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       renderTabs();
 
@@ -307,16 +330,17 @@ describe("PipelineTabs", () => {
       const user = userEvent.setup();
       const onCloseTab = vi.fn();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "My Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       // No running pipelines
       const runStates = new Map<string, { runId: string | null; isStarting: boolean }>();
@@ -328,25 +352,25 @@ describe("PipelineTabs", () => {
       const closeButton = within(tabWithName!).getByRole("button");
       await user.click(closeButton);
 
-      // Should call parent's onCloseTab and store's closeTab
+      // Should call parent's onCloseTab (parent handles closeTab and navigation)
       expect(onCloseTab).toHaveBeenCalledWith("p1");
-      expect(mockCloseTab).toHaveBeenCalledWith("p1");
     });
 
     test("running pipeline shows confirm dialog before closing", async () => {
       const user = userEvent.setup();
       const onCloseTab = vi.fn();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Running Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       // Pipeline is running
       const runStates = new Map([
@@ -373,16 +397,17 @@ describe("PipelineTabs", () => {
       const user = userEvent.setup();
       const onCloseTab = vi.fn();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Running Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       const runStates = new Map([
         ["p1", { runId: "run-123", isStarting: false }],
@@ -404,10 +429,9 @@ describe("PipelineTabs", () => {
       const closeAnyway = screen.getByRole("button", { name: "Close Anyway" });
       await user.click(closeAnyway);
 
-      // Now close should be called
+      // Now close should be called (parent handles closeTab and navigation)
       await waitFor(() => {
         expect(onCloseTab).toHaveBeenCalledWith("p1");
-        expect(mockCloseTab).toHaveBeenCalledWith("p1");
       });
     });
 
@@ -415,16 +439,17 @@ describe("PipelineTabs", () => {
       const user = userEvent.setup();
       const onCloseTab = vi.fn();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Running Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       const runStates = new Map([
         ["p1", { runId: "run-123", isStarting: false }],
@@ -453,63 +478,65 @@ describe("PipelineTabs", () => {
       expect(onCloseTab).not.toHaveBeenCalled();
     });
 
-    test("after close, navigates to remaining tab or home", async () => {
+    test("after close, calls onCloseTab (parent handles navigation)", async () => {
       const user = userEvent.setup();
+      const onCloseTab = vi.fn();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Pipeline 1" },
           { pipelineId: "p2", name: "Pipeline 2" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
-      renderTabs();
+      renderTabs(new Map(), onCloseTab);
 
       // Close Pipeline 1
       const tabWithName = screen.getByText("Pipeline 1").closest("button");
       const closeButton = within(tabWithName!).getByRole("button");
       await user.click(closeButton);
 
-      // Should navigate to the remaining pipeline (p2)
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/p2");
+      // Should call onCloseTab (parent handles navigation)
+      expect(onCloseTab).toHaveBeenCalledWith("p1");
     });
 
-    test("after closing last non-home tab, navigates to home", async () => {
+    test("after closing last non-home tab, calls onCloseTab (parent handles navigation)", async () => {
       const user = userEvent.setup();
+      const onCloseTab = vi.fn();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Only Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
-      renderTabs();
+      renderTabs(new Map(), onCloseTab);
 
       // Close the only pipeline
       const tabWithName = screen.getByText("Only Pipeline").closest("button");
       const closeButton = within(tabWithName!).getByRole("button");
       await user.click(closeButton);
 
-      // Should navigate to home
-      expect(mockNavigate).toHaveBeenCalledWith("/pipelines/home");
+      // Should call onCloseTab (parent handles navigation)
+      expect(onCloseTab).toHaveBeenCalledWith("p1");
     });
   });
 
   describe("Edge Cases", () => {
     test("dropdown is hidden when at max tabs", () => {
-      mockCanOpenNewTab.mockReturnValue(false);
-
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Pipeline 1" },
@@ -522,10 +549,11 @@ describe("PipelineTabs", () => {
           { pipelineId: "p8", name: "Pipeline 8" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       renderTabs();
 
@@ -545,58 +573,20 @@ describe("PipelineTabs", () => {
       expect(screen.queryByText("New Pipeline")).not.toBeInTheDocument();
     });
 
-    test("shows error toast when trying to add tab at max", async () => {
-      const user = userEvent.setup();
-
-      // First render with room for tabs
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: [{ pipelineId: "home", name: "Home" }],
-        activeTabId: "home",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
-
-      // Then simulate canOpenNewTab returning false after render
-      mockCanOpenNewTab.mockReturnValue(true);
-
-      const mockFetch = vi.fn().mockResolvedValue({
-        json: () => Promise.resolve({ pipeline: { id: "new-123", name: "Untitled Pipeline" } }),
-      });
-      global.fetch = mockFetch;
-
-      renderTabs();
-
-      // Open dropdown
-      const buttons = screen.getAllByRole("button");
-      const dropdownTrigger = buttons[buttons.length - 1];
-      await user.click(dropdownTrigger);
-
-      // Now make canOpenNewTab return false
-      mockCanOpenNewTab.mockReturnValue(false);
-
-      // Click "New Pipeline"
-      await user.click(screen.getByText("New Pipeline"));
-
-      // Should show error toast
-      expect(toast.error).toHaveBeenCalledWith("Maximum 8 tabs allowed");
-
-      vi.restoreAllMocks();
-    });
-
     test("clicking home tab navigates to home", async () => {
       const user = userEvent.setup();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Pipeline 1" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       renderTabs();
 
@@ -607,16 +597,17 @@ describe("PipelineTabs", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/pipelines/home");
     });
 
-    test("selecting existing pipeline from dropdown calls focusOrOpenTab", async () => {
+    test("selecting existing pipeline from dropdown calls focusOrOpenTab mutation", async () => {
       const user = userEvent.setup();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [{ pipelineId: "home", name: "Home" }],
         activeTabId: "home",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       mockPipelinesData = [{ id: "p1", name: "Existing Pipeline" }];
 
@@ -633,22 +624,23 @@ describe("PipelineTabs", () => {
       });
       await user.click(screen.getByText("Existing Pipeline"));
 
-      // Should call focusOrOpenTab and navigate
-      expect(mockFocusOrOpenTab).toHaveBeenCalledWith("p1", "Existing Pipeline");
+      // Should call focusOrOpenTab mutation and navigate
+      expect(mockFocusOrOpenTabMutate).toHaveBeenCalledWith({ pipelineId: "p1", name: "Existing Pipeline" });
       expect(mockNavigate).toHaveBeenCalledWith("/pipelines/p1");
     });
 
     test("active tab has primary border styling", () => {
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Active Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       renderTabs();
 
@@ -661,16 +653,17 @@ describe("PipelineTabs", () => {
       const user = userEvent.setup();
       const onCloseTab = vi.fn();
 
-      vi.mocked(useTabStore).mockReturnValue({
+      mockTabState = {
         tabs: [
           { pipelineId: "home", name: "Home" },
           { pipelineId: "p1", name: "Starting Pipeline" },
         ],
         activeTabId: "p1",
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      };
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: mockTabState,
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       // Pipeline is starting (not yet running)
       const runStates = new Map([

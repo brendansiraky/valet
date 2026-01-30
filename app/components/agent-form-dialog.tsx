@@ -46,7 +46,6 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
 
   const isEditing = !!agent;
   const mutation = isEditing ? updateMutation : createMutation;
-  const isSubmitting = mutation.isPending;
 
   // Extract validation errors from mutation error
   const mutationError = mutation.error as MutationError | null;
@@ -60,35 +59,23 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
     const instructions = formData.get("instructions") as string;
     const model = formData.get("model") as string | undefined;
 
+    // Close immediately - optimistic update handles the UI
+    setOpen(false);
+    mutation.reset();
+
     if (isEditing) {
-      updateMutation.mutate(
-        {
-          agentId: agent.id,
-          name,
-          instructions,
-          model,
-        },
-        {
-          onSuccess: () => {
-            setOpen(false);
-            mutation.reset();
-          },
-        }
-      );
+      updateMutation.mutate({
+        agentId: agent.id,
+        name,
+        instructions,
+        model,
+      });
     } else {
-      createMutation.mutate(
-        {
-          name,
-          instructions,
-          model,
-        },
-        {
-          onSuccess: () => {
-            setOpen(false);
-            mutation.reset();
-          },
-        }
-      );
+      createMutation.mutate({
+        name,
+        instructions,
+        model,
+      });
     }
   };
 
@@ -181,12 +168,8 @@ export function AgentFormDialog({ agent, configuredProviders, trigger }: AgentFo
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? "Saving..."
-                : isEditing
-                  ? "Save Changes"
-                  : "Create Agent"}
+            <Button type="submit">
+              {isEditing ? "Save Changes" : "Create Agent"}
             </Button>
           </DialogFooter>
         </form>

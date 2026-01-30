@@ -23,14 +23,8 @@ export function TraitDeleteDialog({ trait, trigger }: TraitDeleteDialogProps) {
   const deleteMutation = useDeleteTrait();
 
   const handleDelete = () => {
-    deleteMutation.mutate(
-      { traitId: trait.id },
-      {
-        onSuccess: () => {
-          setOpen(false);
-        },
-      }
-    );
+    deleteMutation.mutate({ traitId: trait.id });
+    setOpen(false);
   };
 
   return (
@@ -47,10 +41,9 @@ export function TraitDeleteDialog({ trait, trigger }: TraitDeleteDialogProps) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={deleteMutation.isPending}
             variant="destructive"
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

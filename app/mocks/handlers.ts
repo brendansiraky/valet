@@ -47,9 +47,13 @@ export const mockPipelineData = {
   pipeline: {
     id: "pipeline-1",
     name: "Test Pipeline",
-    description: "A test pipeline for unit testing",
     flowData: { nodes: [], edges: [] },
   },
+};
+
+export const mockTabsData = {
+  tabs: [],
+  activeTabId: null,
 };
 
 export const handlers = [
@@ -75,6 +79,19 @@ export const handlers = [
 
   http.get("/api/pipelines/:id", () => {
     return HttpResponse.json(mockPipelineData);
+  }),
+
+  // Tabs API
+  http.get("/api/tabs", () => {
+    return HttpResponse.json(mockTabsData);
+  }),
+
+  http.post("/api/tabs", async ({ request }) => {
+    const body = (await request.json()) as {
+      tabs: Array<{ pipelineId: string; name: string; pinned?: boolean }>;
+      activeTabId: string | null;
+    };
+    return HttpResponse.json({ tabs: body.tabs, activeTabId: body.activeTabId });
   }),
 
   // Mutations (POST handlers)
@@ -107,13 +124,11 @@ export const handlers = [
 
     if (intent === "create") {
       const name = formData.get("name") as string;
-      const description = formData.get("description") as string;
       const flowData = formData.get("flowData") as string;
       return HttpResponse.json({
         pipeline: {
           id: "new-pipeline-id",
           name,
-          description,
           flowData: flowData ? JSON.parse(flowData) : null,
         },
       });
@@ -122,13 +137,11 @@ export const handlers = [
     if (intent === "update") {
       const id = formData.get("id") as string;
       const name = formData.get("name") as string;
-      const description = formData.get("description") as string;
       const flowData = formData.get("flowData") as string;
       return HttpResponse.json({
         pipeline: {
           id,
           name,
-          description,
           flowData: flowData ? JSON.parse(flowData) : null,
         },
       });

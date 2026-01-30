@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Form, Link, redirect, useActionData } from "react-router";
+import { Form, Link, useActionData } from "react-router";
 import { z } from "zod";
-import { getSession, commitSession } from "~/services/session.server";
+import { isAuthenticated, createUserSession } from "~/services/auth.server";
 import { hashPassword } from "~/services/password.server";
 import { db, users } from "~/db";
 import { eq } from "drizzle-orm";
@@ -29,12 +29,10 @@ const registerSchema = z
   });
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (userId) {
-    return redirect("/dashboard");
-  }
+  // Redirect to dashboard if already authenticated
+  await isAuthenticated(request, {
+    successRedirect: "/dashboard",
+  });
 
   return null;
 }
@@ -71,19 +69,14 @@ export async function action({ request }: ActionFunctionArgs) {
       email: normalizedEmail,
       passwordHash,
     })
-    .returning({ id: users.id });
+    .returning({ id: users.id, email: users.email });
 
-  // Create session
-  const session = await getSession(request.headers.get("Cookie"));
-  session.set("userId", newUser.id);
-
-  return redirect("/dashboard", {
-    headers: {
-      "Set-Cookie": await commitSession(session, {
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      }),
-    },
-  });
+  // Create session and redirect
+  return createUserSession(
+    request,
+    { id: newUser.id, email: newUser.email },
+    "/dashboard"
+  );
 }
 
 export default function Register() {

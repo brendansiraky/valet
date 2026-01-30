@@ -3,25 +3,12 @@ import { screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { server } from '~/mocks/server'
 import { renderWithClient } from '~/test-utils'
+import Settings from './settings'
 
 // Mock session server before importing Settings component
 vi.mock('~/services/session.server', () => ({
     getSession: vi.fn(),
 }))
-
-// Mock react-router's useLoaderData
-vi.mock('react-router', async () => {
-    const actual = await vi.importActual('react-router')
-    return {
-        ...actual,
-        useLoaderData: () => ({
-            user: { email: 'test@example.com' },
-        }),
-    }
-})
-
-// Import Settings after mocks are set up
-import Settings from './settings'
 
 describe('Settings', () => {
     test('shows loading skeleton while fetching settings', () => {
@@ -37,7 +24,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // PageLayout title should be visible in skeleton
         expect(
@@ -55,7 +42,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for error state
         await waitFor(() => {
@@ -76,7 +63,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for settings to load
         await waitFor(() => {
@@ -98,7 +85,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for settings to load and show confirmation messages
         await waitFor(() => {
@@ -123,7 +110,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for settings to load
         await waitFor(() => {
@@ -149,7 +136,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for settings to load
         await waitFor(() => {
@@ -171,7 +158,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for settings to load
         await waitFor(() => {
@@ -193,7 +180,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for settings to load
         await waitFor(() => {
@@ -215,7 +202,7 @@ describe('Settings', () => {
             }),
         )
 
-        renderWithClient(<Settings />, { withTheme: true, withRouter: true })
+        renderWithClient(<Settings />, { withTheme: true, withRouter: true, withUser: true })
 
         // Wait for settings to load
         await waitFor(() => {

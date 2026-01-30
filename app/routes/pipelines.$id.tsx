@@ -1,7 +1,12 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
+import {
+  useTabsQuery,
+  useCloseTab,
+  useFocusOrOpenTab,
+  HOME_TAB_ID,
+} from "~/hooks/queries/use-tabs";
 import { PipelineTabs } from "~/components/pipeline-builder/pipeline-tabs";
 import { PipelineTabPanel } from "~/components/pipeline-builder/pipeline-tab-panel";
 import { AgentSidebar } from "~/components/pipeline-builder/agent-sidebar";
@@ -51,8 +56,13 @@ export default function PipelineEditorPage() {
   const userTraits = traitsQuery.data ?? [];
   const requestedPipeline = pipelineQuery.data ?? null;
 
-  const { tabs, activeTabId, closeTab, focusOrOpenTab } = useTabStore();
+  const { data: tabState } = useTabsQuery();
+  const closeTabMutation = useCloseTab();
+  const focusOrOpenTabMutation = useFocusOrOpenTab();
   const queryClient = useQueryClient();
+
+  const tabs = tabState?.tabs ?? [];
+  const activeTabId = tabState?.activeTabId ?? null;
 
   // Per-tab run state (lifted to container to persist across tab switches)
   const [runStates, setRunStates] = useState<
@@ -89,18 +99,21 @@ export default function PipelineEditorPage() {
     lastSyncedUrlRef.current = urlId;
 
     if (urlId === "home") {
-      focusOrOpenTab(HOME_TAB_ID, "Home");
+      focusOrOpenTabMutation.mutate({ pipelineId: HOME_TAB_ID, name: "Home" });
     } else {
       // Use pipeline name if available, otherwise placeholder
       // The tab name gets updated by PipelineTabPanel when it loads the data
-      focusOrOpenTab(urlId, requestedPipeline?.name || "Untitled Pipeline");
+      focusOrOpenTabMutation.mutate({
+        pipelineId: urlId,
+        name: requestedPipeline?.name || "Untitled Pipeline",
+      });
     }
   }
 
   // Handle tab close - cleanup cache and run states
   const handleTabClose = useCallback(
     (pipelineId: string) => {
-      closeTab(pipelineId);
+      closeTabMutation.mutate(pipelineId);
       // Remove from React Query cache instead of Zustand
       queryClient.removeQueries({ queryKey: ["pipelines", pipelineId] });
       setRunStates((prev) => {
@@ -124,7 +137,7 @@ export default function PipelineEditorPage() {
         navigate("/pipelines/home");
       }
     },
-    [closeTab, queryClient, tabs, navigate]
+    [closeTabMutation, queryClient, tabs, navigate]
   );
 
   // Get or create run state for a pipeline

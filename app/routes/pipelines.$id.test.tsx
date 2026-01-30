@@ -12,26 +12,25 @@ import {
 import PipelineEditorPage from "./pipelines.$id";
 
 // Keep track of created pipelines for mock state
-let createdPipelines: Array<{ id: string; name: string; description: string | null; flowData: unknown }> = [];
+let createdPipelines: Array<{ id: string; name: string; flowData: unknown }> = [];
 let nextPipelineId = 1;
 
 // Mock navigation function
 const mockNavigate = vi.fn();
 let mockUrlId = "home";
 
-// Mock tab store state - mutable for tests to modify
+// Mock tab state - mutable for tests to modify (via React Query hooks)
 let mockTabs = [{ pipelineId: "home", name: "Home" }];
-let mockActiveTabId = "home";
-const mockCloseTab = vi.fn();
-const mockFocusOrOpenTab = vi.fn();
-const mockUpdateTabName = vi.fn();
-const mockCanOpenNewTab = vi.fn(() => true);
+let mockActiveTabId: string | null = "home";
+const mockCloseTabMutate = vi.fn();
+const mockFocusOrOpenTabMutate = vi.fn();
+const mockUpdateTabNameMutate = vi.fn();
+const mockSetActiveTabMutate = vi.fn();
 
 // Mock pipeline data for usePipelineFlow hook
 let mockPipelineData: Map<string, {
   pipelineId: string;
   pipelineName: string;
-  pipelineDescription: string;
   nodes: unknown[];
   edges: unknown[];
 }> = new Map();
@@ -47,16 +46,32 @@ vi.mock("react-router", async () => {
   };
 });
 
-// Mock zustand stores
-vi.mock("~/stores/tab-store", () => ({
-  useTabStore: vi.fn(() => ({
-    tabs: mockTabs,
-    activeTabId: mockActiveTabId,
-    closeTab: mockCloseTab,
-    focusOrOpenTab: mockFocusOrOpenTab,
-    updateTabName: mockUpdateTabName,
-    canOpenNewTab: mockCanOpenNewTab,
+// Mock React Query tab hooks
+vi.mock("~/hooks/queries/use-tabs", () => ({
+  useTabsQuery: vi.fn(() => ({
+    data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+    isLoading: false,
   })),
+  useCloseTab: vi.fn(() => ({
+    mutate: mockCloseTabMutate,
+    isPending: false,
+  })),
+  useFocusOrOpenTab: vi.fn(() => ({
+    mutate: mockFocusOrOpenTabMutate,
+    isPending: false,
+  })),
+  useUpdateTabName: vi.fn(() => ({
+    mutate: mockUpdateTabNameMutate,
+    isPending: false,
+  })),
+  useSetActiveTab: vi.fn(() => ({
+    mutate: mockSetActiveTabMutate,
+    isPending: false,
+  })),
+  canOpenNewTab: vi.fn((tabs: Array<{ pipelineId: string }>) => {
+    const nonHomeTabs = tabs.filter((t) => t.pipelineId !== "home");
+    return nonHomeTabs.length < 8;
+  }),
   HOME_TAB_ID: "home",
 }));
 
@@ -70,7 +85,6 @@ vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
       nodes: pipeline?.nodes ?? [],
       edges: pipeline?.edges ?? [],
       pipelineName: pipeline?.pipelineName ?? "Untitled Pipeline",
-      pipelineDescription: pipeline?.pipelineDescription ?? "",
       isLoading: false,
       onNodesChange: vi.fn(),
       onEdgesChange: vi.fn(),
@@ -78,7 +92,6 @@ vi.mock("~/hooks/queries/use-pipeline-flow", () => ({
       updateName: (name: string) => {
         mockUpdatePipeline(pipelineId, { pipelineName: name });
       },
-      updateDescription: vi.fn(),
       addAgentNode: vi.fn(),
       addTraitNode: vi.fn(),
       removeNode: vi.fn(),
@@ -113,7 +126,7 @@ vi.mock("@xyflow/react", () => ({
 }));
 
 // Import mocked modules
-import { useTabStore } from "~/stores/tab-store";
+import { useTabsQuery } from "~/hooks/queries/use-tabs";
 import { usePipelineFlow } from "~/hooks/queries/use-pipeline-flow";
 import { useParams } from "react-router";
 
@@ -128,17 +141,13 @@ describe("PipelineEditorPage", () => {
     mockTabs = [{ pipelineId: "home", name: "Home" }];
     mockActiveTabId = "home";
     mockPipelineData = new Map();
-    mockCanOpenNewTab.mockReturnValue(true);
+    // canOpenNewTab is a function, no mock setup needed
 
     // Reset mocks
-    vi.mocked(useTabStore).mockReturnValue({
-      tabs: mockTabs,
-      activeTabId: mockActiveTabId,
-      closeTab: mockCloseTab,
-      focusOrOpenTab: mockFocusOrOpenTab,
-      updateTabName: mockUpdateTabName,
-      canOpenNewTab: mockCanOpenNewTab,
-    });
+    vi.mocked(useTabsQuery).mockReturnValue({
+      data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+      isLoading: false,
+    } as ReturnType<typeof useTabsQuery>);
 
     vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
@@ -165,7 +174,6 @@ describe("PipelineEditorPage", () => {
           pipeline: {
             id,
             name: "Test Pipeline",
-            description: null,
             flowData: { nodes: [], edges: [] },
           },
         });
@@ -177,13 +185,11 @@ describe("PipelineEditorPage", () => {
 
         if (intent === "create") {
           const name = (formData.get("name") as string) || "Untitled Pipeline";
-          const description = formData.get("description") as string || null;
           const flowData = formData.get("flowData") as string;
 
           const newPipeline = {
             id: `pipeline-${nextPipelineId++}`,
             name,
-            description,
             flowData: flowData ? JSON.parse(flowData) : { nodes: [], edges: [] },
           };
           createdPipelines.push(newPipeline);
@@ -194,7 +200,6 @@ describe("PipelineEditorPage", () => {
         if (intent === "update") {
           const id = formData.get("id") as string;
           const name = formData.get("name") as string;
-          const description = formData.get("description") as string || null;
           const flowData = formData.get("flowData") as string;
 
           // Update if exists
@@ -203,7 +208,6 @@ describe("PipelineEditorPage", () => {
             createdPipelines[idx] = {
               ...createdPipelines[idx],
               name,
-              description,
               flowData: flowData ? JSON.parse(flowData) : createdPipelines[idx].flowData,
             };
           }
@@ -212,7 +216,6 @@ describe("PipelineEditorPage", () => {
             pipeline: {
               id,
               name,
-              description,
               flowData: flowData ? JSON.parse(flowData) : { nodes: [], edges: [] },
             },
           });
@@ -304,14 +307,10 @@ describe("PipelineEditorPage", () => {
     mockActiveTabId = "existing-pipeline";
     mockUrlId = "existing-pipeline";
 
-    vi.mocked(useTabStore).mockReturnValue({
-      tabs: mockTabs,
-      activeTabId: mockActiveTabId,
-      closeTab: mockCloseTab,
-      focusOrOpenTab: mockFocusOrOpenTab,
-      updateTabName: mockUpdateTabName,
-      canOpenNewTab: mockCanOpenNewTab,
-    });
+    vi.mocked(useTabsQuery).mockReturnValue({
+      data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+      isLoading: false,
+    } as ReturnType<typeof useTabsQuery>);
 
     vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
@@ -325,7 +324,6 @@ describe("PipelineEditorPage", () => {
           pipeline: {
             id: params.id,
             name: "My Saved Pipeline",
-            description: "Loaded from server",
             flowData: { nodes: [], edges: [] },
           },
         });
@@ -473,7 +471,7 @@ describe("PipelineEditorPage", () => {
             expect(name).toBe("Untitled Pipeline");
 
             return HttpResponse.json({
-              pipeline: { id: "new-pipeline-123", name, description: null, flowData: { nodes: [], edges: [] } }
+              pipeline: { id: "new-pipeline-123", name, flowData: { nodes: [], edges: [] } }
             });
           }
           return HttpResponse.json({ error: "Invalid intent" }, { status: 400 });
@@ -520,14 +518,10 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p1";
       mockUrlId = "p1";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
@@ -535,7 +529,6 @@ describe("PipelineEditorPage", () => {
       mockPipelineData.set("p1", {
         pipelineId: "p1",
         pipelineName: "Test Pipeline",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -555,7 +548,7 @@ describe("PipelineEditorPage", () => {
       await user.click(closeButton);
 
       // closeTab should be called
-      expect(mockCloseTab).toHaveBeenCalledWith("p1");
+      expect(mockCloseTabMutate).toHaveBeenCalledWith("p1");
     });
 
     test("after closing tab, navigates to home if no other tabs", async () => {
@@ -568,21 +561,16 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p1";
       mockUrlId = "p1";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
         pipelineName: "Only Pipeline",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -610,14 +598,10 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "home";
       mockUrlId = "home";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       renderWithClient(<PipelineEditorPage />);
 
@@ -649,14 +633,10 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "home";
       mockUrlId = "home";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       renderWithClient(<PipelineEditorPage />);
 
@@ -680,7 +660,7 @@ describe("PipelineEditorPage", () => {
         await user.click(screen.getByRole("menuitem", { name: "Test Pipeline" }));
 
         // Should call focusOrOpenTab and navigate
-        expect(mockFocusOrOpenTab).toHaveBeenCalledWith("pipeline-1", "Test Pipeline");
+        expect(mockFocusOrOpenTabMutate).toHaveBeenCalledWith({ pipelineId: "pipeline-1", name: "Test Pipeline" });
         expect(mockNavigate).toHaveBeenCalledWith("/pipelines/pipeline-1");
       }
     });
@@ -720,21 +700,16 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p1";
       mockUrlId = "p1";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
         pipelineName: "Pipeline to Delete",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -796,21 +771,16 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p1";
       mockUrlId = "p1";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
         pipelineName: "Pipeline to Keep",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -844,7 +814,7 @@ describe("PipelineEditorPage", () => {
       window.confirm = vi.fn(() => true);
 
       // Create a pipeline first
-      createdPipelines = [{ id: "p-delete", name: "To Delete", description: null, flowData: { nodes: [], edges: [] } }];
+      createdPipelines = [{ id: "p-delete", name: "To Delete", flowData: { nodes: [], edges: [] } }];
 
       mockTabs = [
         { pipelineId: "home", name: "Home" },
@@ -853,21 +823,16 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p-delete";
       mockUrlId = "p-delete";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p-delete", {
         pipelineId: "p-delete",
         pipelineName: "To Delete",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -906,21 +871,16 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p1";
       mockUrlId = "p1";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
         pipelineName: "Test Pipeline",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -957,21 +917,16 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p1";
       mockUrlId = "p1";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
         pipelineName: "My Pipeline",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -1016,14 +971,10 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p2";
       mockUrlId = "p2";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
@@ -1032,8 +983,7 @@ describe("PipelineEditorPage", () => {
         mockPipelineData.set(id, {
           pipelineId: id,
           pipelineName: `Pipeline ${i + 1}`,
-          pipelineDescription: "",
-          nodes: [],
+            nodes: [],
           edges: [],
         });
       });
@@ -1057,21 +1007,16 @@ describe("PipelineEditorPage", () => {
       mockActiveTabId = "p1";
       mockUrlId = "p1";
 
-      vi.mocked(useTabStore).mockReturnValue({
-        tabs: mockTabs,
-        activeTabId: mockActiveTabId,
-        closeTab: mockCloseTab,
-        focusOrOpenTab: mockFocusOrOpenTab,
-        updateTabName: mockUpdateTabName,
-        canOpenNewTab: mockCanOpenNewTab,
-      });
+      vi.mocked(useTabsQuery).mockReturnValue({
+        data: { tabs: mockTabs, activeTabId: mockActiveTabId },
+        isLoading: false,
+      } as ReturnType<typeof useTabsQuery>);
 
       vi.mocked(useParams).mockReturnValue({ id: mockUrlId });
 
       mockPipelineData.set("p1", {
         pipelineId: "p1",
         pipelineName: "First Pipeline",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });
@@ -1079,7 +1024,6 @@ describe("PipelineEditorPage", () => {
       mockPipelineData.set("p2", {
         pipelineId: "p2",
         pipelineName: "Second Pipeline",
-        pipelineDescription: "",
         nodes: [],
         edges: [],
       });

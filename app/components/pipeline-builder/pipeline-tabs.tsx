@@ -2,8 +2,14 @@ import { useState } from "react";
 import { X, Plus, Home, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
-import { usePipelines } from "~/hooks/queries/use-pipelines";
+import {
+  useTabsQuery,
+  useFocusOrOpenTab,
+  useSetActiveTab,
+  canOpenNewTab,
+  HOME_TAB_ID,
+} from "~/hooks/queries/use-tabs";
+import { usePipelines, useCreatePipeline } from "~/hooks/queries/use-pipelines";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
@@ -31,12 +37,19 @@ interface PipelineTabsProps {
 
 export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
   const navigate = useNavigate();
-  const { tabs, activeTabId, closeTab, canOpenNewTab, focusOrOpenTab } =
-    useTabStore();
+  const { data: tabState } = useTabsQuery();
+  const focusOrOpenTabMutation = useFocusOrOpenTab();
+  const setActiveTabMutation = useSetActiveTab();
   const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
   const { data: pipelines = [] } = usePipelines();
 
+  const tabs = tabState?.tabs ?? [];
+  const activeTabId = tabState?.activeTabId ?? null;
+
   const handleTabClick = (pipelineId: string) => {
+    // Immediate visual feedback - tab switches instantly (optimistic update)
+    setActiveTabMutation.mutate(pipelineId);
+    // Navigation happens after (can be slower, but user sees tab change immediately)
     navigate(`/pipelines/${pipelineId}`);
   };
 
@@ -59,55 +72,37 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
   };
 
   const performClose = (pipelineId: string) => {
-    onCloseTab(pipelineId); // Parent cleanup
-    closeTab(pipelineId);
-
-    // Navigate to remaining tab or home
-    const remaining = tabs.filter(
-      (t) => t.pipelineId !== pipelineId && t.pipelineId !== HOME_TAB_ID
-    );
-    if (remaining.length > 0) {
-      const lastTab = remaining[remaining.length - 1];
-      navigate(`/pipelines/${lastTab.pipelineId}`);
-    } else {
-      navigate("/pipelines/home");
-    }
-
+    // Parent handles closeTab, cache cleanup, and navigation
+    onCloseTab(pipelineId);
     setConfirmCloseId(null);
   };
 
-  const handleNewTab = async () => {
-    if (!canOpenNewTab()) {
+  const createPipeline = useCreatePipeline();
+
+  const handleNewTab = () => {
+    if (!canOpenNewTab(tabs)) {
       toast.error("Maximum 8 tabs allowed");
       return;
     }
 
-    // Create new pipeline in DB immediately
-    const formData = new FormData();
-    formData.set("intent", "create");
-    formData.set("name", "Untitled Pipeline");
-    formData.set("flowData", JSON.stringify({ nodes: [], edges: [] }));
-
-    const response = await fetch("/api/pipelines", {
-      method: "POST",
-      body: formData,
-    });
-
-    const { pipeline } = await response.json();
-    navigate(`/pipelines/${pipeline.id}`);
+    createPipeline.mutate(
+      { name: "Untitled Pipeline", flowData: { nodes: [], edges: [] } },
+      {
+        onSuccess: (pipeline) => {
+          navigate(`/pipelines/${pipeline.id}`);
+        },
+        onError: () => {
+          toast.error("Failed to create pipeline");
+        },
+      }
+    );
   };
 
   const handleSelectPipeline = (pipelineId: string, name: string) => {
-    // Check if already open as a tab
-    const existingTab = tabs.find((t) => t.pipelineId === pipelineId);
-    if (existingTab) {
-      // Just focus the existing tab
-      navigate(`/pipelines/${pipelineId}`);
-    } else {
-      // Open new tab via navigation (route will add to store)
-      focusOrOpenTab(pipelineId, name);
-      navigate(`/pipelines/${pipelineId}`);
-    }
+    // Immediate visual feedback - optimistic update via mutation
+    focusOrOpenTabMutation.mutate({ pipelineId, name });
+    // Then navigate (user already sees the tab change)
+    navigate(`/pipelines/${pipelineId}`);
   };
 
   // Filter out pipelines already open in tabs for dropdown
@@ -161,7 +156,7 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
         </div>
 
         {/* Dropdown for adding tabs - hidden when at limit */}
-        {canOpenNewTab() && (
+        {canOpenNewTab(tabs) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="flex-shrink-0 size-8 ml-1">

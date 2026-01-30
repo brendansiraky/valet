@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { z } from "zod";
-import { getSession } from "~/services/session.server";
+import { getUserId } from "~/services/auth.server";
 import { db, agents, apiKeys, agentTraits, traits } from "~/db";
 import { eq, and, inArray } from "drizzle-orm";
 import { runAgent, type AgentRunResult } from "~/services/agent-runner.server";
@@ -23,9 +23,7 @@ export async function action({
   request,
   params,
 }: ActionFunctionArgs): Promise<Response> {
-  // Require authentication
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return jsonResponse(
