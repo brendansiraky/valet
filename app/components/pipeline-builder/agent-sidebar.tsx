@@ -1,14 +1,24 @@
 import { Card, CardHeader, CardTitle, CardContent } from '~/components/ui/card'
-import type { Agent } from '~/db/schema/agents'
-import type { Trait } from '~/db/schema/traits'
+
+interface SidebarAgent {
+    id: string
+    name: string
+    instructions: string | null
+}
+
+interface SidebarTrait {
+    id: string
+    name: string
+    color: string
+}
 
 interface AgentSidebarProps {
-    agents: Agent[]
-    traits: Trait[]
+    agents: SidebarAgent[]
+    traits: SidebarTrait[]
 }
 
 export function AgentSidebar({ agents, traits }: AgentSidebarProps) {
-    const onAgentDragStart = (event: React.DragEvent, agent: Agent) => {
+    const onAgentDragStart = (event: React.DragEvent, agent: SidebarAgent) => {
         event.dataTransfer.setData('application/agent-id', agent.id)
         event.dataTransfer.setData('application/agent-name', agent.name)
         event.dataTransfer.setData(
@@ -18,7 +28,7 @@ export function AgentSidebar({ agents, traits }: AgentSidebarProps) {
         event.dataTransfer.effectAllowed = 'move'
     }
 
-    const onTraitDragStart = (event: React.DragEvent, trait: Trait) => {
+    const onTraitDragStart = (event: React.DragEvent, trait: SidebarTrait) => {
         event.dataTransfer.setData('application/trait-id', trait.id)
         event.dataTransfer.setData('application/trait-name', trait.name)
         event.dataTransfer.setData('application/trait-color', trait.color)

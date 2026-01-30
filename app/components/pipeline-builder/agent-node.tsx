@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 import type { AgentNodeData } from "~/stores/pipeline-store";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { TraitChip } from "./trait-chip";
-import { useTraits } from "./traits-context";
+import { useTraitsContext } from "./traits-context";
 
 // Define the full node type for React Flow
 type AgentNodeType = Node<AgentNodeData, "agent">;
@@ -15,7 +15,7 @@ type AgentNodeType = Node<AgentNodeData, "agent">;
 export const AgentNode = memo(
   ({ id, data, selected }: NodeProps<AgentNodeType>) => {
     const [isDragOver, setIsDragOver] = useState(false);
-    const traitsMap = useTraits();
+    const traitsMap = useTraitsContext();
     const { addTraitToNode, removeTraitFromNode } = usePipelineStore();
 
     const handleDragOver = (e: React.DragEvent) => {

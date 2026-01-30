@@ -3,7 +3,7 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { useTabStore } from "~/stores/tab-store";
 import { PipelineCanvas } from "./pipeline-canvas";
-import { TraitsContext } from "./traits-context";
+import { TraitsContext, type TraitContextValue } from "./traits-context";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import {
@@ -17,7 +17,6 @@ import {
 import { getLayoutedElements } from "~/lib/pipeline-layout";
 import type { Node, Edge } from "@xyflow/react";
 import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
-import type { Trait } from "~/db/schema/traits";
 
 interface PipelineTabPanelProps {
   pipelineId: string;
@@ -29,7 +28,7 @@ interface PipelineTabPanelProps {
   } | null; // null for new pipeline
   agents: Array<{ id: string; name: string; instructions: string | null }>;
   traits: Array<{ id: string; name: string; color: string }>;
-  traitsMap: Map<string, Trait>;
+  traitsMap: Map<string, TraitContextValue>;
   runState: { runId: string | null; isStarting: boolean };
   onOpenRunDialog: () => void;
   onDelete: () => void;

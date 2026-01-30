@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useLoaderData, useNavigate, useParams } from "react-router";
-import type { LoaderFunctionArgs } from "react-router";
-import { redirect } from "react-router";
-import { getSession } from "~/services/session.server";
-import { db, pipelines, agents, traits } from "~/db";
-import { eq, and } from "drizzle-orm";
+import { useNavigate, useParams } from "react-router";
 import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { PipelineTabs } from "~/components/pipeline-builder/pipeline-tabs";
@@ -30,79 +25,27 @@ import {
   Controls,
   ReactFlowProvider,
 } from "@xyflow/react";
-import type { Node, Edge } from "@xyflow/react";
-import type { AgentNodeData, PipelineNodeData } from "~/stores/pipeline-store";
-import type { Trait } from "~/db/schema/traits";
+import type { AgentNodeData } from "~/stores/pipeline-store";
+import type { TraitContextValue } from "~/components/pipeline-builder/traits-context";
 import { useAutosave } from "~/hooks/use-autosave";
-
-// Loader returns data for the requested pipeline
-export async function loader({ request, params }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId = session.get("userId");
-
-  if (!userId) {
-    return redirect("/login");
-  }
-
-  const { id } = params;
-
-  // Fetch user's agents and traits for sidebar
-  const [userAgents, userTraits] = await Promise.all([
-    db.select().from(agents).where(eq(agents.userId, userId)),
-    db
-      .select()
-      .from(traits)
-      .where(eq(traits.userId, userId))
-      .orderBy(traits.name),
-  ]);
-
-  // For home tab, return null pipeline
-  if (id === "home") {
-    return {
-      requestedPipeline: null,
-      requestedId: "home",
-      agents: userAgents,
-      traits: userTraits,
-    };
-  }
-
-  // For new pipelines, return null pipeline
-  if (id === "new") {
-    return {
-      requestedPipeline: null,
-      requestedId: "new",
-      agents: userAgents,
-      traits: userTraits,
-    };
-  }
-
-  // Load the requested pipeline
-  const [requestedPipeline] = await db
-    .select()
-    .from(pipelines)
-    .where(and(eq(pipelines.id, id!), eq(pipelines.userId, userId)));
-
-  if (!requestedPipeline) {
-    throw new Response("Pipeline not found", { status: 404 });
-  }
-
-  return {
-    requestedPipeline,
-    requestedId: id,
-    agents: userAgents,
-    traits: userTraits,
-  };
-}
+import { useAgents } from "~/hooks/queries/useAgents";
+import { useTraits } from "~/hooks/queries/use-traits";
+import { usePipeline, useRunPipeline } from "~/hooks/queries/use-pipelines";
 
 export default function PipelineEditorPage() {
-  const {
-    requestedPipeline,
-    requestedId,
-    agents: userAgents,
-    traits: userTraits,
-  } = useLoaderData<typeof loader>();
   const { id: urlId } = useParams();
   const navigate = useNavigate();
+
+  // Fetch data via React Query hooks
+  const agentsQuery = useAgents();
+  const traitsQuery = useTraits();
+  const pipelineQuery = usePipeline(urlId);
+  const runPipelineMutation = useRunPipeline();
+
+  // Derive data from queries
+  const userAgents = agentsQuery.data?.agents ?? [];
+  const userTraits = traitsQuery.data ?? [];
+  const requestedPipeline = pipelineQuery.data ?? null;
 
   const { tabs, activeTabId, closeTab, focusOrOpenTab } = useTabStore();
   const { removePipeline, getPipeline } = usePipelineStore();
@@ -129,7 +72,7 @@ export default function PipelineEditorPage() {
 
   // Traits lookup map for context
   const traitsMap = useMemo(
-    () => new Map(userTraits.map((t) => [t.id, t])),
+    () => new Map<string, TraitContextValue>(userTraits.map((t) => [t.id, t])),
     [userTraits]
   );
 
@@ -192,30 +135,25 @@ export default function PipelineEditorPage() {
     setRunDialogPipelineId(pipelineId);
   };
 
-  const handleRunSubmit = async () => {
+  const handleRunSubmit = () => {
     if (!runDialogPipelineId) return;
 
     const pipelineId = runDialogPipelineId;
     setRunDialogPipelineId(null);
     setRunState(pipelineId, { runId: null, isStarting: true });
 
-    try {
-      const formData = new FormData();
-      formData.set("input", runInput);
-
-      const response = await fetch(`/api/pipeline/${pipelineId}/run`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      setRunState(pipelineId, { runId: data.runId, isStarting: false });
-    } catch (error) {
-      console.error("Failed to start pipeline:", error);
-      setRunState(pipelineId, { runId: null, isStarting: false });
-    }
+    runPipelineMutation.mutate(
+      { pipelineId, input: runInput },
+      {
+        onSuccess: (data) => {
+          setRunState(pipelineId, { runId: data.runId, isStarting: false });
+        },
+        onError: (error) => {
+          console.error("Failed to start pipeline:", error);
+          setRunState(pipelineId, { runId: null, isStarting: false });
+        },
+      }
+    );
 
     setRunInput("");
   };
@@ -311,10 +249,10 @@ export default function PipelineEditorPage() {
                 );
               }
 
-              // For the requested pipeline, use loader data
+              // For the requested pipeline, use React Query data
               // For other tabs, need to use data from store (will already be loaded)
               const initialData =
-                tab.pipelineId === requestedId
+                tab.pipelineId === urlId
                   ? requestedPipeline
                   : null; // PipelineTabPanel will use store data if pipeline already loaded
 
@@ -458,7 +396,7 @@ function PipelineTabPanelWithAutosave({
   } | null;
   agents: Array<{ id: string; name: string; instructions: string | null }>;
   traits: Array<{ id: string; name: string; color: string }>;
-  traitsMap: Map<string, Trait>;
+  traitsMap: Map<string, TraitContextValue>;
   runState: { runId: string | null; isStarting: boolean };
   onOpenRunDialog: () => void;
   onDelete: () => void;
