@@ -10,6 +10,7 @@ Current milestone roadmaps. Phases continue across milestones.
 - ✅ **v1.1 Enhanced Agents** — Phases 7-10 (shipped 2026-01-29)
 - ✅ **v1.2 Multi-Provider & Artifacts** — Phases 11-14 (shipped 2026-01-29)
 - ✅ **v1.3 Agent DNA & Dynamic Traits** — Phases 15-18 (shipped 2026-01-30)
+- 🔄 **v1.4 State Architecture Cleanup** — Phase 19 (in progress)
 
 ---
 
@@ -192,3 +193,81 @@ Plans:
 ---
 *v1.3 created: 2026-01-29*
 *v1.3 shipped: 2026-01-30*
+
+---
+
+# v1.4 State Architecture Cleanup
+
+**Status:** In Progress
+**Phases:** 19
+**Depends on:** v1.3 (complete)
+
+## Overview
+
+The pipeline builder screen incorrectly uses Zustand to manage server state that should be handled by React Query. This creates a problematic dual-store pattern where backend data is duplicated into Zustand, causing decoupling and potential sync issues. This milestone removes the pipeline-store entirely and moves all pipeline data management to React Query with proper optimistic updates.
+
+## Phases
+
+### Phase 19: Remove Zustand from Pipeline Builder
+
+**Goal:** Eliminate pipeline-store.ts and manage all pipeline data through React Query
+**Depends on:** v1.3 complete
+**Status:** Ready
+**Plans:** 4 plans
+
+Plans:
+- [ ] 19-01-PLAN.md — Create usePipelineFlow hook (foundation)
+- [ ] 19-02-PLAN.md — Migrate PipelineTabPanel and PipelineCanvas
+- [ ] 19-03-PLAN.md — Migrate AgentNode, route file, delete pipeline-store
+- [ ] 19-04-PLAN.md — Update tests for new mocking approach
+
+**Scope:**
+- Delete `app/stores/pipeline-store.ts` entirely
+- React Flow nodes/edges stored in React Query cache as `flowData`
+- React Flow callbacks update cache directly via optimistic mutations
+- Pipeline name/description edits use mutations with optimistic updates
+- Node add/remove operations use mutations
+- Trait assignment to nodes uses mutations
+- Tab state (which pipelines are open) remains in Zustand (this is UI state, not server state)
+- Multi-pipeline editing uses React Query's cache keyed by `["pipelines", id]`
+
+**Key Insight:** The Zustand store was introduced as an intermediary between React Query and React Flow, but this is unnecessary. React Query can directly hold the `flowData` and components can read/write it via queries and mutations.
+
+**Requirements:**
+- ARCH-01: All pipeline data flows through React Query, not Zustand
+- ARCH-02: React Flow state (nodes/edges) stored in query cache
+- ARCH-03: Mutations with optimistic updates for instant UI feedback
+- ARCH-04: Tab store (UI state) remains separate from pipeline data
+- ARCH-05: No regression in autosave behavior
+- ARCH-06: No regression in multi-tab editing
+
+**Success Criteria:**
+1. `app/stores/pipeline-store.ts` is deleted
+2. All pipeline data reads use `usePipeline(id)` query
+3. All pipeline data writes use mutations with optimistic updates
+4. React Flow nodes/edges come from query cache `data.flowData`
+5. Tab switching uses React Query cache (no Zustand state transfer)
+6. Existing tests pass with updated mocking approach
+7. TypeScript compiles with zero errors
+
+---
+
+## Key Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Delete pipeline-store entirely | Clean break — intermediate refactors create technical debt |
+| React Query holds flowData directly | Single source of truth for server state |
+| Optimistic mutations for edits | Maintains instant UI feedback without Zustand intermediary |
+| Keep tab-store for UI state | Tabs are UI concern, not server state |
+
+---
+
+## Progress
+
+| Phase | Requirements | Status |
+|-------|--------------|--------|
+| 19 - Remove Zustand from Pipeline Builder | 6 | Ready |
+
+---
+*v1.4 created: 2026-01-30*
