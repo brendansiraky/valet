@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Non-technical users can automate repetitive multi-stage document workflows by building and running AI agent pipelines through a visual interface.
-**Current focus:** v1.3 Agent DNA & Dynamic Traits
+**Current focus:** v1.4 State Architecture Cleanup
 
 ## Current Position
 
-Phase: 18 of 18 - Pipeline Tabs
-Plan: 04 of 4 complete
-Status: Complete
-Last activity: 2026-01-30 - Completed quick task 038: Test pipeline name persistence after refresh
+Phase: 19 - Remove Zustand from Pipeline Builder
+Plan: 01 of 4
+Status: In progress
+Last activity: 2026-01-30 - Completed 19-01-PLAN.md (React Query flow hook)
 
-Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
+Progress: [██░░░░░░░░] 25% (v1.4: Plan 1/4 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 46
+- Total plans completed: 47
 - Average duration: 6 min
-- Total execution time: 4.7 hours
+- Total execution time: 4.73 hours
 
 **By Phase:**
 
@@ -45,9 +45,10 @@ Progress: [##########] 100% (v1.3: 4/4 phases complete - SHIPPED)
 | 16-trait-colors | 1 | 3 min | 3 min |
 | 17-dynamic-pipeline-traits | 3 | 8 min | 3 min |
 | 18-pipeline-tabs | 4 | 15 min | 4 min |
+| 19-remove-zustand | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 17-03 (1 min), 18-01 (3 min), 18-03 (4 min), 18-02 (5 min), 18-04 (3 min)
+- Last 5 plans: 18-01 (3 min), 18-03 (4 min), 18-02 (5 min), 18-04 (3 min), 19-01 (2 min)
 
 *Updated after each plan completion*
 
@@ -64,6 +65,8 @@ v1.2 decisions archived in milestones/v1.2-ROADMAP.md.
 | 2026-01-30 | Immediate auto-save (no debounce) | User feedback: prefer instant saves over coalesced |
 | 2026-01-30 | CSS display:none for inactive tabs | Preserves React Flow state without unmounting |
 | 2026-01-30 | ReactFlowProvider isolation per tab panel | Each tab gets own provider to prevent state bleed |
+| 2026-01-30 | 1000ms debounce for autosave in usePipelineFlow | Balance responsive UX with server request reduction |
+| 2026-01-30 | Pipeline types centralized in use-pipelines.ts | FlowData, AgentNodeData, TraitNodeData for easier imports |
 
 ### Pending Todos
 
@@ -123,7 +126,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 039: Clean up useEffect anti-patterns in pipeline-tab-panel
+Stopped at: Completed 19-01-PLAN.md (React Query flow hook)
 Resume file: None
 
 ---
