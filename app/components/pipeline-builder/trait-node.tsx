@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { Card, CardHeader, CardTitle } from "~/components/ui/card";
 import { cn } from "~/lib/utils";
-import type { TraitNodeData } from "~/stores/pipeline-store";
+import type { TraitNodeData } from "~/hooks/queries/use-pipelines";
 
 type TraitNodeType = Node<TraitNodeData, "trait">;
 
