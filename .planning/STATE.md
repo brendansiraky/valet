@@ -118,11 +118,12 @@ None.
 | 036 | Write extensive tests for pipelines screen user flow | 2026-01-30 | 0b1b96c | [036-write-extensive-tests-for-pipelines-scre](./quick/036-write-extensive-tests-for-pipelines-scre/) |
 | 037 | Change trait tile border to left-only accent color | 2026-01-30 | 5ef1fb7 | [037-change-trait-tile-border-to-left-only-co](./quick/037-change-trait-tile-border-to-left-only-co/) |
 | 038 | Test pipeline name persistence after refresh | 2026-01-30 | 312f951 | [038-test-pipeline-name-persistence-after-ref](./quick/038-test-pipeline-name-persistence-after-ref/) |
+| 039 | Clean up useEffect anti-patterns in pipeline-tab-panel | 2026-01-30 | 60b6480 | [039-cleanup-useeffect-antipatterns-pipeline-tab-panel](./quick/039-cleanup-useeffect-antipatterns-pipeline-tab-panel/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 038: Test pipeline name persistence after refresh
+Stopped at: Completed quick task 039: Clean up useEffect anti-patterns in pipeline-tab-panel
 Resume file: None
 
 ---
