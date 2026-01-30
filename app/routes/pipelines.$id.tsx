@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
-import { usePipelineStore } from "~/stores/pipeline-store";
 import { PipelineTabs } from "~/components/pipeline-builder/pipeline-tabs";
 import { PipelineTabPanel } from "~/components/pipeline-builder/pipeline-tab-panel";
 import { AgentSidebar } from "~/components/pipeline-builder/agent-sidebar";
@@ -25,11 +25,16 @@ import {
   Controls,
   ReactFlowProvider,
 } from "@xyflow/react";
-import type { AgentNodeData } from "~/stores/pipeline-store";
 import type { TraitContextValue } from "~/components/pipeline-builder/traits-context";
 import { useAgents } from "~/hooks/queries/useAgents";
 import { useTraits } from "~/hooks/queries/use-traits";
-import { usePipeline, useRunPipeline } from "~/hooks/queries/use-pipelines";
+import {
+  usePipeline,
+  useRunPipeline,
+  type Pipeline,
+  type FlowData,
+  type AgentNodeData,
+} from "~/hooks/queries/use-pipelines";
 
 export default function PipelineEditorPage() {
   const { id: urlId } = useParams();
@@ -47,7 +52,7 @@ export default function PipelineEditorPage() {
   const requestedPipeline = pipelineQuery.data ?? null;
 
   const { tabs, activeTabId, closeTab, focusOrOpenTab } = useTabStore();
-  const { removePipeline, getPipeline } = usePipelineStore();
+  const queryClient = useQueryClient();
 
   // Per-tab run state (lifted to container to persist across tab switches)
   const [runStates, setRunStates] = useState<
@@ -92,11 +97,12 @@ export default function PipelineEditorPage() {
     }
   }
 
-  // Handle tab close - cleanup store and run states
+  // Handle tab close - cleanup cache and run states
   const handleTabClose = useCallback(
     (pipelineId: string) => {
       closeTab(pipelineId);
-      removePipeline(pipelineId);
+      // Remove from React Query cache instead of Zustand
+      queryClient.removeQueries({ queryKey: ["pipelines", pipelineId] });
       setRunStates((prev) => {
         const next = new Map(prev);
         next.delete(pipelineId);
@@ -118,7 +124,7 @@ export default function PipelineEditorPage() {
         navigate("/pipelines/home");
       }
     },
-    [closeTab, removePipeline, tabs, navigate]
+    [closeTab, queryClient, tabs, navigate]
   );
 
   // Get or create run state for a pipeline
@@ -169,10 +175,11 @@ export default function PipelineEditorPage() {
       usage: { inputTokens: number; outputTokens: number } | null,
       model: string | null
     ) => {
-      const pipeline = getPipeline(pipelineId);
+      const pipeline = queryClient.getQueryData<Pipeline>(["pipelines", pipelineId]);
       if (!pipeline) return;
 
-      const steps = pipeline.nodes
+      const flowData = pipeline.flowData as FlowData;
+      const steps = flowData.nodes
         .filter((n) => n.type === "agent")
         .map((node, index) => ({
           agentName: (node.data as AgentNodeData).agentName,
@@ -190,7 +197,7 @@ export default function PipelineEditorPage() {
       );
       setRunState(pipelineId, { runId: null, isStarting: false });
     },
-    [getPipeline]
+    [queryClient]
   );
 
   const handleRunError = useCallback((pipelineId: string, error: string) => {
@@ -200,6 +207,22 @@ export default function PipelineEditorPage() {
       3000
     );
   }, []);
+
+  // Helper to get pipeline steps for RunProgress component
+  const getStepsForPipeline = useCallback(
+    (pipelineId: string) => {
+      const pipeline = queryClient.getQueryData<Pipeline>(["pipelines", pipelineId]);
+      if (!pipeline) return [];
+      const flowData = pipeline.flowData as FlowData;
+      return flowData.nodes
+        .filter((n) => n.type === "agent")
+        .map((n) => ({
+          agentId: (n.data as AgentNodeData).agentId,
+          agentName: (n.data as AgentNodeData).agentName,
+        }));
+    },
+    [queryClient]
+  );
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -253,10 +276,28 @@ export default function PipelineEditorPage() {
 
               // For the requested pipeline, use React Query data
               // For other tabs, need to use data from store (will already be loaded)
-              const initialData =
-                tab.pipelineId === urlId
-                  ? requestedPipeline
-                  : null; // PipelineTabPanel will use store data if pipeline already loaded
+              const isCurrentUrlTab = tab.pipelineId === urlId;
+              const initialData = isCurrentUrlTab ? requestedPipeline : null;
+
+              // Don't render until we know we have data (or query is disabled for "new")
+              // This prevents loading with "Untitled Pipeline" while React Query fetches
+              // However, if the pipeline is already in cache, render immediately
+              const isQueryEnabled = !!urlId && urlId !== "home" && urlId !== "new";
+              const pipelineInCache = !!queryClient.getQueryData(["pipelines", tab.pipelineId]);
+              const shouldWaitForData =
+                isCurrentUrlTab && isQueryEnabled && pipelineQuery.isPending && !pipelineInCache;
+
+              if (shouldWaitForData) {
+                return (
+                  <div
+                    key={tab.pipelineId}
+                    style={{ display: isActive ? "flex" : "none" }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <p className="text-muted-foreground">Loading pipeline...</p>
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -280,14 +321,7 @@ export default function PipelineEditorPage() {
                     <div className="fixed bottom-4 right-4 w-96 z-50">
                       <RunProgress
                         runId={runState.runId}
-                        steps={
-                          getPipeline(tab.pipelineId)
-                            ?.nodes.filter((n) => n.type === "agent")
-                            .map((n) => ({
-                              agentId: (n.data as AgentNodeData).agentId,
-                              agentName: (n.data as AgentNodeData).agentName,
-                            })) || []
-                        }
+                        steps={getStepsForPipeline(tab.pipelineId)}
                         onComplete={(final, outputs, inputs, usage, model) =>
                           handleRunComplete(
                             tab.pipelineId,
@@ -326,7 +360,7 @@ export default function PipelineEditorPage() {
             <OutputViewer
               steps={output.steps}
               finalOutput={output.finalOutput}
-              pipelineName={getPipeline(pipelineId)?.pipelineName || "Pipeline"}
+              pipelineName={queryClient.getQueryData<Pipeline>(["pipelines", pipelineId])?.name || "Pipeline"}
               usage={output.usage}
               model={output.model}
               onClose={() =>
