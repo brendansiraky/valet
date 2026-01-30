@@ -186,8 +186,17 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem
+              onClick={handleNewTab}
+              disabled={!canOpenNewTab()}
+              className="font-medium"
+            >
+              <Plus className="size-4 mr-2" />
+              New Pipeline
+            </DropdownMenuItem>
             {availablePipelines.length > 0 && (
               <>
+                <DropdownMenuSeparator />
                 {availablePipelines.map((pipeline) => (
                   <DropdownMenuItem
                     key={pipeline.id}
@@ -198,17 +207,8 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
                     <span className="truncate">{pipeline.name}</span>
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator />
               </>
             )}
-            <DropdownMenuItem
-              onClick={handleNewTab}
-              disabled={!canOpenNewTab()}
-              className="font-medium"
-            >
-              <Plus className="size-4 mr-2" />
-              New Pipeline
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

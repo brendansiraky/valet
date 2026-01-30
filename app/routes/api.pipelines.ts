@@ -1,7 +1,7 @@
-import type { ActionFunctionArgs } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { getSession } from "~/services/session.server";
 import { db, pipelines } from "~/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import type { FlowData } from "~/db/schema/pipelines";
 
 function jsonResponse(data: unknown, status: number = 200): Response {
@@ -9,6 +9,23 @@ function jsonResponse(data: unknown, status: number = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const userId = session.get("userId");
+
+  if (!userId) {
+    return jsonResponse({ error: "Authentication required" }, 401);
+  }
+
+  const userPipelines = await db
+    .select({ id: pipelines.id, name: pipelines.name })
+    .from(pipelines)
+    .where(eq(pipelines.userId, userId))
+    .orderBy(desc(pipelines.updatedAt));
+
+  return jsonResponse({ pipelines: userPipelines });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
