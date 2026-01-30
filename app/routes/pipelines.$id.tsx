@@ -332,6 +332,7 @@ export default function PipelineEditorPage() {
                     traitsMap={traitsMap}
                     runState={runState}
                     onOpenRunDialog={() => handleOpenRunDialog(tab.pipelineId)}
+                    onDelete={() => handleTabClose(tab.pipelineId)}
                   />
 
                   {/* Run progress for this tab */}
@@ -446,6 +447,7 @@ function PipelineTabPanelWithAutosave({
   traitsMap,
   runState,
   onOpenRunDialog,
+  onDelete,
 }: {
   pipelineId: string;
   initialData: {
@@ -459,6 +461,7 @@ function PipelineTabPanelWithAutosave({
   traitsMap: Map<string, Trait>;
   runState: { runId: string | null; isStarting: boolean };
   onOpenRunDialog: () => void;
+  onDelete: () => void;
 }) {
   // Autosave for this pipeline
   useAutosave(pipelineId);
@@ -472,6 +475,7 @@ function PipelineTabPanelWithAutosave({
       traitsMap={traitsMap}
       runState={runState}
       onOpenRunDialog={onOpenRunDialog}
+      onDelete={onDelete}
     />
   );
 }

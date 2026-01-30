@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useCallback, useState } from "react";
-import { useNavigate } from "react-router";
 import { ReactFlowProvider } from "@xyflow/react";
 import { usePipelineStore } from "~/stores/pipeline-store";
 import { useTabStore } from "~/stores/tab-store";
@@ -33,6 +32,7 @@ interface PipelineTabPanelProps {
   traitsMap: Map<string, Trait>;
   runState: { runId: string | null; isStarting: boolean };
   onOpenRunDialog: () => void;
+  onDelete: () => void;
 }
 
 export function PipelineTabPanel({
@@ -43,8 +43,8 @@ export function PipelineTabPanel({
   traitsMap,
   runState,
   onOpenRunDialog,
+  onDelete,
 }: PipelineTabPanelProps) {
-  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -184,7 +184,7 @@ export function PipelineTabPanel({
     formData.set("id", pipelineId);
 
     await fetch("/api/pipelines", { method: "POST", body: formData });
-    navigate("/pipelines");
+    onDelete();
   };
 
   if (!pipeline) {
