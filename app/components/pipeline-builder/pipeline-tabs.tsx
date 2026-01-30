@@ -1,10 +1,17 @@
-import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Plus, Home, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { useTabStore } from "~/stores/tab-store";
+import { useTabStore, HOME_TAB_ID } from "~/stores/tab-store";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +23,11 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 
+interface Pipeline {
+  id: string;
+  name: string;
+}
+
 interface PipelineTabsProps {
   runStates: Map<string, { runId: string | null; isStarting: boolean }>;
   onCloseTab: (pipelineId: string) => void;
@@ -23,8 +35,25 @@ interface PipelineTabsProps {
 
 export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
   const navigate = useNavigate();
-  const { tabs, activeTabId, closeTab, canOpenNewTab } = useTabStore();
+  const { tabs, activeTabId, closeTab, canOpenNewTab, focusOrOpenTab } =
+    useTabStore();
   const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+
+  // Fetch pipelines list for dropdown
+  useEffect(() => {
+    const fetchPipelines = async () => {
+      try {
+        const response = await fetch("/api/pipelines");
+        if (!response.ok) throw new Error("Failed to fetch pipelines");
+        const data = await response.json();
+        setPipelines(data.pipelines ?? []);
+      } catch {
+        // Silently fail - dropdown will just be empty
+      }
+    };
+    fetchPipelines();
+  }, []);
 
   const handleTabClick = (pipelineId: string) => {
     navigate(`/pipelines/${pipelineId}`);
@@ -32,6 +61,9 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
 
   const handleClose = (e: React.MouseEvent, pipelineId: string) => {
     e.stopPropagation();
+
+    // Home tab cannot be closed
+    if (pipelineId === HOME_TAB_ID) return;
 
     // Check if pipeline is running
     const runState = runStates.get(pipelineId);
@@ -49,13 +81,15 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
     onCloseTab(pipelineId); // Parent cleanup
     closeTab(pipelineId);
 
-    // Navigate to remaining tab or pipelines list
-    const remaining = tabs.filter((t) => t.pipelineId !== pipelineId);
+    // Navigate to remaining tab or home
+    const remaining = tabs.filter(
+      (t) => t.pipelineId !== pipelineId && t.pipelineId !== HOME_TAB_ID
+    );
     if (remaining.length > 0) {
       const lastTab = remaining[remaining.length - 1];
       navigate(`/pipelines/${lastTab.pipelineId}`);
     } else {
-      navigate("/pipelines");
+      navigate("/pipelines/home");
     }
 
     setConfirmCloseId(null);
@@ -82,14 +116,46 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
     navigate(`/pipelines/${pipeline.id}`);
   };
 
-  if (tabs.length === 0) {
-    return null; // No tabs = no tab bar
-  }
+  const handleSelectPipeline = (pipelineId: string, name: string) => {
+    // Check if already open as a tab
+    const existingTab = tabs.find((t) => t.pipelineId === pipelineId);
+    if (existingTab) {
+      // Just focus the existing tab
+      navigate(`/pipelines/${pipelineId}`);
+    } else {
+      // Open new tab via navigation (route will add to store)
+      focusOrOpenTab(pipelineId, name);
+      navigate(`/pipelines/${pipelineId}`);
+    }
+  };
+
+  // Filter out pipelines already open in tabs for dropdown
+  const openTabIds = new Set(tabs.map((t) => t.pipelineId));
+  const availablePipelines = pipelines.filter((p) => !openTabIds.has(p.id));
+
+  // Separate regular tabs from home tab
+  const regularTabs = tabs.filter((t) => t.pipelineId !== HOME_TAB_ID);
 
   return (
     <>
       <div className="flex items-center border-b bg-muted/30 px-2 h-10">
-        {tabs.map((tab) => (
+        {/* Pinned home tab */}
+        <button
+          onClick={() => handleTabClick(HOME_TAB_ID)}
+          className={cn(
+            "flex items-center justify-center size-8 rounded-t-md border-b-2 transition-colors",
+            "hover:bg-background/50",
+            activeTabId === HOME_TAB_ID
+              ? "border-primary bg-background"
+              : "border-transparent"
+          )}
+          title="Home"
+        >
+          <Home className="size-4" />
+        </button>
+
+        {/* Regular tabs */}
+        {regularTabs.map((tab) => (
           <button
             key={tab.pipelineId}
             onClick={() => handleTabClick(tab.pipelineId)}
@@ -110,15 +176,41 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
             </button>
           </button>
         ))}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleNewTab}
-          disabled={!canOpenNewTab()}
-          className="size-8 ml-1"
-        >
-          <Plus className="size-4" />
-        </Button>
+
+        {/* Dropdown for adding tabs */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="size-8 ml-1">
+              <Plus className="size-4" />
+              <ChevronDown className="size-3 -ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            {availablePipelines.length > 0 && (
+              <>
+                {availablePipelines.map((pipeline) => (
+                  <DropdownMenuItem
+                    key={pipeline.id}
+                    onClick={() =>
+                      handleSelectPipeline(pipeline.id, pipeline.name)
+                    }
+                  >
+                    <span className="truncate">{pipeline.name}</span>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem
+              onClick={handleNewTab}
+              disabled={!canOpenNewTab()}
+              className="font-medium"
+            >
+              <Plus className="size-4 mr-2" />
+              New Pipeline
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <AlertDialog
