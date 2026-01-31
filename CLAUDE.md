@@ -156,4 +156,15 @@ These skills contain project-specific patterns and must be loaded to ensure cons
 **ALL async server state MUST use TanStack Query.** Invoke `/react-query` for patterns.
 
 - Query hooks live in `app/hooks/queries/`
+- Selector hooks live in `app/hooks/selectors/`
 - Zustand is for local UI state only (sidebar, tabs, form state)
+
+### Selectors Over Direct Queries
+
+**Always access query data through selectors, not directly from query hooks.**
+
+- If a selector exists, use it (e.g., `useSelectedPipeline()`, `useSelectedPipelineFlow()`, `usePipelineFlowByPipelineId()`, `useAgents()`, `useTraits()`)
+- If a selector doesn't exist for your use case, create one in `app/hooks/selectors/`
+- If you see code using a query hook directly from `app/hooks/queries/`, refactor it to use or create a selector
+
+This ensures consistent data access patterns and makes it easy to add derived logic in one place.
