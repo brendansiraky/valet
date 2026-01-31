@@ -96,6 +96,7 @@ vi.mock("@xyflow/react", () => ({
   Background: () => null,
   Controls: () => null,
   MiniMap: () => null,
+  MarkerType: { ArrowClosed: "arrowclosed" },
   useReactFlow: () => ({
     screenToFlowPosition: vi.fn((pos: { x: number; y: number }) => pos),
     fitView: vi.fn(),

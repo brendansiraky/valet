@@ -40,6 +40,7 @@ import {
   type AgentNodeData,
 } from "~/hooks/queries/use-pipelines";
 import { queries } from "~/hooks/queries/keys";
+import { topologicalSortNodes } from "~/lib/topological-sort";
 
 export default function PipelinesPage() {
   // Fetch data via React Query hooks
@@ -165,13 +166,13 @@ export default function PipelinesPage() {
       if (!pipeline) return;
 
       const flowData = pipeline.flowData as FlowData;
-      const steps = flowData.nodes
-        .filter((n) => n.type === "agent")
-        .map((node, index) => ({
-          agentName: (node.data as AgentNodeData).agentName,
-          output: stepOutputs.get(index) || "",
-          input: stepInputs.get(index) || "",
-        }));
+      // Sort nodes in execution order to correctly match stepOutputs indices
+      const sortedAgentNodes = topologicalSortNodes(flowData.nodes, flowData.edges);
+      const steps = sortedAgentNodes.map((node, index) => ({
+        agentName: (node.data as AgentNodeData).agentName,
+        output: stepOutputs.get(index) || "",
+        input: stepInputs.get(index) || "",
+      }));
 
       setCompletedOutputs((prev) =>
         new Map(prev).set(pipelineId, {
@@ -195,17 +196,18 @@ export default function PipelinesPage() {
   }, []);
 
   // Helper to get pipeline steps for RunProgress component
+  // Uses topological sort to match actual execution order
   const getStepsForPipeline = useCallback(
     (pipelineId: string) => {
       const pipeline = queryClient.getQueryData<Pipeline>(queries.pipelines.detail(pipelineId).queryKey);
       if (!pipeline) return [];
       const flowData = pipeline.flowData as FlowData;
-      return flowData.nodes
-        .filter((n) => n.type === "agent")
-        .map((n) => ({
-          agentId: (n.data as AgentNodeData).agentId,
-          agentName: (n.data as AgentNodeData).agentName,
-        }));
+      // Sort nodes in execution order (same algorithm as backend)
+      const sortedAgentNodes = topologicalSortNodes(flowData.nodes, flowData.edges);
+      return sortedAgentNodes.map((n) => ({
+        agentId: (n.data as AgentNodeData).agentId,
+        agentName: (n.data as AgentNodeData).agentName,
+      }));
     },
     [queryClient]
   );

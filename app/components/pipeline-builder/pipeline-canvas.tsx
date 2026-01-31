@@ -5,11 +5,13 @@ import {
   Controls,
   MiniMap,
   useReactFlow,
+  MarkerType,
   type Node,
   type Edge,
   type OnNodesChange,
   type OnEdgesChange,
   type OnConnect,
+  type DefaultEdgeOptions,
 } from "@xyflow/react";
 import type { PipelineNodeData } from "~/hooks/queries/use-pipelines";
 import { AgentNode } from "./agent-node";
@@ -19,6 +21,15 @@ import { TraitNode } from "./trait-node";
 const nodeTypes = {
   agent: AgentNode,
   trait: TraitNode,
+};
+
+// Default edge options with arrow marker to show flow direction
+const defaultEdgeOptions: DefaultEdgeOptions = {
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 20,
+    height: 20,
+  },
 };
 
 interface PipelineCanvasProps {
@@ -103,6 +114,7 @@ export function PipelineCanvas({
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
         onNodesChange={isLocked ? undefined : onNodesChange}
         onEdgesChange={isLocked ? undefined : onEdgesChange}
         onConnect={isLocked ? undefined : onConnect}
