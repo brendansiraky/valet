@@ -22,10 +22,26 @@ interface TabsPayload {
 
 // --- Query ---
 
+// Home tab is a client-only concept - always present, never stored in DB
+const HOME_TAB: TabData = {
+  id: "home-tab",
+  pipelineId: HOME_TAB_ID,
+  name: "Home",
+  pinned: true,
+  position: -1, // Always first
+  isActive: false, // Derived from activeTabId, not this field
+};
+
 async function fetchTabs(): Promise<TabState> {
   const res = await fetch("/api/tabs");
   if (!res.ok) throw new Error("Failed to fetch tabs");
-  return res.json();
+  const data: TabState = await res.json();
+
+  // Prepend home tab to server tabs
+  return {
+    tabs: [HOME_TAB, ...data.tabs],
+    activeTabId: data.activeTabId,
+  };
 }
 
 export function useTabsQuery() {
@@ -39,11 +55,14 @@ export function useTabsQuery() {
 // --- Save Mutation (internal) ---
 
 // Convert TabData[] to TabInput[] for API
+// Filters out home tab - it's a client-only concept, not stored in DB
 function toTabInputs(tabs: TabData[]): TabInput[] {
-  return tabs.map((t) => ({
-    pipelineId: t.pipelineId,
-    pinned: t.pinned,
-  }));
+  return tabs
+    .filter((t) => t.pipelineId !== HOME_TAB_ID)
+    .map((t) => ({
+      pipelineId: t.pipelineId,
+      pinned: t.pinned,
+    }));
 }
 
 async function saveTabs(payload: TabsPayload): Promise<TabState> {
@@ -146,33 +165,16 @@ export function useCloseTab() {
         throw new Error("Cannot close home tab");
       }
 
+      // onMutate has already:
+      // 1. Removed the closed tab from cache
+      // 2. Computed the new activeTabId
+      // So we just persist the current (post-optimistic-update) state
       const current = queryClient.getQueryData<TabState>(["tabs"]);
       if (!current) throw new Error("Tab state not loaded");
 
-      const tabIndex = current.tabs.findIndex((t) => t.pipelineId === pipelineId);
-      if (tabIndex === -1) {
-        throw new Error("Tab not found");
-      }
-
-      const newTabs = current.tabs.filter((t) => t.pipelineId !== pipelineId);
-
-      // Determine new active tab if we closed the active one
-      let newActiveId = current.activeTabId;
-      if (current.activeTabId === pipelineId) {
-        if (newTabs.length === 0) {
-          newActiveId = null;
-        } else if (tabIndex >= newTabs.length) {
-          // Closed last tab, activate new last
-          newActiveId = newTabs[newTabs.length - 1].pipelineId;
-        } else {
-          // Activate tab at same index (which is now the next tab)
-          newActiveId = newTabs[tabIndex].pipelineId;
-        }
-      }
-
       return saveMutation.mutateAsync({
-        tabs: toTabInputs(newTabs),
-        activeTabId: newActiveId,
+        tabs: toTabInputs(current.tabs),
+        activeTabId: current.activeTabId,
       });
     },
     onMutate: async (pipelineId) => {
