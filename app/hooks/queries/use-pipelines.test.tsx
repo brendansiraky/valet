@@ -12,6 +12,7 @@ import {
     useSavePipeline,
     useDeletePipeline,
 } from './use-pipelines'
+import { queries } from './keys'
 
 describe('usePipelines', () => {
     test('fetches and returns pipeline list', async () => {
@@ -330,7 +331,7 @@ describe('useDeletePipeline', () => {
         const queryClient = createTestQueryClient()
 
         // Pre-seed the cache with pipelines
-        queryClient.setQueryData(['pipelines'], mockPipelinesData.pipelines)
+        queryClient.setQueryData(queries.pipelines.all.queryKey, mockPipelinesData.pipelines)
 
         const { result } = renderHook(() => useDeletePipeline(), {
             wrapper: ({ children }) => (
@@ -345,7 +346,7 @@ describe('useDeletePipeline', () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
         // Cache should be invalidated after delete
-        const queryState = queryClient.getQueryState(['pipelines'])
+        const queryState = queryClient.getQueryState(queries.pipelines.all.queryKey)
         expect(queryState?.isInvalidated).toBe(true)
     })
 
@@ -367,5 +368,101 @@ describe('useDeletePipeline', () => {
 
         await waitFor(() => expect(result.current.isError).toBe(true))
         expect(result.current.error?.message).toBe('Pipeline not found')
+    })
+
+    test('optimistically removes tab when deleting active pipeline', async () => {
+        const queryClient = createTestQueryClient()
+
+        // Pre-seed with pipelines and tabs
+        queryClient.setQueryData(queries.pipelines.all.queryKey, [
+            { id: 'pipeline-1', name: 'Pipeline 1' },
+            { id: 'pipeline-2', name: 'Pipeline 2' },
+        ])
+        queryClient.setQueryData(['tabs'], {
+            tabs: [
+                { pipelineId: 'home', name: 'Home', pinned: true },
+                { pipelineId: 'pipeline-1', name: 'Pipeline 1', pinned: false },
+                { pipelineId: 'pipeline-2', name: 'Pipeline 2', pinned: false },
+            ],
+            activeTabId: 'pipeline-1', // Active tab is the one being deleted
+        })
+
+        // Use a delayed response to verify optimistic update happens immediately
+        server.use(
+            http.post('/api/pipelines', async () => {
+                await new Promise((r) => setTimeout(r, 100))
+                return HttpResponse.json({ success: true })
+            }),
+        )
+
+        const { result } = renderHook(() => useDeletePipeline(), {
+            wrapper: ({ children }) => (
+                <QueryClientProvider client={queryClient}>
+                    {children}
+                </QueryClientProvider>
+            ),
+        })
+
+        result.current.mutate({ id: 'pipeline-1' })
+
+        // Optimistic update should happen immediately (before server responds)
+        await waitFor(() => {
+            const tabs = queryClient.getQueryData<{
+                tabs: Array<{ pipelineId: string }>
+                activeTabId: string | null
+            }>(['tabs'])
+            expect(tabs?.tabs.map((t) => t.pipelineId)).toEqual(['home', 'pipeline-2'])
+            // Active tab should switch to the next tab (pipeline-2)
+            expect(tabs?.activeTabId).toBe('pipeline-2')
+        })
+
+        // Verify mutation eventually completes
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    })
+
+    test('rolls back tab on delete error', async () => {
+        const queryClient = createTestQueryClient()
+
+        // Pre-seed with pipelines and tabs
+        queryClient.setQueryData(queries.pipelines.all.queryKey, [
+            { id: 'pipeline-1', name: 'Pipeline 1' },
+        ])
+        queryClient.setQueryData(['tabs'], {
+            tabs: [
+                { pipelineId: 'home', name: 'Home', pinned: true },
+                { pipelineId: 'pipeline-1', name: 'Pipeline 1', pinned: false },
+            ],
+            activeTabId: 'pipeline-1',
+        })
+
+        server.use(
+            http.post('/api/pipelines', () => {
+                return HttpResponse.json(
+                    { error: 'Delete failed' },
+                    { status: 500 },
+                )
+            }),
+        )
+
+        const { result } = renderHook(() => useDeletePipeline(), {
+            wrapper: ({ children }) => (
+                <QueryClientProvider client={queryClient}>
+                    {children}
+                </QueryClientProvider>
+            ),
+        })
+
+        result.current.mutate({ id: 'pipeline-1' })
+
+        // Wait for error
+        await waitFor(() => expect(result.current.isError).toBe(true))
+
+        // Tab should be restored after rollback
+        const tabs = queryClient.getQueryData<{
+            tabs: Array<{ pipelineId: string }>
+            activeTabId: string | null
+        }>(['tabs'])
+        expect(tabs?.tabs.map((t) => t.pipelineId)).toEqual(['home', 'pipeline-1'])
+        expect(tabs?.activeTabId).toBe('pipeline-1')
     })
 })

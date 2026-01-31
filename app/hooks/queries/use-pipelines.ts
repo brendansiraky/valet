@@ -241,6 +241,12 @@ async function deletePipeline(data: DeletePipelineInput): Promise<void> {
   }
 }
 
+// Tab state shape for optimistic update
+interface TabState {
+  tabs: Array<{ pipelineId: string; name: string; pinned: boolean }>;
+  activeTabId: string | null;
+}
+
 export function useDeletePipeline() {
   const queryClient = useQueryClient();
 
@@ -250,19 +256,62 @@ export function useDeletePipeline() {
     onMutate: async (deletedPipeline) => {
       // Cancel in-flight queries to prevent race conditions
       await queryClient.cancelQueries({ queryKey: queries.pipelines.all.queryKey });
+      await queryClient.cancelQueries({
+        queryKey: queries.pipelines.detail(deletedPipeline.id).queryKey,
+      });
+      await queryClient.cancelQueries({ queryKey: ["tabs"] });
 
       // Snapshot current state for rollback
       const previousPipelines = queryClient.getQueryData<PipelineListItem[]>(
         queries.pipelines.all.queryKey
       );
+      const previousTabs = queryClient.getQueryData<TabState>(["tabs"]);
 
-      // Optimistically remove from cache
+      // Optimistically remove from list cache
       queryClient.setQueryData<PipelineListItem[]>(
         queries.pipelines.all.queryKey,
         (old) => old?.filter((p) => p.id !== deletedPipeline.id)
       );
 
-      return { previousPipelines };
+      // Note: We intentionally do NOT remove the detail query here.
+      // Removing it while the component is still mounted (even briefly during
+      // React's batched update) causes React Query to see "no data for enabled
+      // query" and trigger a fetch, resulting in a 404.
+      // Instead, we just cancel it and let it become inactive when the component
+      // unmounts. The query will be garbage collected after gcTime.
+
+      // Optimistically close the tab
+      if (previousTabs) {
+        const tabIndex = previousTabs.tabs.findIndex(
+          (t) => t.pipelineId === deletedPipeline.id
+        );
+        if (tabIndex !== -1) {
+          const newTabs = previousTabs.tabs.filter(
+            (t) => t.pipelineId !== deletedPipeline.id
+          );
+
+          // Compute new active tab if we're closing the active one
+          let newActiveId = previousTabs.activeTabId;
+          if (previousTabs.activeTabId === deletedPipeline.id) {
+            if (newTabs.length === 0) {
+              newActiveId = null;
+            } else if (tabIndex >= newTabs.length) {
+              // Was last tab, select new last
+              newActiveId = newTabs[newTabs.length - 1].pipelineId;
+            } else {
+              // Select tab at same position
+              newActiveId = newTabs[tabIndex].pipelineId;
+            }
+          }
+
+          queryClient.setQueryData<TabState>(["tabs"], {
+            tabs: newTabs,
+            activeTabId: newActiveId,
+          });
+        }
+      }
+
+      return { previousPipelines, previousTabs };
     },
 
     onError: (_err, _deletedPipeline, context) => {
@@ -273,17 +322,23 @@ export function useDeletePipeline() {
           context.previousPipelines
         );
       }
+      // Restore tabs if deletion failed
+      if (context?.previousTabs) {
+        queryClient.setQueryData(["tabs"], context.previousTabs);
+      }
     },
 
     onSettled: () => {
-      // Always refetch to ensure consistency with server
-      queryClient.invalidateQueries({ queryKey: queries.pipelines._def });
+      // Only invalidate pipelines - tabs are persisted by closeTabMutation
+      // which is called in the component's onSuccess callback
+      queryClient.invalidateQueries({ queryKey: queries.pipelines.all.queryKey });
     },
   });
 }
 
 // Create new empty pipeline with optimistic update
 interface CreatePipelineInput {
+  id: string; // Client generates this UUID
   name: string;
   flowData: FlowData;
 }
@@ -297,6 +352,7 @@ interface CreatePipelineResponse {
 async function createPipeline(data: CreatePipelineInput): Promise<CreatePipelineResponse> {
   const formData = new FormData();
   formData.set("intent", "create");
+  formData.set("id", data.id); // Send client-generated ID
   formData.set("name", data.name);
   formData.set("flowData", JSON.stringify(data.flowData));
 
@@ -329,19 +385,13 @@ export function useCreatePipeline() {
         queries.pipelines.all.queryKey
       );
 
-      // Generate a temporary ID for optimistic display
-      const tempId = `temp-${Date.now()}`;
-
-      // Optimistically add to cache
+      // Use the real ID directly - no temp ID swapping needed
       queryClient.setQueryData<PipelineListItem[]>(
         queries.pipelines.all.queryKey,
-        (old) => [
-          ...(old ?? []),
-          { id: tempId, name: newPipeline.name },
-        ]
+        (old) => [...(old ?? []), { id: newPipeline.id, name: newPipeline.name }]
       );
 
-      return { previousPipelines, tempId };
+      return { previousPipelines };
     },
 
     onError: (_err, _newPipeline, context) => {
@@ -352,19 +402,6 @@ export function useCreatePipeline() {
           context.previousPipelines
         );
       }
-    },
-
-    onSuccess: (createdPipeline, _variables, context) => {
-      // Replace temp item with real one from server
-      queryClient.setQueryData<PipelineListItem[]>(
-        queries.pipelines.all.queryKey,
-        (old) =>
-          old?.map((p) =>
-            p.id === context?.tempId
-              ? { id: createdPipeline.id, name: createdPipeline.name }
-              : p
-          )
-      );
     },
 
     onSettled: () => {
