@@ -200,20 +200,20 @@ vi.mock("~/hooks/queries/use-pipelines", () => ({
   })),
   useCreatePipeline: vi.fn(() => ({
     mutate: (
-      input: { name: string; flowData: { nodes: unknown[]; edges: unknown[] } },
+      input: { id: string; name: string; flowData: { nodes: unknown[]; edges: unknown[] } },
       callbacks?: {
         onSuccess?: (pipeline: { id: string; name: string }) => void;
         onError?: () => void;
       }
     ) => {
-      // Create pipeline in DB
+      // Create pipeline in DB using client-provided ID
       const newPipeline = {
-        id: `pipeline-${nextPipelineId++}`,
+        id: input.id,
         name: input.name,
         flowData: input.flowData,
       };
       dbPipelines.push(newPipeline);
-      apiCalls.push({ type: "CREATE_PIPELINE", data: { name: input.name } });
+      apiCalls.push({ type: "CREATE_PIPELINE", data: { id: input.id, name: input.name } });
 
       mockCreatePipelineMutate(input, callbacks);
       callbacks?.onSuccess?.({ id: newPipeline.id, name: newPipeline.name });
@@ -444,11 +444,19 @@ describe("Tabs Normalization - Name from Pipeline JOIN", () => {
 
       expect(dbPipelines[0].name).toBe("Untitled Pipeline");
 
-      // Verify openTab was called with correct name
-      expect(mockOpenTabMutate).toHaveBeenCalledWith({
-        pipelineId: dbPipelines[0].id,
-        name: "Untitled Pipeline",
-      });
+      // Verify openTab was called with client-generated UUID and correct name
+      expect(mockOpenTabMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pipelineId: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          ),
+          name: "Untitled Pipeline",
+        })
+      );
+
+      // Verify the pipelineId matches what was stored in DB (client-generated ID)
+      const openTabCall = mockOpenTabMutate.mock.calls[0][0];
+      expect(dbPipelines[0].id).toBe(openTabCall.pipelineId);
     });
   });
 

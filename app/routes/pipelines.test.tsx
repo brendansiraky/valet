@@ -167,11 +167,13 @@ describe("PipelinesPage", () => {
         const intent = formData.get("intent");
 
         if (intent === "create") {
+          // Use client-provided ID if available, else generate one
+          const id = (formData.get("id") as string) || `pipeline-${nextPipelineId++}`;
           const name = (formData.get("name") as string) || "Untitled Pipeline";
           const flowData = formData.get("flowData") as string;
 
           const newPipeline = {
-            id: `pipeline-${nextPipelineId++}`,
+            id,
             name,
             flowData: flowData ? JSON.parse(flowData) : { nodes: [], edges: [] },
           };
@@ -424,10 +426,13 @@ describe("PipelinesPage", () => {
         await user.click(screen.getByText("New Pipeline"));
 
         // Verify openTab mutation was called (tab state is the source of truth)
+        // Client generates UUID, so expect a UUID pattern
         await waitFor(() => {
           expect(mockOpenTabMutate).toHaveBeenCalledWith(
             expect.objectContaining({
-              pipelineId: expect.stringMatching(/^pipeline-\d+$/),
+              pipelineId: expect.stringMatching(
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+              ),
               name: "Untitled Pipeline",
             })
           );

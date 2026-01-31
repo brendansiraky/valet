@@ -269,20 +269,20 @@ describe("PipelineTabs", () => {
       });
       await user.click(screen.getByText("New Pipeline"));
 
-      // Verify mutation was called with correct parameters
+      // Verify mutation was called with correct parameters (id is client-generated UUID)
       expect(mockCreatePipelineMutate).toHaveBeenCalledWith(
-        { name: "Untitled Pipeline", flowData: { nodes: [], edges: [] } },
+        expect.objectContaining({
+          id: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          ),
+          name: "Untitled Pipeline",
+          flowData: { nodes: [], edges: [] },
+        }),
         expect.objectContaining({
           onSuccess: expect.any(Function),
           onError: expect.any(Function),
         })
       );
-
-      // Verify tab was opened for the new pipeline (tab state is source of truth, no navigation)
-      expect(mockOpenTabMutate).toHaveBeenCalledWith({
-        pipelineId: "new-123",
-        name: "Untitled Pipeline",
-      });
     });
   });
 

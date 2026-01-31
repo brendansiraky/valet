@@ -172,15 +172,15 @@ vi.mock("~/hooks/queries/use-pipelines", () => ({
     isPending: false,
   })),
   useCreatePipeline: vi.fn(() => ({
-    mutate: (input: { name: string; flowData: { nodes: unknown[]; edges: unknown[] } }, callbacks?: { onSuccess?: (pipeline: { id: string; name: string }) => void; onError?: () => void }) => {
-      // Simulate creating a pipeline in dbPipelines
+    mutate: (input: { id: string; name: string; flowData: { nodes: unknown[]; edges: unknown[] } }, callbacks?: { onSuccess?: (pipeline: { id: string; name: string }) => void; onError?: () => void }) => {
+      // Simulate creating a pipeline in dbPipelines using client-provided ID
       const newPipeline = {
-        id: `pipeline-${nextPipelineId++}`,
+        id: input.id,
         name: input.name,
         flowData: input.flowData,
       };
       dbPipelines.push(newPipeline);
-      apiCalls.push({ type: "CREATE_PIPELINE", data: { name: input.name } });
+      apiCalls.push({ type: "CREATE_PIPELINE", data: { id: input.id, name: input.name } });
 
       // Track the call
       mockCreatePipelineMutate(input, callbacks);
@@ -443,9 +443,11 @@ describe("Pipeline Creation Flow - Starting from Empty State", () => {
         expect(dbPipelines).toHaveLength(1);
       });
 
-      // Verify the created pipeline
+      // Verify the created pipeline (id is client-generated UUID)
       expect(dbPipelines[0].name).toBe("Untitled Pipeline");
-      expect(dbPipelines[0].id).toBe("pipeline-1");
+      expect(dbPipelines[0].id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      );
 
       // Tab state is source of truth - no navigation, openTab mutation handles it
 

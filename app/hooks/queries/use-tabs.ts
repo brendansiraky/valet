@@ -4,7 +4,7 @@ import type { TabData } from "~/db/schema/pipeline-tabs";
 export const HOME_TAB_ID = "home";
 const MAX_TABS = 8;
 
-interface TabState {
+export interface TabState {
   tabs: TabData[];
   activeTabId: string | null;
 }

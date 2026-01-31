@@ -39,6 +39,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   switch (intent) {
     case "create": {
+      const id = formData.get("id") as string | null;
       const name = formData.get("name") as string;
       const flowDataStr = formData.get("flowData") as string;
 
@@ -53,6 +54,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const [newPipeline] = await db
         .insert(pipelines)
         .values({
+          id: id ?? undefined, // Use client ID if provided, else let Drizzle generate
           userId,
           name,
           flowData,

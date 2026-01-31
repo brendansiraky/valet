@@ -1,0 +1,37 @@
+# fly.toml - Fly.io deployment configuration
+# See https://fly.io/docs/reference/configuration/
+
+app = "valet-staging"
+primary_region = "sjc"
+
+[build]
+
+# Run migrations before deploying new version
+[deploy]
+  release_command = "npm run db:migrate:prod"
+
+[env]
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  # Long-running connections for SSE streaming (pipelines can run 10-20 min)
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  # Extended timeouts for streaming responses
+  [http_service.http_options]
+    idle_timeout = 1800  # 30 minutes
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

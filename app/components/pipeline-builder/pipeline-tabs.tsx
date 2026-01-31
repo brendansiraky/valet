@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Plus, Home, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import {
     useTabsQuery,
     useFocusOrOpenTab,
@@ -8,7 +9,9 @@ import {
     useOpenTab,
     canOpenNewTab,
     HOME_TAB_ID,
+    type TabState,
 } from '~/hooks/queries/use-tabs'
+import type { TabData } from '~/db/schema/pipeline-tabs'
 import { usePipelines, useCreatePipeline } from '~/hooks/queries/use-pipelines'
 import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
@@ -36,6 +39,7 @@ interface PipelineTabsProps {
 }
 
 export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
+    const queryClient = useQueryClient()
     const { data: tabState } = useTabsQuery()
     const focusOrOpenTabMutation = useFocusOrOpenTab()
     const setActiveTabMutation = useSetActiveTab()
@@ -83,17 +87,44 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
             return
         }
 
+        // Generate ID upfront - this is the REAL ID
+        const pipelineId = crypto.randomUUID()
+        const name = 'Untitled Pipeline'
+
+        // Optimistically update tabs cache immediately (no server call yet)
+        queryClient.setQueryData<TabState>(['tabs'], (prev) => {
+            if (!prev || !canOpenNewTab(prev.tabs)) return prev
+            return {
+                tabs: [
+                    ...prev.tabs,
+                    { pipelineId, name, pinned: false } as TabData,
+                ],
+                activeTabId: pipelineId,
+            }
+        })
+
+        // Create pipeline, then persist tab state
         createPipeline.mutate(
-            { name: 'Untitled Pipeline', flowData: { nodes: [], edges: [] } },
+            { id: pipelineId, name, flowData: { nodes: [], edges: [] } },
             {
-                onSuccess: (pipeline) => {
-                    // Open a tab for the new pipeline - no navigation needed
-                    openTabMutation.mutate({
-                        pipelineId: pipeline.id,
-                        name: pipeline.name,
-                    })
+                onSuccess: () => {
+                    // Now persist the tab (pipeline exists, FK is valid)
+                    openTabMutation.mutate({ pipelineId, name })
                 },
                 onError: () => {
+                    // Rollback optimistic tab update
+                    queryClient.setQueryData<TabState>(['tabs'], (prev) => {
+                        if (!prev) return prev
+                        return {
+                            tabs: prev.tabs.filter(
+                                (t) => t.pipelineId !== pipelineId,
+                            ),
+                            activeTabId:
+                                prev.tabs.find(
+                                    (t) => t.pipelineId !== pipelineId,
+                                )?.pipelineId ?? HOME_TAB_ID,
+                        }
+                    })
                     toast.error('Failed to create pipeline')
                 },
             },

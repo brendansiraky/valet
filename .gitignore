@@ -5,3 +5,6 @@
 # React Router
 /.react-router/
 /build/
+
+# Compiled migration script (generated during Docker build)
+/scripts/*.mjs

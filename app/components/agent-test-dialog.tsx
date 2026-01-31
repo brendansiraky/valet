@@ -90,13 +90,17 @@ export function AgentTestDialog({
                     <Checkbox
                       id={`test-trait-${trait.id}`}
                       checked={selectedTraitIds.includes(trait.id)}
+                      disabled={isLoading}
                       onCheckedChange={(checked) => {
                         setSelectedTraitIds((prev) =>
                           checked ? [...prev, trait.id] : prev.filter((id) => id !== trait.id)
                         );
                       }}
                     />
-                    <label htmlFor={`test-trait-${trait.id}`} className="text-sm cursor-pointer">
+                    <label
+                      htmlFor={`test-trait-${trait.id}`}
+                      className={`text-sm select-none ${isLoading ? "text-muted-foreground" : "cursor-pointer"}`}
+                    >
                       {trait.name}
                     </label>
                   </div>
