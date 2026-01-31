@@ -15,8 +15,11 @@ export const ANTHROPIC_MODELS = [
  * OpenAI GPT models.
  */
 export const OPENAI_MODELS = [
+  { id: "gpt-5.2-pro", name: "GPT-5.2 Pro", provider: "openai" },
+  { id: "gpt-5.2", name: "GPT-5.2", provider: "openai" },
   { id: "gpt-4o", name: "GPT-4o", provider: "openai" },
   { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "openai" },
+  { id: "o3-mini", name: "o3-mini (Reasoning)", provider: "openai" },
 ] as const;
 
 /**

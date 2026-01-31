@@ -46,13 +46,24 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap",
   },
+  // Cyberpunk theme fonts
+  {
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap",
+  },
+  // Vintage Paper theme fonts
+  {
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap",
+  },
+  // Caffeine theme uses system fonts - no import needed
 ];
 
 // Blocking script to prevent FOUC (Flash of Unstyled Content)
 // This runs synchronously before CSS paints, setting theme classes on <html>
 const themeInitScript = `
 (function() {
-  var themes = ['tangerine', 'bubblegum', 'sunset-horizon', 'soft-pop', 'notebook', 'northern-lights', 'neo-brutalism', 'nature', 'modern-minimal', 'mocha-mousse'];
+  var themes = ['tangerine', 'bubblegum', 'sunset-horizon', 'soft-pop', 'notebook', 'northern-lights', 'neo-brutalism', 'nature', 'modern-minimal', 'mocha-mousse', 'cyberpunk', 'vintage-paper', 'caffeine'];
   var defaultTheme = 'notebook';
   var theme = defaultTheme;
   var colorMode = 'light';

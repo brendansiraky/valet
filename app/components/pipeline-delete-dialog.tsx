@@ -1,8 +1,6 @@
-import { type ReactNode } from "react";
-import { Form } from "react-router";
+import { useState, type ReactNode } from "react";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -11,15 +9,33 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
+import { Button } from "~/components/ui/button";
+import { useDeletePipeline } from "~/hooks/queries/use-pipelines";
 
 interface PipelineDeleteDialogProps {
   pipeline: { id: string; name: string };
   trigger: ReactNode;
+  onDeleted?: () => void;
 }
 
-export function PipelineDeleteDialog({ pipeline, trigger }: PipelineDeleteDialogProps) {
+export function PipelineDeleteDialog({ pipeline, trigger, onDeleted }: PipelineDeleteDialogProps) {
+  const [open, setOpen] = useState(false);
+  const deleteMutation = useDeletePipeline();
+
+  const handleDelete = () => {
+    setOpen(false);
+    deleteMutation.mutate(
+      { id: pipeline.id },
+      {
+        onSuccess: () => {
+          onDeleted?.();
+        },
+      }
+    );
+  };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -30,13 +46,9 @@ export function PipelineDeleteDialog({ pipeline, trigger }: PipelineDeleteDialog
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Form method="post">
-            <input type="hidden" name="intent" value="delete" />
-            <input type="hidden" name="pipelineId" value={pipeline.id} />
-            <AlertDialogAction type="submit" variant="destructive">
-              Delete
-            </AlertDialogAction>
-          </Form>
+          <Button variant="destructive" onClick={handleDelete}>
+            Delete
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

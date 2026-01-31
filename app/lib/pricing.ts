@@ -14,8 +14,12 @@ export const MODEL_PRICING: Record<string, { input: number; output: number }> = 
   "claude-sonnet-4-5-20250929": { input: 3, output: 15 },
   "claude-haiku-4-5-20251001": { input: 1, output: 5 },
   // OpenAI models
+  "gpt-5.2-pro": { input: 10, output: 30 },
+  "gpt-5.2": { input: 1.75, output: 14 },
   "gpt-4o": { input: 2.5, output: 10 },
   "gpt-4o-mini": { input: 0.15, output: 0.6 },
+  // OpenAI reasoning models
+  "o3-mini": { input: 1.1, output: 4.4 },
 };
 
 /**
@@ -58,4 +62,16 @@ export function formatTokens(count: number): string {
     return `${(count / 1_000).toFixed(1)}K`;
   }
   return count.toString();
+}
+
+/**
+ * Format pricing for model selection display.
+ * Returns "$X.XX/M" format for price per million tokens.
+ */
+export function formatModelPrice(modelId: string): string | null {
+  const pricing = MODEL_PRICING[modelId];
+  if (!pricing) return null;
+
+  // Show input price as the primary indicator (most relevant for users)
+  return `$${pricing.input}/M`;
 }

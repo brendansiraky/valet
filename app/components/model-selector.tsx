@@ -1,4 +1,5 @@
 import { ANTHROPIC_MODELS, OPENAI_MODELS } from "~/lib/models";
+import { formatModelPrice } from "~/lib/pricing";
 import {
   Select,
   SelectContent,
@@ -51,7 +52,12 @@ export function ModelSelector({
             <SelectLabel>Anthropic</SelectLabel>
             {ANTHROPIC_MODELS.map((model) => (
               <SelectItem key={model.id} value={model.id}>
-                {model.name}
+                <span className="flex w-full items-center justify-between gap-4">
+                  <span>{model.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatModelPrice(model.id)}
+                  </span>
+                </span>
               </SelectItem>
             ))}
           </SelectGroup>
@@ -62,7 +68,12 @@ export function ModelSelector({
             <SelectLabel>OpenAI</SelectLabel>
             {OPENAI_MODELS.map((model) => (
               <SelectItem key={model.id} value={model.id}>
-                {model.name}
+                <span className="flex w-full items-center justify-between gap-4">
+                  <span>{model.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatModelPrice(model.id)}
+                  </span>
+                </span>
               </SelectItem>
             ))}
           </SelectGroup>

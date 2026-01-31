@@ -2,13 +2,14 @@
  * OpenAI provider implementation.
  *
  * Implements the AIProvider interface using the OpenAI SDK,
- * using the Chat Completions API for message-based interactions.
+ * using the Responses API for message-based interactions.
  *
- * Note: OpenAI does not support web_fetch or web_search tools in Chat Completions.
+ * Note: OpenAI does not support web_fetch or web_search tools in Responses API.
  * These tools will be skipped with a warning when requested.
  */
 
 import OpenAI from "openai";
+import type { EasyInputMessage } from "openai/resources/responses/responses";
 import { OPENAI_MODELS } from "~/lib/models";
 import { registerProviderFactory } from "./registry";
 import type {
@@ -17,7 +18,6 @@ import type {
   ChatOptions,
   ChatResult,
   ProviderModel,
-  ToolConfig,
 } from "./types";
 
 export class OpenAIProvider implements AIProvider {
@@ -39,32 +39,30 @@ export class OpenAIProvider implements AIProvider {
       if (unsupported.length > 0) {
         console.warn(
           `[OpenAI] Skipping unsupported tools: ${unsupported.join(", ")}. ` +
-            `OpenAI Chat Completions API does not support these tools.`
+            `OpenAI Responses API does not support these tools.`
         );
       }
     }
 
-    // Map messages to OpenAI format
-    const openAIMessages: OpenAI.ChatCompletionMessageParam[] = messages.map((m) => ({
-      role: m.role,
+    // Map messages to OpenAI Responses API format
+    const input: EasyInputMessage[] = messages.map((m) => ({
+      role: m.role === "system" ? "developer" : m.role,
       content: m.content,
     }));
 
-    const response = await this.client.chat.completions.create({
+    const response = await this.client.responses.create({
       model: options.model,
-      max_tokens: options.maxTokens ?? 4096,
-      messages: openAIMessages,
+      max_output_tokens: options.maxTokens ?? 4096,
+      input,
     });
 
-    const content = response.choices[0]?.message?.content ?? "";
-
     return {
-      content,
+      content: response.output_text,
       usage: {
-        inputTokens: response.usage?.prompt_tokens ?? 0,
-        outputTokens: response.usage?.completion_tokens ?? 0,
+        inputTokens: response.usage?.input_tokens ?? 0,
+        outputTokens: response.usage?.output_tokens ?? 0,
       },
-      citations: [], // Chat Completions API doesn't have built-in citations
+      citations: [], // Responses API doesn't have built-in citations
     };
   }
 

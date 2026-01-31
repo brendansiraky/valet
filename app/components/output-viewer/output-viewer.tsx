@@ -3,14 +3,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
 import { MarkdownViewer } from "./markdown-viewer";
 import { DownloadButtons } from "./download-buttons";
 import { calculateCost, formatCost, formatTokens } from "~/lib/pricing";
+import { ALL_MODELS } from "~/lib/models";
 
 interface StepOutput {
   agentName: string;
   output: string;
   input?: string;
+  model?: string;
+}
+
+/**
+ * Get display name for a model ID.
+ */
+function getModelDisplayName(modelId: string): string {
+  const model = ALL_MODELS.find((m) => m.id === modelId);
+  return model?.name ?? modelId;
 }
 
 interface OutputViewerProps {
@@ -37,6 +48,9 @@ export function OutputViewer({
 }: OutputViewerProps) {
   const defaultTab = steps.length > 0 ? "final" : "step-0";
 
+  // Track which main tab is selected
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
   // Track which sub-tab (input/output) is selected for each step
   const [stepViews, setStepViews] = useState<Record<number, 'input' | 'output'>>({});
 
@@ -54,7 +68,7 @@ export function OutputViewer({
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={defaultTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             {steps.map((step, index) => (
               <TabsTrigger key={index} value={`step-${index}`}>
@@ -64,37 +78,48 @@ export function OutputViewer({
             <TabsTrigger value="final">Final Output</TabsTrigger>
           </TabsList>
 
-          {steps.map((step, index) => (
-            <TabsContent key={index} value={`step-${index}`}>
-              <Tabs
-                value={getStepView(index)}
-                onValueChange={(v) => setStepView(index, v as 'input' | 'output')}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <TabsList>
-                    <TabsTrigger value="input">Input</TabsTrigger>
-                    <TabsTrigger value="output">Output</TabsTrigger>
-                  </TabsList>
-                  <DownloadButtons
-                    content={getStepView(index) === 'input' ? (step.input ?? '') : step.output}
-                    pipelineName={pipelineName}
-                    stepName={step.agentName}
-                    contentType={getStepView(index)}
-                  />
-                </div>
-                <TabsContent value="input">
-                  <ScrollArea className="h-[400px] rounded-md border p-4">
-                    <MarkdownViewer content={step.input || "No input"} />
-                  </ScrollArea>
-                </TabsContent>
-                <TabsContent value="output">
-                  <ScrollArea className="h-[400px] rounded-md border p-4">
-                    <MarkdownViewer content={step.output || "No output"} />
-                  </ScrollArea>
-                </TabsContent>
-              </Tabs>
-            </TabsContent>
-          ))}
+          {steps.map((step, index) => {
+            // Use step-specific model if available, fallback to pipeline model
+            const stepModel = step.model ?? model;
+            return (
+              <TabsContent key={index} value={`step-${index}`}>
+                <Tabs
+                  value={getStepView(index)}
+                  onValueChange={(v) => setStepView(index, v as 'input' | 'output')}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <TabsList>
+                        <TabsTrigger value="input">Input</TabsTrigger>
+                        <TabsTrigger value="output">Output</TabsTrigger>
+                      </TabsList>
+                      {stepModel && (
+                        <Badge variant="secondary" className="text-xs">
+                          {getModelDisplayName(stepModel)}
+                        </Badge>
+                      )}
+                    </div>
+                    <DownloadButtons
+                      content={getStepView(index) === 'input' ? (step.input ?? '') : step.output}
+                      pipelineName={pipelineName}
+                      stepName={step.agentName}
+                      contentType={getStepView(index)}
+                    />
+                  </div>
+                  <TabsContent value="input">
+                    <ScrollArea className="h-[400px] rounded-md border p-4">
+                      <MarkdownViewer content={step.input || "No input"} />
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="output">
+                    <ScrollArea className="h-[400px] rounded-md border p-4">
+                      <MarkdownViewer content={step.output || "No output"} />
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
+            );
+          })}
 
           <TabsContent value="final">
             <div className="flex items-center justify-end mb-4">
@@ -110,8 +135,8 @@ export function OutputViewer({
           </TabsContent>
         </Tabs>
 
-        {/* Usage Summary */}
-        {usage && model && (
+        {/* Usage Summary - only shown on Final Output tab */}
+        {activeTab === "final" && usage && model && (
           <div className="mt-4 p-3 bg-muted rounded-lg">
             <h4 className="text-sm font-medium mb-2">Usage Summary</h4>
             <div className="grid grid-cols-3 gap-4 text-sm">

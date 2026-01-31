@@ -2,6 +2,7 @@ import { Form } from "react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ANTHROPIC_MODELS, OPENAI_MODELS } from "~/lib/models";
+import { formatModelPrice } from "~/lib/pricing";
 import { useUser } from "~/contexts/user-context";
 import {
   Card,
@@ -244,7 +245,6 @@ export default function Settings() {
                   <Select
                     value={modelPreference}
                     onValueChange={handleModelChange}
-                    disabled={updateModelMutation.isPending}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a model" />
@@ -255,7 +255,12 @@ export default function Settings() {
                           <SelectLabel>Anthropic</SelectLabel>
                           {ANTHROPIC_MODELS.map((model) => (
                             <SelectItem key={model.id} value={model.id}>
-                              {model.name}
+                              <span className="flex w-full items-center justify-between gap-4">
+                                <span>{model.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatModelPrice(model.id)}
+                                </span>
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -265,7 +270,12 @@ export default function Settings() {
                           <SelectLabel>OpenAI</SelectLabel>
                           {OPENAI_MODELS.map((model) => (
                             <SelectItem key={model.id} value={model.id}>
-                              {model.name}
+                              <span className="flex w-full items-center justify-between gap-4">
+                                <span>{model.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatModelPrice(model.id)}
+                                </span>
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -273,12 +283,6 @@ export default function Settings() {
                     </SelectContent>
                   </Select>
                 </div>
-                {updateModelMutation.isPending && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin" />
-                    <span>Saving...</span>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>

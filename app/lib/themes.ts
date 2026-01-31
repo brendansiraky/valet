@@ -79,6 +79,30 @@ export const themes = {
       serif: "Georgia",
     },
   },
+  cyberpunk: {
+    name: "Cyberpunk",
+    fonts: {
+      sans: "Outfit",
+      mono: "Fira Code",
+      serif: "Georgia",
+    },
+  },
+  "vintage-paper": {
+    name: "Vintage Paper",
+    fonts: {
+      sans: "Libre Baskerville",
+      mono: "IBM Plex Mono",
+      serif: "Lora",
+    },
+  },
+  caffeine: {
+    name: "Caffeine",
+    fonts: {
+      sans: "system-ui",
+      mono: "ui-monospace",
+      serif: "ui-serif",
+    },
+  },
 } as const;
 
 export type ThemeId = keyof typeof themes;

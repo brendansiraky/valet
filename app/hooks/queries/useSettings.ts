@@ -129,8 +129,29 @@ export function useUpdateModelPreference() {
 
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queries.settings._def });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: queries.settings.all.queryKey });
+
+      // Snapshot the previous value
+      const previousSettings = queryClient.getQueryData<SettingsData>(queries.settings.all.queryKey);
+
+      // Optimistically update the cache
+      if (previousSettings) {
+        queryClient.setQueryData<SettingsData>(queries.settings.all.queryKey, {
+          ...previousSettings,
+          modelPreference: newData.modelPreference,
+        });
+      }
+
+      // Return context with the previous value for rollback
+      return { previousSettings };
+    },
+    onError: (_err, _newData, context) => {
+      // Roll back to the previous value on error
+      if (context?.previousSettings) {
+        queryClient.setQueryData(queries.settings.all.queryKey, context.previousSettings);
+      }
     },
   });
 }

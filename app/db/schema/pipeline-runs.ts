@@ -13,6 +13,7 @@ export interface ArtifactOutput {
     agentName: string;
     output: string;
     stepOrder: number;
+    model?: string; // Model used for this step (v1.4+)
   }>;
   finalOutput: string;
 }

@@ -89,32 +89,50 @@ export async function registerPipelineWorker() {
         });
       }
 
-      // Determine model: use first agent's model if set, otherwise fallback to user preference or default
-      // Note: For simplicity, pipeline uses a single model for all steps (the first agent's preference)
-      const pipelineModel = steps[0]?.model ?? defaultApiKey?.modelPreference ?? "claude-sonnet-4-5-20250929";
+      // Determine default model (fallback for agents without preference)
+      const defaultModel = defaultApiKey?.modelPreference ?? "claude-sonnet-4-5-20250929";
 
-      // Get the correct API key for the model's provider
-      const providerId = getProviderForModel(pipelineModel);
-      const [apiKey] = await db
-        .select()
-        .from(apiKeys)
-        .where(and(eq(apiKeys.userId, userId), eq(apiKeys.provider, providerId)));
+      // Collect unique providers needed by this pipeline
+      const requiredProviders = new Set<string>();
+      for (const step of steps) {
+        const stepModel = step.model ?? defaultModel;
+        requiredProviders.add(getProviderForModel(stepModel));
+      }
 
-      if (!apiKey) {
+      // Load all required API keys
+      const apiKeyMap = new Map<string, string>();
+      const missingProviders: string[] = [];
+
+      for (const providerId of requiredProviders) {
+        const [apiKey] = await db
+          .select()
+          .from(apiKeys)
+          .where(and(eq(apiKeys.userId, userId), eq(apiKeys.provider, providerId)));
+
+        if (!apiKey) {
+          missingProviders.push(providerId);
+        } else {
+          apiKeyMap.set(providerId, apiKey.encryptedKey);
+        }
+      }
+
+      // Fail if any required API keys are missing
+      if (missingProviders.length > 0) {
+        const providers = missingProviders.join(", ");
         await db
           .update(pipelineRuns)
-          .set({ status: "failed", error: `${providerId} API key not configured. Please add your API key in Settings.` })
+          .set({ status: "failed", error: `Missing API key(s) for: ${providers}. Please add your API key(s) in Settings.` })
           .where(eq(pipelineRuns.id, runId));
         return;
       }
 
-      // Execute pipeline
+      // Execute pipeline with per-step model support
       await executePipeline({
         runId,
         steps,
         initialInput: input,
-        encryptedApiKey: apiKey.encryptedKey,
-        model: pipelineModel,
+        apiKeys: apiKeyMap,
+        defaultModel,
       });
     } catch (error) {
       // Handle errors (including orphaned agent detection) by marking run as failed

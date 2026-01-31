@@ -10,6 +10,7 @@ interface AgentWithTraitIds extends Agent {
 interface Trait {
   id: string;
   name: string;
+  color: string;
 }
 
 interface AgentsData {

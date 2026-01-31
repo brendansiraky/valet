@@ -7,7 +7,7 @@ import { EventEmitter } from "events";
 export type RunEvent =
   | { type: "step_start"; stepIndex: number; agentName: string }
   | { type: "text_delta"; stepIndex: number; text: string }
-  | { type: "step_complete"; stepIndex: number; output: string; input: string }
+  | { type: "step_complete"; stepIndex: number; output: string; input: string; model?: string }
   | {
       type: "pipeline_complete";
       finalOutput: string;

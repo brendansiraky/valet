@@ -48,6 +48,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     columns: {
       id: true,
       name: true,
+      color: true,
     },
   });
 

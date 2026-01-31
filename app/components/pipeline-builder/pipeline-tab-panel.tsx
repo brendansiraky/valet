@@ -4,7 +4,7 @@ import { ReactFlowProvider } from '@xyflow/react'
 import debounce from 'lodash-es/debounce'
 import { useUpdateTabName, useTabsQuery } from '~/hooks/queries/use-tabs'
 import { usePipelineFlow } from '~/hooks/queries/use-pipeline-flow'
-import { useDeletePipeline, useUpdatePipelineName } from '~/hooks/queries/use-pipelines'
+import { useUpdatePipelineName } from '~/hooks/queries/use-pipelines'
 import { PipelineCanvas } from './pipeline-canvas'
 import { PipelineContext } from './pipeline-context'
 import { TraitsContext, type TraitContextValue } from './traits-context'
@@ -12,6 +12,7 @@ import { Input } from '~/components/ui/input'
 import { Button } from '~/components/ui/button'
 import { LayoutGrid, Trash2, Play, Loader2, AlertTriangle } from 'lucide-react'
 import { getLayoutedElements } from '~/lib/pipeline-layout'
+import { PipelineDeleteDialog } from '~/components/pipeline-delete-dialog'
 import type {
     AgentNodeData,
     PipelineNodeData,
@@ -40,7 +41,6 @@ export function PipelineTabPanel({
     onOpenRunDialog,
     onDelete,
 }: PipelineTabPanelProps) {
-    const deletePipelineMutation = useDeletePipeline()
     const updateTabNameMutation = useUpdateTabName()
     const updatePipelineNameMutation = useUpdatePipelineName()
     const { data: tabsData } = useTabsQuery()
@@ -149,22 +149,6 @@ export function PipelineTabPanel({
         setNodesAndEdges(layoutedNodes, layoutedEdges)
     }, [enrichedNodes, edges, setNodesAndEdges])
 
-    const handleDelete = () => {
-        if (!confirm('Delete this pipeline?')) return
-
-        deletePipelineMutation.mutate(
-            { id: pipelineId },
-            {
-                onSuccess: () => {
-                    onDelete()
-                },
-                onError: (error) => {
-                    console.error('Failed to delete pipeline:', error)
-                },
-            },
-        )
-    }
-
     if (isLoading) {
         return (
             <div className='flex-1 flex items-center justify-center'>
@@ -217,10 +201,16 @@ export function PipelineTabPanel({
                         </>
                     )}
                 </Button>
-                <Button variant='destructive' onClick={handleDelete}>
-                    <Trash2 className='size-4 mr-2' />
-                    Delete
-                </Button>
+                <PipelineDeleteDialog
+                    pipeline={{ id: pipelineId, name: tabName }}
+                    trigger={
+                        <Button variant='destructive'>
+                            <Trash2 className='size-4 mr-2' />
+                            Delete
+                        </Button>
+                    }
+                    onDeleted={onDelete}
+                />
             </div>
 
             {/* Canvas with isolated ReactFlowProvider */}

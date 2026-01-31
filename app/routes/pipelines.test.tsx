@@ -678,24 +678,25 @@ describe("PipelinesPage", () => {
       expect(deleteButtons.length).toBeGreaterThan(0);
       await user.click(deleteButtons[0]);
 
-      // Confirm should have been called
-      expect(window.confirm).toHaveBeenCalledWith("Delete this pipeline?");
+      // Confirmation dialog should appear
+      await waitFor(() => {
+        expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+        expect(screen.getByText("Delete pipeline?")).toBeInTheDocument();
+      });
+
+      // Click the confirm button in the dialog
+      const confirmButton = screen.getByRole("button", { name: "Delete" });
+      await user.click(confirmButton);
 
       // Delete mutation should have been called
       await waitFor(() => {
         expect(deleteCalled).toBe(true);
         expect(deletedId).toBe("p1");
       });
-
-      // Restore
-      window.confirm = originalConfirm;
     });
 
     test("canceling delete confirmation does not delete pipeline", async () => {
       const user = userEvent.setup();
-
-      const originalConfirm = window.confirm;
-      window.confirm = vi.fn(() => false);
 
       let deleteCalled = false;
 
@@ -746,19 +747,26 @@ describe("PipelinesPage", () => {
       expect(deleteButtons.length).toBeGreaterThan(0);
       await user.click(deleteButtons[0]);
 
-      expect(window.confirm).toHaveBeenCalled();
+      // Confirmation dialog should appear
+      await waitFor(() => {
+        expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+      });
+
+      // Click the Cancel button instead of confirming
+      const cancelButton = screen.getByRole("button", { name: "Cancel" });
+      await user.click(cancelButton);
+
+      // Dialog should close
+      await waitFor(() => {
+        expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+      });
 
       // Delete should NOT have been called
       expect(deleteCalled).toBe(false);
-
-      window.confirm = originalConfirm;
     });
 
     test("deleted pipeline no longer appears in dropdown", async () => {
       const user = userEvent.setup();
-
-      const originalConfirm = window.confirm;
-      window.confirm = vi.fn(() => true);
 
       // Create a pipeline first
       createdPipelines = [{ id: "p-delete", name: "To Delete", flowData: { nodes: [], edges: [] } }];
@@ -796,12 +804,19 @@ describe("PipelinesPage", () => {
       expect(deleteButtons.length).toBeGreaterThan(0);
       await user.click(deleteButtons[0]);
 
+      // Confirmation dialog should appear
+      await waitFor(() => {
+        expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+      });
+
+      // Click the confirm button in the dialog
+      const confirmButton = screen.getByRole("button", { name: "Delete" });
+      await user.click(confirmButton);
+
       await waitFor(() => {
         // Pipeline should be removed from createdPipelines by the handler
         expect(createdPipelines.find(p => p.id === "p-delete")).toBeUndefined();
       });
-
-      window.confirm = originalConfirm;
     });
   });
 
