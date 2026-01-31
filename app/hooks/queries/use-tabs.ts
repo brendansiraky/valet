@@ -38,9 +38,10 @@ async function fetchTabs(): Promise<TabState> {
   const data: TabState = await res.json();
 
   // Prepend home tab to server tabs
+  // Default to home tab if no active tab is set
   return {
     tabs: [HOME_TAB, ...data.tabs],
-    activeTabId: data.activeTabId,
+    activeTabId: data.activeTabId ?? HOME_TAB_ID,
   };
 }
 
@@ -190,8 +191,10 @@ export function useCloseTab() {
 
           let newActiveId = previous.activeTabId;
           if (previous.activeTabId === pipelineId) {
+            // Home tab is always present and can't be closed, so newTabs.length >= 1
+            // But fallback to HOME_TAB_ID for safety
             if (newTabs.length === 0) {
-              newActiveId = null;
+              newActiveId = HOME_TAB_ID;
             } else if (tabIndex >= newTabs.length) {
               newActiveId = newTabs[newTabs.length - 1].pipelineId;
             } else {

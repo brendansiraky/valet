@@ -22,7 +22,7 @@ import {
 } from "~/components/ui/dialog";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
-import { Play } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import {
   ReactFlow,
   Background,
@@ -51,10 +51,13 @@ export default function PipelinesPage() {
   const userAgents = agentsQuery.data?.agents ?? [];
   const userTraits = traitsQuery.data ?? [];
 
-  const { data: tabState } = useTabsQuery();
+  const { data: tabState, isPending: tabsPending } = useTabsQuery();
   const closeTabMutation = useCloseTab();
   const focusOrOpenTabMutation = useFocusOrOpenTab();
   const queryClient = useQueryClient();
+
+  // Show full-page loader on initial page load
+  const isInitialLoading = agentsQuery.isPending || traitsQuery.isPending || tabsPending;
 
   const tabs = tabState?.tabs ?? [];
   const activeTabId = tabState?.activeTabId ?? null;
@@ -206,6 +209,14 @@ export default function PipelinesPage() {
     },
     [queryClient]
   );
+
+  if (isInitialLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden">

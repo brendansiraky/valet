@@ -38,6 +38,7 @@ vi.mock("~/hooks/queries/use-tabs", () => ({
   useTabsQuery: vi.fn(() => ({
     data: { tabs: mockTabs, activeTabId: mockActiveTabId },
     isLoading: false,
+    isPending: false,
   })),
   useCloseTab: vi.fn(() => ({
     mutate: mockCloseTabMutate,
@@ -132,6 +133,7 @@ describe("PipelinesPage", () => {
     vi.mocked(useTabsQuery).mockReturnValue({
       data: { tabs: mockTabs, activeTabId: mockActiveTabId },
       isLoading: false,
+      isPending: false,
     } as ReturnType<typeof useTabsQuery>);
 
     // Setup MSW handlers for pipeline operations
@@ -273,8 +275,10 @@ describe("PipelinesPage", () => {
 
     renderWithClient(<PipelinesPage />);
 
-    expect(screen.getByTestId("react-flow")).toBeInTheDocument();
+    // While data is loading, a centered loader should be shown (not the main UI)
+    expect(screen.queryByTestId("react-flow")).not.toBeInTheDocument();
 
+    // After data loads, the UI should appear
     await waitFor(
       () => {
         expect(screen.getByText("Test Agent")).toBeInTheDocument();
@@ -294,6 +298,7 @@ describe("PipelinesPage", () => {
     vi.mocked(useTabsQuery).mockReturnValue({
       data: { tabs: mockTabs, activeTabId: mockActiveTabId },
       isLoading: false,
+      isPending: false,
     } as ReturnType<typeof useTabsQuery>);
 
     // Pipeline NOT in cache - this simulates first load
@@ -508,6 +513,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       // Mock pipeline data in store
@@ -546,6 +552,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       renderWithClient(<PipelinesPage />);
@@ -580,6 +587,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       renderWithClient(<PipelinesPage />);
@@ -645,6 +653,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       mockPipelineData.set("p1", {
@@ -712,6 +721,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       mockPipelineData.set("p1", {
@@ -761,6 +771,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       mockPipelineData.set("p-delete", {
@@ -806,6 +817,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       mockPipelineData.set("p1", {
@@ -849,6 +861,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       mockPipelineData.set("p1", {
@@ -888,7 +901,7 @@ describe("PipelinesPage", () => {
   });
 
   describe("Multiple Tabs", () => {
-    test("multiple pipeline tabs can be open simultaneously", () => {
+    test("multiple pipeline tabs can be open simultaneously", async () => {
       mockTabs = [
         { pipelineId: "home", name: "Home" },
         { pipelineId: "p1", name: "Pipeline 1" },
@@ -900,6 +913,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       // Add pipeline data for each
@@ -914,8 +928,10 @@ describe("PipelinesPage", () => {
 
       renderWithClient(<PipelinesPage />);
 
-      // All tabs should be visible
-      expect(screen.getByText("Pipeline 1")).toBeInTheDocument();
+      // Wait for initial data to load, then check tabs are visible
+      await waitFor(() => {
+        expect(screen.getByText("Pipeline 1")).toBeInTheDocument();
+      });
       expect(screen.getByText("Pipeline 2")).toBeInTheDocument();
       expect(screen.getByText("Pipeline 3")).toBeInTheDocument();
     });
@@ -933,6 +949,7 @@ describe("PipelinesPage", () => {
       vi.mocked(useTabsQuery).mockReturnValue({
         data: { tabs: mockTabs, activeTabId: mockActiveTabId },
         isLoading: false,
+        isPending: false,
       } as ReturnType<typeof useTabsQuery>);
 
       mockPipelineData.set("p1", {
@@ -951,8 +968,8 @@ describe("PipelinesPage", () => {
 
       renderWithClient(<PipelinesPage />);
 
-      // Click on Second Pipeline tab
-      const secondTab = screen.getByText("Second Pipeline");
+      // Wait for initial data to load, then click on Second Pipeline tab
+      const secondTab = await screen.findByText("Second Pipeline");
       await user.click(secondTab);
 
       // Should call setActiveTab mutation (no navigation)
