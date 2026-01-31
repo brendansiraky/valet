@@ -94,7 +94,6 @@ describe("api.pipelines.$id", () => {
       const mockPipeline = {
         id: "pipe-123",
         name: "Test Pipeline",
-        description: "A test pipeline",
         flowData: { nodes: [], edges: [] },
         userId: "user-123",
       };

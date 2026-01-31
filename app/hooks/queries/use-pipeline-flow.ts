@@ -70,7 +70,8 @@ export interface UsePipelineFlowReturn {
 export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
   const queryClient = useQueryClient();
   const pipelineQuery = usePipeline(pipelineId);
-  const saveMutation = useSavePipeline();
+  // Destructure mutate - it's referentially stable, unlike the mutation object
+  const { mutate: savePipeline } = useSavePipeline();
 
   // Extract flow data with type safety and defaults
   const flowData = useMemo((): FlowData => {
@@ -105,7 +106,7 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
         if (!pipeline) return;
 
         const fd = pipeline.flowData as FlowData;
-        saveMutation.mutate({
+        savePipeline({
           id: pipelineId,
           name: pipeline.name,
           nodes: fd.nodes,
@@ -113,7 +114,7 @@ export function usePipelineFlow(pipelineId: string): UsePipelineFlowReturn {
           isNew: false,
         });
       }, 1000),
-    [queryClient, pipelineId, saveMutation]
+    [queryClient, pipelineId, savePipeline]
   );
 
   // Cleanup debounce on unmount - legitimate useEffect for cleanup pattern

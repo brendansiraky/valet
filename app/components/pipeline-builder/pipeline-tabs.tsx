@@ -12,7 +12,8 @@ import {
     type TabState,
 } from '~/hooks/queries/use-tabs'
 import type { TabData } from '~/db/schema/pipeline-tabs'
-import { usePipelines, useCreatePipeline } from '~/hooks/queries/use-pipelines'
+import { usePipelines, useCreatePipeline, type Pipeline } from '~/hooks/queries/use-pipelines'
+import { queries } from '~/hooks/queries/keys'
 import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
 import {
@@ -103,6 +104,16 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
             }
         })
 
+        // Seed the pipeline detail cache so usePipelineFlow has data to work with
+        queryClient.setQueryData<Pipeline>(
+            queries.pipelines.detail(pipelineId).queryKey,
+            {
+                id: pipelineId,
+                name,
+                flowData: { nodes: [], edges: [] },
+            }
+        )
+
         // Create pipeline, then persist tab state
         createPipeline.mutate(
             { id: pipelineId, name, flowData: { nodes: [], edges: [] } },
@@ -124,6 +135,10 @@ export function PipelineTabs({ runStates, onCloseTab }: PipelineTabsProps) {
                                     (t) => t.pipelineId !== pipelineId,
                                 )?.pipelineId ?? HOME_TAB_ID,
                         }
+                    })
+                    // Remove the seeded pipeline cache
+                    queryClient.removeQueries({
+                        queryKey: queries.pipelines.detail(pipelineId).queryKey,
                     })
                     toast.error('Failed to create pipeline')
                 },

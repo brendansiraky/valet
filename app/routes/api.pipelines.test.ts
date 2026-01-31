@@ -135,7 +135,6 @@ describe("api.pipelines", () => {
       const newPipeline = {
         id: "pipe-new",
         name: "Test Pipeline",
-        description: "A test pipeline",
         flowData: { nodes: [], edges: [] },
         userId: "user-123",
       };
@@ -144,7 +143,6 @@ describe("api.pipelines", () => {
       const request = createRequest({
         intent: "create",
         name: "Test Pipeline",
-        description: "A test pipeline",
       });
       const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);
 
@@ -240,7 +238,6 @@ describe("api.pipelines", () => {
       const updatedPipeline = {
         id: "pipe-1",
         name: "Updated Pipeline",
-        description: "Updated desc",
         flowData: { nodes: [{ id: "1" }], edges: [] },
       };
       mockUpdateChain([updatedPipeline]);
@@ -249,7 +246,6 @@ describe("api.pipelines", () => {
         intent: "update",
         id: "pipe-1",
         name: "Updated Pipeline",
-        description: "Updated desc",
         flowData: JSON.stringify({ nodes: [{ id: "1" }], edges: [] }),
       });
       const response = await action({ request, params: {}, context: {}, unstable_pattern: "" } as RouteArgs);

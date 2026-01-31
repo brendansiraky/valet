@@ -39,6 +39,7 @@ import {
   type FlowData,
   type AgentNodeData,
 } from "~/hooks/queries/use-pipelines";
+import { queries } from "~/hooks/queries/keys";
 
 export default function PipelinesPage() {
   // Fetch data via React Query hooks
@@ -94,7 +95,7 @@ export default function PipelinesPage() {
     (pipelineId: string) => {
       closeTabMutation.mutate(pipelineId);
       // Remove from React Query cache
-      queryClient.removeQueries({ queryKey: ["pipelines", pipelineId] });
+      queryClient.removeQueries({ queryKey: queries.pipelines.detail(pipelineId).queryKey });
       setRunStates((prev) => {
         const next = new Map(prev);
         next.delete(pipelineId);
@@ -157,7 +158,7 @@ export default function PipelinesPage() {
       usage: { inputTokens: number; outputTokens: number } | null,
       model: string | null
     ) => {
-      const pipeline = queryClient.getQueryData<Pipeline>(["pipelines", pipelineId]);
+      const pipeline = queryClient.getQueryData<Pipeline>(queries.pipelines.detail(pipelineId).queryKey);
       if (!pipeline) return;
 
       const flowData = pipeline.flowData as FlowData;
@@ -193,7 +194,7 @@ export default function PipelinesPage() {
   // Helper to get pipeline steps for RunProgress component
   const getStepsForPipeline = useCallback(
     (pipelineId: string) => {
-      const pipeline = queryClient.getQueryData<Pipeline>(["pipelines", pipelineId]);
+      const pipeline = queryClient.getQueryData<Pipeline>(queries.pipelines.detail(pipelineId).queryKey);
       if (!pipeline) return [];
       const flowData = pipeline.flowData as FlowData;
       return flowData.nodes
@@ -261,7 +262,7 @@ export default function PipelinesPage() {
               const initialData = isCurrentActiveTab ? requestedPipeline : null;
 
               // Don't render until we have data (query is enabled for active tab)
-              const pipelineInCache = !!queryClient.getQueryData(["pipelines", tab.pipelineId]);
+              const pipelineInCache = !!queryClient.getQueryData(queries.pipelines.detail(tab.pipelineId).queryKey);
               const shouldWaitForData =
                 isCurrentActiveTab && pipelineQuery.isPending && !pipelineInCache;
 
@@ -338,7 +339,7 @@ export default function PipelinesPage() {
             <OutputViewer
               steps={output.steps}
               finalOutput={output.finalOutput}
-              pipelineName={queryClient.getQueryData<Pipeline>(["pipelines", pipelineId])?.name || "Pipeline"}
+              pipelineName={queryClient.getQueryData<Pipeline>(queries.pipelines.detail(pipelineId).queryKey)?.name || "Pipeline"}
               usage={output.usage}
               model={output.model}
               onClose={() =>
