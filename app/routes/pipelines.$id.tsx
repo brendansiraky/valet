@@ -12,6 +12,7 @@ import { PipelineTabPanel } from "~/components/pipeline-builder/pipeline-tab-pan
 import { AgentSidebar } from "~/components/pipeline-builder/agent-sidebar";
 import { TraitsContext } from "~/components/pipeline-builder/traits-context";
 import { RunProgress } from "~/components/pipeline-runner/run-progress";
+import { FlowPreview } from "~/components/pipeline-runner/flow-preview";
 import { OutputViewer } from "~/components/output-viewer/output-viewer";
 import {
   Dialog,
@@ -23,6 +24,8 @@ import {
 } from "~/components/ui/dialog";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
+import { ScrollArea } from "~/components/ui/scroll-area";
+import { Label } from "~/components/ui/label";
 import { Play } from "lucide-react";
 import {
   ReactFlow,
@@ -73,7 +76,7 @@ export default function PipelineEditorPage() {
     Map<
       string,
       {
-        steps: Array<{ agentName: string; output: string; input: string }>;
+        steps: Array<{ agentName: string; output: string; input: string; model?: string }>;
         finalOutput: string;
         usage: { inputTokens: number; outputTokens: number } | null;
         model: string | null;
@@ -186,6 +189,7 @@ export default function PipelineEditorPage() {
       finalOutput: string,
       stepOutputs: Map<number, string>,
       stepInputs: Map<number, string>,
+      stepModels: Map<number, string>,
       usage: { inputTokens: number; outputTokens: number } | null,
       model: string | null
     ) => {
@@ -199,6 +203,7 @@ export default function PipelineEditorPage() {
         agentName: (node.data as AgentNodeData).agentName,
         output: stepOutputs.get(index) || "",
         input: stepInputs.get(index) || "",
+        model: stepModels.get(index) ?? model ?? undefined, // Per-step model
       }));
 
       setCompletedOutputs((prev) =>
@@ -237,6 +242,32 @@ export default function PipelineEditorPage() {
       }));
     },
     [queryClient]
+  );
+
+  // Helper to get flow preview steps for the run dialog
+  const getFlowPreviewSteps = useCallback(
+    (pipelineId: string | null) => {
+      if (!pipelineId) return [];
+      const pipeline = queryClient.getQueryData<Pipeline>(["pipelines", pipelineId]);
+      if (!pipeline) return [];
+      const flowData = pipeline.flowData as FlowData;
+      const sortedAgentNodes = topologicalSortNodes(flowData.nodes, flowData.edges);
+      return sortedAgentNodes.map((n) => {
+        const data = n.data as AgentNodeData;
+        return {
+          agentId: data.agentId,
+          agentName: data.agentName,
+          agentInstructions: data.agentInstructions,
+        };
+      });
+    },
+    [queryClient]
+  );
+
+  // Compute flow preview steps for the run dialog
+  const flowPreviewSteps = useMemo(
+    () => getFlowPreviewSteps(runDialogPipelineId),
+    [getFlowPreviewSteps, runDialogPipelineId]
   );
 
   return (
@@ -337,12 +368,13 @@ export default function PipelineEditorPage() {
                       <RunProgress
                         runId={runState.runId}
                         steps={getStepsForPipeline(tab.pipelineId)}
-                        onComplete={(final, outputs, inputs, usage, model) =>
+                        onComplete={(final, outputs, inputs, stepModels, usage, model) =>
                           handleRunComplete(
                             tab.pipelineId,
                             final,
                             outputs,
                             inputs,
+                            stepModels,
                             usage,
                             model
                           )
@@ -395,20 +427,38 @@ export default function PipelineEditorPage() {
         open={!!runDialogPipelineId}
         onOpenChange={(open) => !open && setRunDialogPipelineId(null)}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Run Pipeline</DialogTitle>
             <DialogDescription>
-              Enter the input text for this pipeline run.
+              Preview the execution flow and enter your input to start the pipeline.
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            placeholder="Enter your input here..."
-            value={runInput}
-            onChange={(e) => setRunInput(e.target.value)}
-            rows={6}
-            className="resize-none"
-          />
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            {/* Flow preview */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Execution Flow</Label>
+              <ScrollArea className="h-[280px] rounded-lg border bg-muted/30 p-3">
+                <FlowPreview steps={flowPreviewSteps} />
+              </ScrollArea>
+            </div>
+
+            {/* Input area */}
+            <div className="space-y-2">
+              <Label htmlFor="run-input" className="text-sm font-medium">
+                Input
+              </Label>
+              <Textarea
+                id="run-input"
+                placeholder="Enter your input here..."
+                value={runInput}
+                onChange={(e) => setRunInput(e.target.value)}
+                className="h-[280px] resize-none"
+              />
+            </div>
+          </div>
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -416,7 +466,7 @@ export default function PipelineEditorPage() {
             >
               Cancel
             </Button>
-            <Button onClick={handleRunSubmit}>
+            <Button onClick={handleRunSubmit} disabled={flowPreviewSteps.length === 0}>
               <Play className="size-4 mr-2" />
               Run Pipeline
             </Button>
